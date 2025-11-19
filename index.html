@@ -11,6 +11,16 @@
   <meta name="apple-mobile-web-app-title" content="100戦杯リザルト">
   <title>100戦杯リザルト</title>
   <style>
+    @font-face {
+      font-family: 'MPLUS1pEB';
+      src: url('./LINESeedJP_A_TTF_Bd.ttf') format('truetype');
+      font-style: normal;
+    }
+    .gear-title,
+    .result-name,
+    .blade-name {
+      font-family: 'MPLUS1pEB', sans-serif;
+    }
     /* --- 全体 --- */
     :root{
       --bg:#ffffff;
@@ -21,13 +31,14 @@
       --card-bg: #fff;
       --card-border: rgba(0,0,0,0.06);
       --color: #fff;
+      --font-family: 'MPLUS1pEB', sans-serif;
     }
     body {
       background: url('BackImage.png') no-repeat center center fixed;
       background-size: cover;
       color: var(--text);
-      font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
       padding: 18px;
+      letter-spacing: -0.08em;
     }
 
     .page-header {
@@ -298,7 +309,7 @@
     }
     .gear-card.open .gear-body {
       opacity:1;
-      max-height: 420px; /* enough for content */
+      max-height: 600px; /* enough for content */
     }
 
     /* --- top summary inside card --- */
@@ -527,6 +538,114 @@
     /* 勝敗ごとの色 */
     .win-side { color: #ffe72e; font-weight: bold; }
     .lose-side { color: #888; }
+    .result-box {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+#resultBox {
+  
+  width: 100%;
+  max-width: 520px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+  box-sizing: border-box;
+  padding: 0px 8px;
+}
+
+.result-blader-card {
+  width: 100%;
+  padding: 10px 14px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  box-sizing: border-box;
+  display: flex;             
+  justify-content: space-between; 
+  flex-direction: column;
+  align-items: stretch;
+  cursor: pointer;
+}
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.result-name {
+  font-size: 12px;
+  text-align: left;
+}
+
+.result-status {
+  font-weight: 900;
+  text-align: right;
+  min-width: 48px;   
+  display: flex;
+  justify-content: space-between;
+}
+
+/* --- マッチ詳細 全体 --- */
+.match-detail {
+  margin-top: 6px;
+  display: none; /* クリックで展開 */
+  width: 100%;
+}
+
+/* --- 1行（4列） --- */
+.match-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px 1fr; /* 左幅広 / 2列目 / 3列目 / 右幅広 */
+  gap: 4px;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 14px;
+}
+
+/* --- 左ブレーダーのベイ名 --- */
+.match-row .lbey {
+  text-align: left;
+  font-weight: 600;
+  padding-left: 4px;
+}
+
+/* --- 右ブレーダーのベイ名 --- */
+.match-row .rbey {
+  text-align: right;
+  font-weight: 600;
+  padding-right: 4px;
+}
+
+/* --- 左のフィニッシュ略号 (SF/BF/OF/XF) --- */
+.match-row .finish-l {
+  text-align: center;
+  font-weight: 700;
+  color: #8cf;
+}
+
+/* --- 右のフィニッシュ略号 --- */
+.match-row .finish-r {
+  text-align: center;
+  font-weight: 700;
+  color: #f88;
+}
+
+/* --- 最後の行 下線削除 --- */
+.match-row:last-child {
+  border-bottom: none;
+}
 
 
   </style>
@@ -570,11 +689,6 @@
   </div>
 
 </div>
-
-
-
-    </div>
-  </div>
 
   <div class="gear-cards">
     <div class="gear-card" id="gearCard1">
@@ -646,240 +760,522 @@
       </div>
     </div>  
 
-    <div class="result-card">
-      <!-- 1人のブレーダーにつき1枚 -->
-      <div class="blader-card">
-        <div class="blader-header">
-          <span class="opponent-name">OpponentName</span>
-          <span class="battle-result tag-win">Win</span>
-        </div>
-
-        <div class="blader-body">
-          <!-- JSでレコードごとに追加される -->
-          <!-- 例 -->
-          <div class="battle-row">
-            <span class="my-bey win-side">Aero</span>
-            <span class="battle-detail">SF</span>
-            <span class="opp-bey lose-side">Phoenix</span>
-          </div>
-        </div>
-      </div>
+    <div id="resultBox">
+      <div id="bladerList"></div>
     </div>
 
   
   </div>
 
   <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const supabaseUrl = 'https://ddmjevqneetbmahtcqdl.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkbWpldnFuZWV0Ym1haHRjcWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NzM5MTksImV4cCI6MjA3ODU0OTkxOX0.L63jZ8n7MjsTuGaNYYyRWvxOM-gzYlFzIMuZ4gvgHrk';
-const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseUrl = 'https://ddmjevqneetbmahtcqdl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkbWpldnFuZWV0Ym1haHRjcWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NzM5MTksImV4cCI6MjA3ODU0OTkxOX0.L63jZ8n7MjsTuGaNYYyRWvxOM-gzYlFzIMuZ4gvgHrk';
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-// 既存の targetBlader ロジックに合わせる（URL id かデフォルト）
-const urlParams = new URLSearchParams(window.location.search);
-const inputPassword = urlParams.get('id');
-let targetBlader = inputPassword
+    const urlParams = new URLSearchParams(window.location.search);
+    const inputPassword = urlParams.get('id'); 
+    let targetBlader = 'よっしー'; 
 
-// ヘルパー：Finishキーマップ
-const finishMap = {
-  "Spin": "SF",
-  "Burst": "BF",
-  "Over": "OF",
-  "Xtreme": "XF"
-};
+    if (inputPassword) {
+      const { data: userData, error } = await supabase
+        .from('UserDB')
+        .select('Name')
+        .eq('Password', inputPassword)
+        .single(); // 1件だけ取得
 
-// ヘルパー：先頭トークン（ベイ名の1つ目のスペースまで）
-function firstToken(str) {
-  if (!str || typeof str !== 'string') return '';
-  return str.split(' ')[0];
-}
+      if (userData && userData.Name) {
+        targetBlader = userData.Name;
+      } else {
+        console.warn('該当するユーザーがいません');
+      }
+    }
 
-// ヘルパー：クラス付与用（勝者=黄色, 敗者=グレー, 引き分けは無し）
-function getSideClass(myPoint, oppPoint) {
-  if (myPoint > oppPoint) return { mine: 'win-side', opp: 'lose-side' };
-  if (myPoint < oppPoint) return { mine: 'lose-side', opp: 'win-side' };
-  return { mine: '', opp: '' }; // 引き分けはデフォルト
-}
 
-// 初期ユーザー取得（パスワード経由で Name を取得する既存ロジック再現）
-async function resolveTargetBlader() {
-  if (!inputPassword) return; // 既にデフォルトが使われる
-  const { data: userData, error } = await supabase
+    const finishMap = {
+      "Spin": "SF",
+      "Burst": "BF",
+      "Over": "OF",
+      "Xtreme": "XF"
+    };
+
+    // 開閉処理（delegate）
+    document.querySelectorAll('.gear-card').forEach(card => {
+      const head = card.querySelector('.gear-head');
+      head.addEventListener('click', () => {
+        card.classList.toggle('open');
+      });
+    });
+
+
+async function calcResults() {
+  // 画面要素
+  const bladeTitle = document.getElementById('bladeTitle');
+  const bladeSpec = document.getElementById('bladeSpec');
+  const bladeImage = document.getElementById('bladeImage');
+  const totalPointsEl = document.getElementById('totalPoints');
+  const totalNegPointsEl = document.getElementById('totalNegPoints');
+  const overallRateEl = document.getElementById('overallRate');
+
+  // fetch ResultDB
+  const { data, error } = await supabase.from('ResultDB').select('*');
+  if (error) {
+    console.error('ResultDB fetch error', error);
+    return;
+  }
+  const rows = data || [];
+
+  // --- opponentごとの合計で勝敗判定 ---
+  const opponents = {};
+  rows.forEach(row => {
+    const { LBlader, RBlader, LPoint, RPoint } = row;
+    if (typeof LPoint !== 'number' || typeof RPoint !== 'number') return;
+
+    let isLeft=false, myPoint, oppPoint, opponent;
+    if (LBlader === targetBlader) {
+      isLeft = true;
+      myPoint = LPoint;
+      oppPoint = RPoint;
+      opponent = RBlader;
+    } else if (RBlader === targetBlader) {
+      isLeft = false;
+      myPoint = RPoint;
+      oppPoint = LPoint;
+      opponent = LBlader;
+    } else return;
+
+    if (!opponents[opponent]) opponents[opponent] = { myTotal:0, oppTotal:0, lTotal:0, rTotal:0, lWins:0, rWins:0 };
+    opponents[opponent].myTotal += myPoint;
+    opponents[opponent].oppTotal += oppPoint;
+
+    // L/Rサイドカウント
+    if (isLeft) opponents[opponent].lTotal += 1;
+    else opponents[opponent].rTotal += 1;
+  });
+
+  // 勝敗判定
+  let totalWins=0, totalLosses=0, totalDraws=0;
+  let lWins=0, lTotal=0, rWins=0, rTotal=0;
+
+  Object.values(opponents).forEach(v => {
+    if (v.myTotal > v.oppTotal) totalWins++;
+    else if (v.myTotal < v.oppTotal) totalLosses++;
+    else totalDraws++;
+
+    if (v.lTotal > 0) {
+      lTotal++;
+      if (v.myTotal > v.oppTotal) lWins++;
+    }
+    if (v.rTotal > 0) {
+      rTotal++;
+      if (v.myTotal > v.oppTotal) rWins++;
+    }
+  });
+
+  const lRate = lTotal ? `${((lWins/lTotal)*100).toFixed(1)}%` : '-';
+  const rRate = rTotal ? `${((rWins/rTotal)*100).toFixed(1)}%` : '-';
+  const overallRate = (totalWins + totalLosses + totalDraws) ? `${((totalWins / (totalWins+totalLosses+totalDraws))*100).toFixed(1)}%` : '-';
+
+  bladeTitle.textContent = targetBlader;
+  bladeSpec.textContent = `勝: ${totalWins} / 敗: ${totalLosses} / 引き分け: ${totalDraws}`;
+  overallRateEl.textContent = overallRate;
+
+  // --- 得点/失点はレコード単位で計算 ---
+  let totalWinPoints = 0, totalLosePoints = 0;
+  rows.forEach(row => {
+    const { LBlader, RBlader, LPoint, RPoint } = row;
+    if (typeof LPoint !== 'number' || typeof RPoint !== 'number') return;
+    let myPoint;
+    if (LBlader === targetBlader) myPoint = LPoint;
+    else if (RBlader === targetBlader) myPoint = RPoint;
+    else return;
+
+    if (myPoint > 0) totalWinPoints += myPoint;
+    if (myPoint < 0) totalLosePoints += myPoint;
+  });
+
+  totalPointsEl.textContent = totalWinPoints;
+  totalNegPointsEl.textContent = totalLosePoints;
+
+  // L/Rサイド勝率
+  document.getElementById('lSideRate').textContent = lRate;
+  document.getElementById('rSideRate').textContent = rRate;
+
+  // --- 以下、Gearごとの統計表示 ---
+  const { data: userData, error: userError } = await supabase
     .from('UserDB')
-    .select('Name')
-    .eq('Password', inputPassword)
+    .select('Name, Blade1, Ratchet1, Bit1, Blade2, Ratchet2, Bit2, Blade3, Ratchet3, Bit3')
+    .eq('Name', targetBlader)
     .single();
 
-  if (error) {
-    console.warn('該当するユーザーがいません', error);
-    return;
-  }
-  if (userData && userData.Name) targetBlader = userData.Name;
+  if (userError || !userData) return;
+
+  for (let i = 1; i <= 3; i++) {
+    const blade = userData[`Blade${i}`] || '';
+    const ratchet = userData[`Ratchet${i}`] || '';
+    const bit = userData[`Bit${i}`] || '';
+    const title = `${blade} ${ratchet} ${bit}`.trim();
+
+    document.getElementById(`gearTitle${i}`).textContent = title || '(未設定)';
+    document.getElementById(`gearWinRateVal${i}`).textContent = '-';
+    document.getElementById(`gearPointsVal${i}`).textContent = '0';
+    document.getElementById(`gearNegPointsVal${i}`).textContent = '0';
+
+    const thumbEl = document.getElementById(`gearThumb${i}`);
+    thumbEl.innerHTML = '';
+
+    if (blade) {
+      const imgUrl = `https://beymetchannel.github.io/image-server/images/${blade}.png`;
+
+      thumbEl.innerHTML = `<img src="${imgUrl}" alt="${blade}">`;
+    } else {
+      thumbEl.textContent = '–';
+    }
+
+    // 該当ギアの試合抽出
+    const relevantMatches = rows.filter(row => {
+      if (row.LBlader === targetBlader) return row.LBey === title;
+      if (row.RBlader === targetBlader) return row.RBey === title;
+      return false;
+    });
+
+    let wins=0, points=0, negPoints=0;
+    const finishStats = { SF:{win:0,lose:0}, BF:{win:0,lose:0}, OF:{win:0,lose:0}, XF:{win:0,lose:0} };
+
+    relevantMatches.forEach(row => {
+      const isLeft = row.LBlader === targetBlader;
+      const myPoint = isLeft ? row.LPoint : row.RPoint;
+      const oppPoint = isLeft ? row.RPoint : row.LPoint;
+
+      if (myPoint > oppPoint) wins++;
+      if (myPoint > 0) points += myPoint;
+      if (myPoint < 0) negPoints += myPoint;
+
+      const finKey = finishMap[row.Finish];
+      if (!finKey) return;
+      if (myPoint > oppPoint) finishStats[finKey].win++;
+      else if (myPoint < oppPoint) finishStats[finKey].lose++;
+    });
+
+    const totalMatches = relevantMatches.length;
+    const winRate = totalMatches ? `${((wins/totalMatches)*100).toFixed(1)}%` : '-';
+
+    document.getElementById(`gearWinRateVal${i}`).textContent = winRate;
+    document.getElementById(`gearPointsVal${i}`).textContent = points;
+    document.getElementById(`gearNegPointsVal${i}`).textContent = negPoints;
+
+    // 横棒グラフ
+    const finishBlock = document.getElementById(`finishBlock${i}`);
+    let maxCount = 1;
+    ['SF','BF','OF','XF'].forEach(k => {
+      maxCount = Math.max(maxCount, finishStats[k].win, finishStats[k].lose);
+    });
+
+    let html = '';
+    ['SF','BF','OF','XF'].forEach(k => {
+      const w = finishStats[k].win;
+      const l = finishStats[k].lose;
+      html += `
+        <div class="finish-wrap">
+          <div class="finish-label">${k}</div>
+          <div class="result-small">
+            <div class="win-row">
+              <div class="finish-text">WIN: ${w}</div>
+              <div class="bar-container">
+                <div class="bar-win" style="width:${(w/maxCount)*100}%"></div>
+              </div>
+            </div>
+            <div class="lose-row">
+              <div class="finish-text">LOSE: ${l}</div>
+              <div class="bar-container">
+                <div class="bar-lose" style="width:${(l/maxCount)*100}%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    finishBlock.innerHTML = html;
+  } // end for gear
 }
 
-// メイン：ResultDB と UserDB を取得し、opponentCards をレンダーする
-async function renderOpponentCards() {
-  // resolve target first
-  await resolveTargetBlader();
+calcResults();
 
-  // DOM 参照先（result-card 内に <div id="opponentCards"> を用意してください）
-  const wrap = document.getElementById('opponentCards');
-  if (!wrap) {
-    console.warn('opponentCards 要素が見つかりません。HTMLに <div id="opponentCards"></div> を配置してください。');
+
+async function calcRanking(myName) {
+  // UserDB から全ブレーダー一覧取得
+  const { data: userList, error: userListErr } = await supabase
+    .from("UserDB")
+    .select("Name");
+
+  if (userListErr) {
+    console.error('UserDB fetch error', userListErr);
     return;
   }
-  wrap.innerHTML = ''; // クリア
+  const allUsers = (userList || []).map(u => u.Name);
 
-  // fetch both tables
-  const [{ data: users = [], error: userErr }, { data: results = [], error: resultErr }] = await Promise.all([
-    supabase.from('UserDB').select('*'),
-    supabase.from('ResultDB').select('*')
-  ]);
+  // ResultDB の全バトルデータ取得
+  const { data: battleList = [], error: battleErr } = await supabase
+    .from("ResultDB")
+    .select("*");
 
-  if (userErr) { console.error('UserDB fetch error', userErr); return; }
-  if (resultErr) { console.error('ResultDB fetch error', resultErr); return; }
+  if (battleErr) {
+    console.error('ResultDB fetch error', battleErr);
+    return;
+  }
 
-  // 自分以外のブレーダー一覧（UserDB の登録者のみ表示）
-  const opponents = (users || []).filter(u => u.Name && u.Name !== targetBlader);
+  // 基礎集計用データ構造
+  const stats = {}; // goals を入れておく（表示用）
+  const opponentsMap = {}; // opponentsMap[player][opponent] = { myTotal, oppTotal }
 
-  // 先に opponentsMap（自分 vs opponent の合算）を作る（効率化）
-  // key: opponentName -> { myTotal, oppTotal, records: [...] }
-  const pairMap = {};
-  // iterate over all results and collect records that include targetBlader
-  results.forEach(row => {
-    const L = row.LBlader, R = row.RBlader;
-    if (L !== targetBlader && R !== targetBlader) return; // 対象外
+  function ensurePlayer(p) {
+    if (!stats[p]) stats[p] = { goalsFor:0, goalsAgainst:0 };
+    if (!opponentsMap[p]) opponentsMap[p] = {};
+  }
 
-    // Determine opponent and which side target was on for this record
-    const isLeft = (L === targetBlader);
-    const opponent = isLeft ? R : L;
-    if (!opponent) return;
+  // 全試合を走査して得点集計 + 対戦相手ごとの合算値を作る
+  battleList.forEach(b => {
+    const L = b.LBlader;
+    const R = b.RBlader;
+    const Lscore = typeof b.LPoint === 'number' ? b.LPoint : 0;
+    const Rscore = typeof b.RPoint === 'number' ? b.RPoint : 0;
 
-    if (!pairMap[opponent]) pairMap[opponent] = { myTotal: 0, oppTotal: 0, records: [] };
+    // プレイヤー確保
+    ensurePlayer(L);
+    ensurePlayer(R);
 
-    const myPoint = isLeft ? (Number(row.LPoint) || 0) : (Number(row.RPoint) || 0);
-    const oppPoint = isLeft ? (Number(row.RPoint) || 0) : (Number(row.LPoint) || 0);
+    // 総得点集計（レコード単位の合算）
+    stats[L].goalsFor += Lscore;
+    stats[L].goalsAgainst += Rscore;
+    stats[R].goalsFor += Rscore;
+    stats[R].goalsAgainst += Lscore;
 
-    pairMap[opponent].myTotal += myPoint;
-    pairMap[opponent].oppTotal += oppPoint;
-    // keep the original row + meta for rendering
-    pairMap[opponent].records.push(Object.assign({}, row, { targetIsLeft: isLeft }));
+    // opponentsMap に該当ペアを追加/更新
+    if (!opponentsMap[L][R]) opponentsMap[L][R] = { myTotal:0, oppTotal:0 };
+    if (!opponentsMap[R][L]) opponentsMap[R][L] = { myTotal:0, oppTotal:0 };
+
+    // L 側の記録にこの試合の得点を加算（合算は myTotal と oppTotal）
+    opponentsMap[L][R].myTotal += Lscore;
+    opponentsMap[L][R].oppTotal += Rscore;
+
+    // R 側の記録は逆に加算
+    opponentsMap[R][L].myTotal += Rscore;
+    opponentsMap[R][L].oppTotal += Lscore;
   });
 
-  // For each opponent from UserDB, build the card
-  opponents.forEach(op => {
-    const name = op.Name;
-    const entry = pairMap[name] || { myTotal: 0, oppTotal: 0, records: [] };
-    let headerResult = '-';
-    if (entry.records.length === 0) {
-      headerResult = '-';
-    } else if (entry.myTotal > entry.oppTotal) {
-      headerResult = 'Win';
-    } else if (entry.myTotal < entry.oppTotal) {
-      headerResult = 'Lose';
-    } else {
-      headerResult = 'Dlow'; // your wording for draw
-    }
+  // opponentsMap を元に、各選手の勝/負/分を決定（相手ごとの合算で判定）
+  const finalStats = {}; // { win, lose, draw, goalsFor, goalsAgainst }
+  // 初期化（表示対象は UserDB 登録者に限定）
+  allUsers.forEach(name => {
+    finalStats[name] = { win:0, lose:0, draw:0, goalsFor: (stats[name]?.goalsFor || 0), goalsAgainst: (stats[name]?.goalsAgainst || 0) };
+  });
 
-    // create elements
-    const card = document.createElement('div');
-    card.className = 'blader-card';
+  // ただし opponentsMap に含まれる相手が UserDB にない場合でも、勝敗カウントの対象としたいなら
+  // allUsers のみを対象にしている点に注意（必要なら stats にある全キー基準に切替可能）
+  allUsers.forEach(player => {
+    const opponents = opponentsMap[player] || {};
+    Object.keys(opponents).forEach(opponent => {
+      // 対戦相手が UserDB に載っていない場合でも合算判定に含めたいならコメント外してください
+      // if (!finalStats[opponent]) return;
 
-    // header
-    const header = document.createElement('div');
-    header.className = 'blader-header';
-    header.innerHTML = `
-      <span class="opponent-name">${escapeHtml(name)}</span>
-      <span class="battle-result ${headerResult === 'Win' ? 'tag-win' : headerResult === 'Lose' ? 'tag-lose' : headerResult === 'Dlow' ? 'tag-dlow' : 'tag-none'}">${headerResult}</span>
-    `;
-    card.appendChild(header);
+      const pair = opponents[opponent];
+      const myTotal = pair.myTotal;
+      const oppTotal = pair.oppTotal;
 
-    // body (initially hidden)
-    const body = document.createElement('div');
-    body.className = 'blader-body';
-    // if no records, show a placeholder row
-    if (entry.records.length === 0) {
-      const emptyRow = document.createElement('div');
-      emptyRow.className = 'battle-row';
-      emptyRow.innerHTML = `<div style="width:100%; text-align:center; color:#999; font-size:12px;">-</div>`;
-      body.appendChild(emptyRow);
-    } else {
-      // sort records by TimeStamp if present (optional)
-      entry.records.sort((a,b) => {
-        if (!a.TimeStamp || !b.TimeStamp) return 0;
-        return new Date(a.TimeStamp) - new Date(b.TimeStamp);
-      });
-
-      entry.records.forEach(rec => {
-        // compute left/right display according to "展開後は必ず左側に自分、右側に相手"
-        // The requirement: left = 自分のベイ名 (first token), center = content (SF~XF), right = opponent bey (first token)
-        const isLeft = rec.targetIsLeft; // true if target is LBlader in this record
-        const myBeyFull = isLeft ? rec.LBey : rec.RBey;
-        const oppBeyFull = isLeft ? rec.RBey : rec.LBey;
-        const myPoint = isLeft ? Number(rec.LPoint) || 0 : Number(rec.RPoint) || 0;
-        const oppPoint = isLeft ? Number(rec.RPoint) || 0 : Number(rec.LPoint) || 0;
-
-        const myBey = escapeHtml(firstToken(myBeyFull));
-        const oppBey = escapeHtml(firstToken(oppBeyFull));
-        const finKey = finishMap[rec.Finish] || (rec.Finish ? escapeHtml(rec.Finish) : '');
-
-        const sideClass = getSideClass(myPoint, oppPoint);
-
-        // create row
-        const row = document.createElement('div');
-        row.className = 'battle-row';
-        row.innerHTML = `
-          <span class="my-bey ${sideClass.mine}">${myBey}</span>
-          <span class="battle-detail">${finKey}</span>
-          <span class="opp-bey ${sideClass.opp}">${oppBey}</span>
-        `;
-        body.appendChild(row);
-      });
-    }
-
-    card.appendChild(body);
-    wrap.appendChild(card);
-
-    // click toggle (tapで展開)
-    header.addEventListener('click', () => {
-      const isOpen = body.style.display === 'flex';
-      if (isOpen) {
-        body.style.display = 'none';
-      } else {
-        body.style.display = 'flex';
-        body.style.flexDirection = 'column';
-      }
+      if (myTotal > oppTotal) finalStats[player].win++;
+      else if (myTotal < oppTotal) finalStats[player].lose++;
+      else finalStats[player].draw++;
     });
   });
-}
 
-// HTML エスケープ（簡易）
-function escapeHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
+  // ランキング配列作成
+  const rankingArray = allUsers.map(name => {
+    const fs = finalStats[name] || { win:0, lose:0, draw:0, goalsFor:0, goalsAgainst:0 };
+    const totalMatches = fs.win + fs.lose + fs.draw;
+    const winrate = totalMatches === 0 ? 0 : fs.win / totalMatches; // 勝 ÷ (勝+負+分)
+    const goalDiff = fs.goalsFor - fs.goalsAgainst;
+    return {
+      name,
+      winrate,
+      goalDiff,
+      goalsFor: fs.goalsFor,
+      raw: fs
+    };
+  });
 
-// calcResults は既存の集計を行う関数（あなたが既に持っている calcResults をそのまま使ってOK）
-// ここでは calcResults のあとに renderOpponentCards を呼ぶようにするのが良い。
-// もし calcResults をこのファイル内で定義しているなら、calcResults の最後に await renderOpponentCards(); を追加してください。
-// 既存コードの最後で calcResults() を呼んでいるので、その後に renderOpponentCards() を呼び出します。
+  // ソート：①勝率降順 → ②得失点差降順 → ③総得点降順 → ④名前昇順
+  rankingArray.sort((a, b) => {
+    if (b.winrate !== a.winrate) return b.winrate - a.winrate;
+    if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+    return a.name.localeCompare(b.name);
+  });
 
-// すでに別で calcResults() を定義しているなら下の呼び出しは二重呼び出しに注意。
-// ここでは安全に両方呼ぶために Promise.resolve().then(...)
-Promise.resolve().then(async () => {
-  // 既存 calcResults() がグローバルに存在するなら呼び出す（なければスキップ）
-  if (typeof calcResults === 'function') {
-    try { await calcResults(); } catch (e) { console.warn('calcResults error', e); }
+  // 自分の順位表示
+  const myIndex = rankingArray.findIndex(r => r.name === myName);
+  const myRankText = myIndex === -1 ? '-' : String(myIndex + 1);
+  document.getElementById("rankingResult").textContent = myRankText;
+
+  const rankEl = document.getElementById("rankingResult");
+  const rankValue = Number(myRankText);
+  if (!isNaN(rankValue) && rankValue > 0 && rankValue <= 4) {
+    rankEl.classList.add("rank-warning");
+  } else {
+    rankEl.classList.remove("rank-warning");
   }
-  // レンダリング（ResultDB と UserDB を参照して opponentCards を生成）
-  try { await renderOpponentCards(); } catch (e) { console.error('renderOpponentCards error', e); }
-});
+
+}
+calcRanking(targetBlader);
+
+
+
+
+async function loadBladerList(targetBlader) {
+  const { data, error } = await supabase
+    .from("UserDB")
+    .select("Name");
+
+  if (error) { console.error(error); return; }
+
+  const listBox = document.getElementById("bladerList");
+  listBox.innerHTML = "";
+
+  for (const user of data) {
+    if (user.Name === targetBlader) continue;
+
+    const result = await getMatchResult(targetBlader, user.Name);
+
+    const card = document.createElement("div");
+    card.className = "result-blader-card";
+
+    const matchDetails = await getMatchDetails(targetBlader, user.Name);
+
+    card.innerHTML = `
+      <div class="top-row">
+        <div class="result-name">${user.Name}</div>
+        <div class="result-status">${result}</div>
+      </div>
+      <div class="match-detail" style="display:none;">
+        ${matchDetails.map(match => `
+          <div class="match-row">
+            <div class="lbey">${match.LBey}</div>
+            <div class="finish-l">${match.FinishL}</div>
+            <div class="finish-r">${match.FinishR}</div>
+            <div class="rbey">${match.RBey}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+
+    card.addEventListener('click', () => {
+      const detailDiv = card.querySelector('.match-detail');
+      detailDiv.style.display = detailDiv.style.display === 'none' ? 'block' : 'none';
+    });
+
+    listBox.appendChild(card);
+  }
+}
+
+async function getMatchResult(a, b) {
+  const { data: matches1 } = await supabase
+    .from('ResultDB')
+    .select('LPoint, RPoint')
+    .eq('LBlader', a)
+    .eq('RBlader', b);
+  const { data: matches2 } = await supabase
+    .from('ResultDB')
+    .select('LPoint, RPoint')
+    .eq('RBlader', a)
+    .eq('LBlader', b);
+
+  const allMatches = [...matches1, ...matches2];
+  if (!allMatches.length) return "-";
+
+  let win = 0, lose = 0, draw = 0;
+  for (const match of allMatches) {
+    let aPoint, bPoint;
+    if (matches1.includes(match)) {
+      aPoint = match.LPoint; bPoint = match.RPoint;
+    } else {
+      aPoint = match.RPoint; bPoint = match.LPoint;
+    }
+    if (aPoint > bPoint) win++;
+    else if (aPoint < bPoint) lose++;
+    else draw++;
+  }
+  if (win > lose) return "Win";
+  else if (win < lose) return "Lose";
+  else return draw > 0 ? "Draw" : "-";
+}
+
+async function getMatchDetails(a, b) {
+  const { data: matches1 } = await supabase
+    .from('ResultDB')
+    .select('LBlader, LBey, RBlader, RBey, Finish, LPoint, RPoint')
+    .eq('LBlader', a)
+    .eq('RBlader', b);
+
+  const { data: matches2 } = await supabase
+    .from('ResultDB')
+    .select('LBlader, LBey, RBlader, RBey, Finish, LPoint, RPoint')
+    .eq('RBlader', a)
+    .eq('LBlader', b);
+
+  const allMatches = [...matches1, ...matches2];
+
+  // ▼ フィニッシュ変換表
+  const finishMap = {
+    "Spin": "SF",
+    "Burst": "BF",
+    "Over": "OF",
+    "Xtreme": "XF"
+  };
+
+  return allMatches.map(match => {
+    let LBeyName, RBeyName, LPoint, RPoint;
+
+    const isNormalOrder = matches1.includes(match);
+
+    if (isNormalOrder) {
+      LBeyName = match.LBey.split(' ')[0];
+      RBeyName = match.RBey.split(' ')[0];
+      LPoint = match.LPoint;
+      RPoint = match.RPoint;
+    } else {
+      LBeyName = match.RBey.split(' ')[0];
+      RBeyName = match.LBey.split(' ')[0];
+      LPoint = match.RPoint;
+      RPoint = match.LPoint;
+    }
+
+    // ▼ Finish を L側・R側に分解（例: "Burst L" → L側=BF, R側=""）
+    let finishL = "";
+    let finishR = "";
+
+    if (match.Finish) {
+      const [finType, finSide] = match.Finish.split(" ");
+
+      const shortCode = finishMap[finType] || finType;
+
+      if (finSide === "L") finishL = shortCode;
+      if (finSide === "R") finishR = shortCode;
+    }
+
+    return {
+      LBey: LBeyName,
+      RBey: RBeyName,
+      FinishL: finishL,
+      FinishR: finishR
+    };
+  });
+}
+
+
+
+loadBladerList(targetBlader);
+
 
 </script>
-
+</body>
+</html>
