@@ -679,7 +679,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // 既存の targetBlader ロジックに合わせる（URL id かデフォルト）
 const urlParams = new URLSearchParams(window.location.search);
 const inputPassword = urlParams.get('id');
-let targetBlader = 'よっしー'; // デフォルト名（ご希望の初期値）
+let targetBlader = inputPassword
 
 // ヘルパー：Finishキーマップ
 const finishMap = {
@@ -882,3 +882,4 @@ Promise.resolve().then(async () => {
 });
 
 </script>
+
