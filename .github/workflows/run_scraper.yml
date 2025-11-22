@@ -1,47 +1,33 @@
-name: Daily Scraper
+name: Manual Scraper Test
 
-# トリガーの設定（いつ実行するか）
+# 手動実行ボタンのみを有効化
 on:
-  schedule:
-    # 日本時間の朝9:00に実行する場合の例
-    # GitHubはUTC(世界標準時)なので、JST-9時間で設定します (0:00 UTC = 9:00 JST)
-    - cron: '0 0 * * *'
-  
-  # 手動でも実行ボタンを押せるようにする設定
   workflow_dispatch:
 
 jobs:
-  scrape-and-save:
+  test-run:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. リポジトリのコードをチェックアウト（持ってくる）
+      # 1. リポジトリのファイルを読み込む
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Pythonのセットアップ
+      # 2. Python環境を作る (3.10の例)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10' # 使いたいバージョン
+          python-version: '3.10'
 
       # 3. ライブラリのインストール
+      # requirements.txt があればそれを使い、なければ手動で指定も可能
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # もしrequirements.txtがないなら、次の行のコメント(#)を外して直接書いてください
+          # pip install requests beautifulsoup4
 
-      # 4. スクレイピング実行
-      - name: Run script
-        run: python main.py
-
-      # 5. （任意）取得したデータをリポジトリに保存（コミット）する場合
-      # データ保存が不要（通知だけなど）ならこのステップは削除してください
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          # 変更がない場合はエラーにならないようにする記述
-          git commit -m "Update data" || echo "No changes to commit"
-          git push
+      # 4. scraper.py を実行
+      - name: Run scraper.py
+        run: python scraper.py
