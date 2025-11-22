@@ -1,24 +1,43 @@
-name: Manual Scraper Test (FINAL SIMPLE FIX)
+name: Manual Scraper Test (FINAL1 SIMPLE FIX)
 
 on:
-  workflow_dispatch:
+ workflow_dispatch:
 
 jobs:
   test-run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # ... (Set up Python, Force Install Selenium, Run scraper.py のステップはそのまま)
 
-      # 1. Python環境のセットアップ
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      # 2. インストールと実行を一つのステップで強制（最もエラーが出にくい）
-      - name: Install dependencies and Run Scraper
+      - name: Run scraper.py
+        run: python scraper.py
+      
+      # =========================================================
+      # 🚨 新しいステップ：JSONファイルのリポジトリへの保存
+      # =========================================================
+      - name: Commit and Push new data
+        # JSONファイルが作成されなかった場合でもエラーにしないための設定
+        id: commit
         run: |
-          pip install selenium webdriver-manager
-          python scraper.py
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # JSONファイルをステージングに追加
+          git add events.json
+          
+          # 変更がない場合はコミットをスキップ
+          if git diff --cached --exit-code; then
+            echo "::set-output name=commit_status::no_changes"
+          else
+            # コミット実行
+            git commit -m "🤖 Chore: Update event data via GitHub Actions"
+            echo "::set-output name=commit_status::committed"
+          fi
+          
+      - name: Push changes
+        if: steps.commit.outputs.commit_status == 'committed'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }} # 現在のブランチにプッシュ
