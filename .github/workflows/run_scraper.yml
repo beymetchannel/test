@@ -1,20 +1,21 @@
-name: Event Scraper and Data Commit2
+name: Event Scraper and Data Commit
 
 on:
-  workflow_dispatch: # 手動実行トリガー
+  schedule:
+    - cron: '5 14 * * *'
+  workflow_dispatch:
 
 jobs:
   scrape-and-commit:
     runs-on: ubuntu-latest
     
-    # 🚨 権限設定: ファイルをリポジトリに書き込むために必要
     permissions:
       contents: write 
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        # fetch-depth: 0 をつけると、pushする際にエラーが出にくくなります
+        
         with:
           fetch-depth: 0 
 
@@ -23,31 +24,23 @@ jobs:
         with:
           python-version: '3.10'
 
-      # 1. 依存ライブラリの強制インストール（ModuleNotFoundErrorを解消）
       - name: Install dependencies (Selenium, Manager)
         run: pip install selenium webdriver-manager
       
-      # 2. スクレイピング実行
       - name: Run scraper.py
-        # 出力ファイル名が 'events.json' であることを確認
         run: python scraper.py
 
-      # 3. JSONファイルのリポジトリへの保存（コミット）
       - name: Commit and Push new events.json
         run: |
-          # Gitユーザー情報を設定
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 作成された JSONファイルをステージングに追加
           git add events.json
           
-          # 変更がなければコミットをスキップ (エラー防止)
           if git diff --cached --exit-code; then
             echo "No changes in events.json detected. Skipping commit."
           else
-            # 変更があればコミット＆プッシュ
-            git commit -m "🤖 Chore: Update event data (events.json)"
+            git commit -m "Chore: Update event data (events.json)"
             git push
             echo "New events.json committed and pushed successfully."
           fi
