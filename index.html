@@ -358,10 +358,14 @@
     const eventModal = document.getElementById('event-modal');
     const modalContent = document.getElementById('modal-content');
 
-
+    
     function parseDate(dateStr) {
-        const match = dateStr.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
-        if (!match) return null;
+        const match = dateStr.match(/(\d{4})年[\s\n]*(\d{1,2})月[\s\n]*(\d{1,2})日/); 
+        
+        if (!match) {
+            console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
+            return null;
+        }
         
         return {
             year: parseInt(match[1], 10),
@@ -370,23 +374,46 @@
         };
     }
 
-    function showEventDetails(event) {
-        modalContent.innerHTML = `
-            <h3>${event.name}</h3>
-            <p><strong>${event.type}</strong>
-            <p><strong>日時:</strong> ${event.date}${event.time}</p>
-            <p><strong>種別:</strong> </p>
-            <p><strong>人数:</strong> ${event.capacity}</p>
-            <p><strong>会場:</strong> ${event.location}</p>
-            <p><strong>住所:</strong> ${event.address}</p>
-            <p><strong>応募:</strong> ${event.eligibility}<br>${event.entry}</p>
-            <p>${event.details}</p>
-        `;
-        
-        eventModal.style.display = 'flex';
-        document.body.style.overflow = 'hidden'; 
-    }
+function showEventDetails(event) {
+    // 改行(\n)をHTMLの<br>に変換する処理を削除し、そのまま表示させます。
 
+    // 💡 修正ポイント 1: "定員数："を削除
+    // replace()は安全なので、存在しない場合もエラーになりません
+    let displayCapacity = event.capacity.replace('定員数 ', '');
+    
+    // 💡 修正ポイント 2: "参加資格："を削除
+    let displayEligibility = event.eligibility.replace('参加資格：', '');
+    
+    // JSONデータ内の改行(\n)はそのまま表示（HTMLではスペースとして扱われます）
+    
+    modalContent.innerHTML = `
+        <p>${event.type}</p>
+        <h3>${event.name}</h3>
+        
+        <p>
+            <strong>日時:</strong> ${event.time}（ ${event.date} ）
+        </p>
+        <p>
+            <strong>定員:</strong> ${displayCapacity} 
+        </p>
+        
+        <p><strong>会場:</strong> ${event.location}</p>
+        <p><strong>住所:</strong> ${event.address}</p>
+        
+        <p>
+            <strong>受付:</strong> ${displayEligibility}
+            <br>
+            ${event.entry}
+        </p>
+        
+        <p><strong>詳細:</strong> ${event.details}</p>
+    `;
+    
+    eventModal.style.display = 'flex';
+    document.body.style.overflow = 'hidden'; 
+}
+      
+      
     function closeEventModal() {
         eventModal.style.display = 'none';
         document.body.style.overflow = ''; 
@@ -400,7 +427,7 @@
 
     async function loadDataAndInitialize() {
         try {
-            const response = await fetch('./events1.json'); 
+            const response = await fetch('./events.json'); 
             
             if (!response.ok) {
                 throw new Error('スケジュールデータ (events.json) の読み込みに失敗しました。');
