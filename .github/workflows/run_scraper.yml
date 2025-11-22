@@ -1,4 +1,4 @@
-name: Event Scraper and Data Commit
+name: Event Scraper and Data Commit2
 
 on:
   workflow_dispatch: # 手動実行トリガー
