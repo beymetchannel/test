@@ -1,1281 +1,717 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <link rel="icon" type="image/png" href="BeyMetCupIcon.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="BeyMetCupIcon.png">
-  <link rel="shortcut icon" type="image/png" href="BeyMetCupIcon.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="100戦杯リザルト">
-  <title>100戦杯リザルト</title>
-  <style>
-    @font-face {
-      font-family: 'MPLUS1pEB';
-      src: url('./LINESeedJP_A_TTF_Bd.ttf') format('truetype');
-      font-style: normal;
-    }
-    .gear-title,
-    .result-name,
-    .blade-name {
-      font-family: 'MPLUS1pEB', sans-serif;
-    }
-    /* --- 全体 --- */
-    :root{
-      --bg:#ffffff;
-      --text:#111;
-      --accent:#00FFF0;
-      --danger:#C00000;
-      --muted: rgba(0,0,0,0.5);
-      --card-bg: #fff;
-      --card-border: rgba(0,0,0,0.06);
-      --color: #fff;
-      --font-family: 'MPLUS1pEB', sans-serif;
-    }
-    body {
-      background: url('BackImage.png') no-repeat center center fixed;
-      background-size: cover;
-      color: var(--text);
-      padding: 18px;
-      letter-spacing: -0.08em;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcuticon" type="image/x-icon" href="BeyCalendarIcon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="BeyCalendarIcon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BEYカレンダー">
+    <title>BEYカレンダー</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
 
-    .page-header {
-      max-width:520px;
-      display: flex;
-      gap: 12px;
-      color: #fff; /* 文字色を白に */
-      font-size: 18px;
-      font-weight: 700;
-      width: 100%;
-      margin: 0 auto; 
-    }
-    .header-title{
-      display: flex;
-      justify-content: center; 
-      text-align: center; 
-      width: 100%;
-    }
+        body { 
+            font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
+            margin: 0; 
+            padding: 10px; 
+            background-color: #f4f4f4; 
+            overflow-x: hidden; 
+        }
+        h1 { 
+            text-align: center; 
+            color: #505050; 
+            margin: 10px 0; 
+        }
+        
+        .search-container { 
+            width: 100%; 
+            max-width: 1000px; 
+            margin: 10px auto; 
+            padding: 15px; 
+            background-color: #ffffff; 
+            display: flex;
+            flex-wrap: wrap; 
+            gap: 10px;
+            align-items: center;
+        }
+        .search-container label { font-weight: bold; margin-right: 5px; }
 
-    /* --- Top info (画像＋タイトル＋勝率等) --- */
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-bottom: 0px;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px); 
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
-      padding: 12px 0;
-      color: #fff;
-      width: 100%;
-      max-width:520px;
-    }
-    .header .blade-name,
-    .header .blade-spec,
-    .header .big-rate,
-    .header .small-stats {
-      color: #fff;
-    }
+        .keyword-search-group {
+            display: flex;
+            align-items: flex-end; 
+            flex-basis: 100%;
+            flex-direction: column; 
+        }
+        .keyword-search-input-wrapper {
+            display: flex;
+            width: 100%;
+        }
+        .keyword-search-group label {
+            font-size: 14px;
+            align-self: flex-start; 
+            margin-bottom: 5px;
+        }
+        .keyword-search-group input[type="text"] {
+            padding: 8px;
+            border: 1px solid #cccccc;
+            border-radius: 4px 0 0 4px; 
+            flex-grow: 1; 
+            margin: 0;
+        }
+        .search-button-icon {
+            padding: 8px 12px;
+            background-color: #dbdbdb; 
+            color: #505050; 
+            border: none;
+            border-radius: 0 4px 4px 0; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 36px; 
+            line-height: 1.2;
+            box-sizing: border-box;
+        }
 
+        .calendar-container { 
+            width: 100%; 
+            max-width: 1000px; 
+            margin: 10px auto; 
+            border: 1px solid #cccccc; 
+            background-color: #ffffff; 
+        }
+        .calendar-grid-wrapper {
+            margin-top: 15px;
+            border-top: 1px solid #cccccc;
+        }
+        .calendar-grid-wrapper:first-child {
+            margin-top: 0;
+            border-top: none;
+        }
 
-    .ranking-box {
-      width:100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0px;
-      margin:0px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 0px;
-      border-radius: 10px; 
-      backdrop-filter: blur(10px);
-    }
+        .calendar-grid { 
+            display: grid; 
+            grid-template-columns: repeat(7, 1fr); 
+            border-left: 1px solid #cccccc; 
+        }
+        .day-header { 
+            background-color: #f1f1f1; 
+            font-size: 10px; 
+            padding: 8px 5px; 
+            text-align: center; 
+            border-right: 1px solid #cccccc; 
+            border-bottom: 1px solid #cccccc; 
+            color: #505050;
+        }
 
+        .day-cell { min-height: 40px; padding: 5px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
+        
+        .day-number { 
+            font-size: 10px; 
+            color: #505050; 
+            margin-bottom: 3px; 
+            display: block; 
+            text-align: center; 
+        }
+        .calendar-grid .day-cell:nth-child(7n) .day-number { 
+            color: #5555cc; 
+        }
+        .calendar-grid .day-cell:nth-child(7n+1) .day-number { 
+            color: #cc5588; 
+        }
+        .day-cell:nth-child(7n) { background-color: #f4f4f4; } 
+        .day-cell:nth-child(7n+1) { background-color: #f4f4f4; } 
+        
+        .event-label { 
+            text-align: center;
+            display: block; 
+            font-size: 10px; 
+            padding: 2px 0px; 
+            margin-bottom: 1px; 
+            border-radius: 3px; 
+            font-weight: 600; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            cursor: pointer;
+        }
+        .label-yellow { background-color: #FFC75F; color: #505050; } 
+        .label-orange { background-color: #FF9772; color: #505050; } 
+        .label-lightblue { background-color: #6de7d7; color: #505050; } 
+        .label-blue { background-color: #6de7b8; color: #505050; } 
+        .label-gray { background-color: #f06163; color: white; } 
+        .label-black { background-color: #845EC2; color: white; } 
+        .label-green { background-color: #FAF871; color: #505050; }
+        
+        .pref-label {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f4f4f4; 
+            font-size: 0.8em;
+            user-select: none;
+            transition: background-color 0.1s;
+            color: #505050;
+        }
+        .pref-label input[type="checkbox"] { display: none; }
+        .pref-label.checked {
+            background-color: #B3FF52; 
+            color: #505050;
+            font-weight: bold;
+        }
 
-    .ranking-label {
-      font-size: 8px;
-      letter-spacing: 2px;
-      color: #fff;
-      padding: 10px;
-    }
+        .region-group {
+            margin-bottom: 5px;
+            border-bottom: 1px dashed #cccccc;
+        }
+        .region-header-container { 
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 5px 0;
+            cursor: pointer;
+        }
+        .region-header {
+            font-weight: bold;
+            color: #505050;
+            border-left: 3px solid #B3FF52; 
+            padding-left: 10px;
+            margin: 0; 
+            flex-grow: 1; 
+        }
+        
+        .region-select-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: normal; 
+            margin-left: 5px;
+            color: #505050;
+        }
+        .region-select-checkbox {
+            margin-right: 3px;
+            cursor: pointer;
+        }
 
-    .ranking-value {
-      font-size: 40px;
-      font-weight: bold;
-      color: #fff;
-    }
-    .rank-warning {
-      color: #fff;
-      text-shadow: 0 0 5px #ffe72e, 0 0 10px #ffe72e;
-      filter: drop-shadow(0 0 6px #ffe72e);
-    }
+        .checkbox-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        .checkbox-wrapper.open {
+            max-height: 500px; 
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
 
+        #event-modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7); 
+            backdrop-filter: blur(2px);
+            justify-content: center;
+            align-items: center;
+        }
 
-    .reload-btn {
-      margin: 0px;
-      display: flex;  
-      align-items: center;  
-      justify-content: center;
-      gap: 0px;
-      padding: 5px;
-      font-size: 5px;
-      color: #fff;
-      background: rgba(255,255,255,0.2);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 5px;
-      backdrop-filter: blur(4px);
-      cursor: pointer;
-      transition: 0.2s;
-      text-decoration: none;
-      width: 100%; 
-    }
+        #modal-content {
+            background-color: #ffffff;
+            margin: 15% auto; 
+            padding: 20px;
+            border: 1px solid #cccccc;
+            border-radius: 8px;
+            width: 90%; 
+            max-width: 500px; 
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s;
+        }
 
-    .reload-text {
-      font-size: 10px;
-    }
-    .reload-icon {
-      width: 10px;
-      height: 10px;
-      object-fit: contain;
-    }
+        #modal-content h3 {
+            color: #505050; 
+            border-bottom: 2px solid #B3FF52;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        
+        #modal-content p {
+            margin: 5px 0;
+            line-height: 1.5;
+            border-bottom: 0.5px solid #cccccc;
+            color: #505050;
+            word-break: break-word; 
+        }
+        
+        #modal-content strong {
+            display: inline-block;
+            width: 50px;
+            color: #505050;
+        }
+        
+        #label-legend-container {
+            width: 100%;
+            margin: 0px; 
+            display: flex;
+            flex-wrap: wrap; 
+            justify-content: center;
+            align-items: center;
+            font-size: 9px;
+            color: #505050;
+            gap: 5px;
+        }
 
+        .legend-item {
+            display: flex;
+            align-items: center;
+            white-space: nowrap; 
+        }
 
+        .legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 5px;
+            border: 1px solid #c0c0c0; /* 見やすいように枠線を追加 */
+        }
 
-    .ranking-wrap {
-      display: flex;
-      flex-direction: column;  /* ←縦並び */
-      align-items: center;
-      gap: 0px;
-      width: 18%;
-      /*margin: 0px;*/
-    }
-
-
-    .head-main {
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-      width: 100%;
-    }
-    .title-row {
-      display: flex;
-      flex-direction: column; 
-      width: 100%; 
-      
-    }
-    .blade-name {
-      font-weight:800;
-      font-size:20px;
-      letter-spacing:0.3px;
-      
-    }
-    .blade-spec {
-      color:var(--muted);
-      font-size:14px;
-      
-    }
-    .stats-row {
-      display: flex;
-      flex-direction: column;
-      width: 100%;
-      gap: 4px;
-    }
-    .big-rate {
-      font-size: 28px; 
-      font-weight: 800;
-      color: var(--text);
-      flex-shrink: 0; 
-    }
-    .stats-row > .big-rate,
-    .stats-row > .small-stats,
-    .stats-row > .side-rate-row {
-      width: 100%;
-    }
-    
-    .small-stats,
-    .side-rate-row {
-      font-size: 12px;
-      display: flex;
-      gap: 2px;
-    }
-
-    /* --- Card container --- */
-    .gear-cards {
-      margin-top:8px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      max-width:520px;
-    }
-    .gear-card {
-      background: rgba(0, 0, 0, 0.6); /* 黒半透明 */
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(2px);
-      color: #fff; /* 文字色を白に変更 */
-    }
-    .gear-card .gear-title,
-    .gear-card .gear-sub,
-    .gear-card .gear-sub .value,
-    .gear-card .gear-sub .label,
-    .gear-card .gear-thumb,
-    .gear-card .finish-text,
-    .gear-card .finish-label,
-    .gear-card .bar-win,
-    .gear-card .bar-lose {
-      color: #fff;
-    }
-    .gear-card .gear-sub .label,
-    .gear-card .gear-sub span#gearPointsVal1,
-    .gear-card .gear-sub span#gearNegPointsVal1 {
-      color: rgba(255,255,255,0.8);
-    }
-
-    .gear-head {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      cursor:pointer;
-      user-select:none;
-    }
-    .gear-head-left {
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex:1;
-    }
-    .gear-head .gear-winrate {
-      font-size: 20px; /* 大きく表示 */
-      font-weight: 800;
-      color: var(--text);
-      margin-left: auto; /* 右端に表示したい場合 */
-    }
-
-    .gear-thumb {
-      width:44px; height:44px; border-radius:6px; overflow:hidden; background:transparent; flex-shrink:0;
-      display:flex; align-items:center; justify-content:center;
-    }
-    .gear-thumb img{ width:100%; height:100%; object-fit:cover; }
-
-    .gear-title {
-      font-weight:800;
-      font-size:16px;
-    }
-    .gear-sub {
-      font-size:14px;
-      color:var(--muted);
-      margin-top:2px;
-    }
-      .gear-sub .label {
-      font-size:12px; 
-      color:var(--muted);
-      margin-right:2px;
-    }
-
-    .gear-sub .value {
-      font-size:18px;  
-      font-weight:800;
-      color:var(--text);
-      margin-right:8px;
-    }
-
-    .gear-sub span#gearPointsVal1,
-    .gear-sub span#gearNegPointsVal1 {
-      font-size:14px;      
-      color:var(--muted);
-      margin-left:0px;
-      font-weight:800;
-    }
-
-
-    .caret {
-      transition: transform .28s ease;
-      width:18px; height:18px; display:inline-block;
-    }
-    .gear-card.open .caret { transform: rotate(180deg); }
-
-    /* --- expandable content --- */
-    .gear-body {
-      margin-top:10px;
-      overflow:hidden;
-      max-height:0;
-      transition: max-height .32s ease, opacity .22s ease;
-      opacity:0;
-    }
-    .gear-card.open .gear-body {
-      opacity:1;
-      max-height: 600px; /* enough for content */
-    }
-
-    /* --- top summary inside card --- */
-    .gear-summary {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin-bottom:8px;
-    }
-    .gear-summary .rate {
-      font-size:20px;
-      font-weight:800;
-      color:var(--text);
-      min-width:86px;
-    }
-    .gear-summary .points {
-      font-size:13px;
-      color:var(--muted);
-    }
-
-    /* --- Finish bars --- */
-    .finish-block {
-      width:100%;
-      margin-top:6px;
-      padding-right:4px;
-    }
-    .finish-row {
-      display:flex;
-      align-items:center;
-      gap:8px;
-      margin:1px 0;
-    }
-    .finish-wrap {
-      display: flex;
-      align-items: flex-start;   /* 上揃え */
-      gap: 5px;          /* FINISH と WIN/LOSE の間隔 */
-    }
-    .finish-label {
-      font-size: 24px;    /* 大きいFINISH */
-      font-weight: 900;
-      color: #fff;
-      text-align: right;
-      width: 32px;
-    }
-    .win-row, .lose-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .result-small {
-      display: flex;
-      flex-direction: column;
-      gap: 0px;
-      flex: 1;
-    }
-    .win-label,
-    .lose-label {
-      font-size: 22px;
-      font-weight: 700;
-      color: #fff;
-      padding: 4px 12px;
-      border-radius: 6px;
-      width: fit-content;
-    }
-    .win-label {
-      background: #4cb44c;
-    }
-
-    .lose-label {
-      background: #3c3c3c;
-    }
-    .finish-text {
-      font-size: 12px;          /* 小さめ */
-      color: #fff;
-      min-width: 50px;
-      text-align: right;
-      padding-top: 2px;
-    }
-    .finish-pair {
-      display: flex;
-      flex-direction: column;
-      gap: 0; /* win/loseバーの間隔をゼロにする */
-      margin-bottom: 5px; /* ペア間のスペース */
-    }
-
-    .finish-row {
-      display:flex;
-      align-items:center;
-      gap:5px;
-      margin:0;
-    }
-
-
-    .bar-container {
-      flex:1;
-      height:16px;
-      background: rgba(0,0,0,0.06);
-      border-radius:0;
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-    }
-    .bar-win {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(
-        to right,
-        rgba(0, 255, 192, 0) 0%,
-        rgba(0, 255, 192, 0.8) 100%
-      );
-      transition: width .4s ease;
-      border-radius: 0;        /* ← 角丸を無効化 */
-    }
-    .bar-lose {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(
-        to right,
-        rgba(192, 0, 0, 0) 0%,
-        rgba(192, 0, 0, 0.8) 100%
-      );
-      transition: width .4s ease;
-      border-radius: 0;        /* ← 角丸を無効化 */
-    }
-
-
-    .reload-btn {
-      margin: 10px auto 0;
-      display: inline-flex;      
-      align-items: center;  
-      gap: 2px;      
-      padding: 6px 12px;     
-      font-size: 12px;
-      color: #fff;
-      background: rgba(255,255,255,0.01);
-      border: 1px solid rgba(255,255,255,0.05);
-      border-radius: 5px;
-      backdrop-filter: blur(4px);
-      cursor: pointer;
-      transition: 0.2s;
-      text-decoration: none;
-    }
-
-    .reload-btn .reload-icon {
-      width: 16px;    /* アイコンサイズ：調整可 */
-      height: 16px;
-      display: block;
-      object-fit: contain;
-      filter: none;   /* 必要なら色変換や明るさを調整 */
-    }
-    .ranking-wrap {
-      display: flex;
-      flex-direction: column;  /* ←縦並び */
-      align-items: center;
-      gap: 6px;
-      width: 18%;
-      margin: 10px;
-    }
-
-    @media (max-width:520px){
-      .gear-cards{ max-width:100%; }
-    }
-
-
-    /* --- 全体カード --- */
-    .blader-card {
-      width: 100%;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-
-    /* --- ヘッダー部分（閉じている時） --- */
-    .blader-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.4);
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-    }
-
-    /* 左：相手の名前 */
-    .opponent-name {
-      color: #fff;
-      font-size: 14px;
-    }
-
-    /* 右：勝敗のタグ */
-    .battle-result {
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-
-    /* 勝敗色 */
-    .tag-win { color: #ffe72e; border-color: #ffe72e; }
-    .tag-lose { color: #aaa; }
-    .tag-dlow { color: #2ee6ff; }
-    .tag-none { color: #999; }
-
-    /* --- 展開部分 --- */
-    .blader-body {
-      display: none;
-      flex-direction: column;
-      background: rgba(0,0,0,0.3);
-      padding: 6px 10px;
-      gap: 6px;
-    }
-
-    /* レコードの1行 */
-    .battle-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 4px 6px;
-      font-size: 12px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 6px;
-    }
-
-    /* 勝敗ごとの色 */
-    .win-side { color: #ffe72e; font-weight: bold; }
-    .lose-side { color: #888; }
-    .result-box {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 520px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-#resultBox {
-  
-  width: 100%;
-  max-width: 520px;
-  background: rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  backdrop-filter: blur(2px);
-  box-sizing: border-box;
-  padding: 0px 8px;
-}
-
-.result-blader-card {
-  width: 100%;
-  padding: 10px 14px;
-  margin: 8px 0;
-  border-radius: 8px;
-  background: rgba(0,0,0,0.5);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 700;
-  box-sizing: border-box;
-  display: flex;             
-  justify-content: space-between; 
-  flex-direction: column;
-  align-items: stretch;
-  cursor: pointer;
-}
-.top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.result-name {
-  font-size: 12px;
-  text-align: left;
-}
-
-.result-status {
-  font-weight: 900;
-  text-align: right;
-  min-width: 48px;   
-  display: flex;
-  justify-content: space-between;
-}
-
-/* --- マッチ詳細 全体 --- */
-.match-detail {
-  margin-top: 6px;
-  display: none; /* クリックで展開 */
-  width: 100%;
-}
-
-/* --- 1行（4列） --- */
-.match-row {
-  display: grid;
-  grid-template-columns: 1fr 60px 60px 1fr; /* 左幅広 / 2列目 / 3列目 / 右幅広 */
-  gap: 4px;
-  align-items: center;
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  font-size: 14px;
-}
-
-/* --- 左ブレーダーのベイ名 --- */
-.match-row .lbey {
-  text-align: left;
-  font-weight: 600;
-  padding-left: 4px;
-}
-
-/* --- 右ブレーダーのベイ名 --- */
-.match-row .rbey {
-  text-align: right;
-  font-weight: 600;
-  padding-right: 4px;
-}
-
-/* --- 左のフィニッシュ略号 (SF/BF/OF/XF) --- */
-.match-row .finish-l {
-  text-align: center;
-  font-weight: 700;
-  color: #8cf;
-}
-
-/* --- 右のフィニッシュ略号 --- */
-.match-row .finish-r {
-  text-align: center;
-  font-weight: 700;
-  color: #f88;
-}
-
-/* --- 最後の行 下線削除 --- */
-.match-row:last-child {
-  border-bottom: none;
-}
-
-
-  </style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
 </head>
 <body>
-  <div class="page-header">
-    <span class="header-title">BEYMETCUP 100戦杯</span>
-  </div>
-  <div class="header">
-    <div class="ranking-wrap">
-      <div class="ranking-box">
-        <div class="ranking-label">RANKING</div>
-        <div class="ranking-value" id="rankingResult">-</div>
-      </div>
-
-      <button class="reload-btn" onclick="location.reload()">
-        <img src="ReloadIcon.png" class="reload-icon">
-        <span class="reload-text">更新</span>
-      </button>
-    </div>
-
-    <div class="head-main">
-      <div class="title-row">
-        <div class="blade-name" id="bladeTitle">---</div>
-        <div class="blade-spec" id="bladeSpec">---</div>
-      </div>
-      <div class="stats-row">
-        <div class="big-rate" id="overallRate">-</div>
-
-        <div class="small-stats">
-          得点：<span id="totalPoints">0</span> / 
-          失点：<span id="totalNegPoints">0</span>
-        </div>
-
-        <div class="side-rate-row">
-          L勝率：<span id="lSideRate">-</span> / 
-          R勝率：<span id="rSideRate">-</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-
-  <div class="gear-cards">
-    <div class="gear-card" id="gearCard1">
-      <div class="gear-head" data-index="1">
-        <div class="gear-head-left">
-          <div class="gear-thumb" id="gearThumb1"></div>
-          <div>
-            <div class="gear-title" id="gearTitle1">...</div>
-            <div class="gear-sub" id="gearSub1">
-              <span class="label">勝率:</span>
-              <span class="value" id="gearWinRateVal1">-</span>
-              <span class="label">得点:</span>
-              <span id="gearPointsVal1">0</span>
-              <span class="label">失点:</span>
-              <span id="gearNegPointsVal1">0</span>
+    <div class="search-container">
+        <div style="flex-basis: 100%;">
+            <div id="prefecture-checkbox-container" style="border: 1px solid #cccccc; padding: 5px; border-radius: 4px; background-color: #ffffff;">
+                データ読み込み中...
             </div>
-          </div>
         </div>
-        <div class="caret">▼</div>
-      </div>
-      <div class="gear-body" id="gearBody1">
-        <div class="finish-block" id="finishBlock1"></div>
-      </div>
-    </div>
-
-    <div class="gear-card" id="gearCard2">
-      <div class="gear-head" data-index="2">
-        <div class="gear-head-left">
-          <div class="gear-thumb" id="gearThumb2"></div>
-          <div>
-            <div class="gear-title" id="gearTitle2">...</div>
-            <div class="gear-sub" id="gearSub2">
-              <span class="label">勝率:</span>
-              <span class="value" id="gearWinRateVal2">-</span>
-              <span class="label">得点:</span>
-              <span id="gearPointsVal2">0</span>
-              <span class="label">失点:</span>
-              <span id="gearNegPointsVal2">0</span>
+        
+        <div class="keyword-search-group" style="margin-top: 10px;color: #505050;">
+            <label for="city-input">キーワード検索:</label>
+            <div class="keyword-search-input-wrapper">
+                <input type="text" id="city-input" placeholder="市町村名やイベント名など">
+                <button id="search-button" class="search-button-icon">🔍</button>
             </div>
-          </div>
         </div>
-        <div class="caret">▼</div>
-      </div>
-      <div class="gear-body" id="gearBody2">
-        <div class="finish-block" id="finishBlock2"></div>
-      </div>
+        <div id="filter-status" style="color: #505050;font-size:10px;"></div>
+
     </div>
-
-    <div class="gear-card" id="gearCard3">
-      <div class="gear-head" data-index="3">
-        <div class="gear-head-left">
-          <div class="gear-thumb" id="gearThumb3"></div>
-          <div>
-            <div class="gear-title" id="gearTitle3">...</div>
-            <div class="gear-sub" id="gearSub3">
-              <span class="label">勝率:</span>
-              <span class="value" id="gearWinRateVal3">-</span>
-              <span class="label">得点:</span>
-              <span id="gearPointsVal3">0</span>
-              <span class="label">失点:</span>
-              <span id="gearNegPointsVal3">0</span>
-            </div>
-          </div>
-        </div>
-        <div class="caret">▼</div>
-      </div>
-      <div class="gear-body" id="gearBody3">
-        <div class="finish-block" id="finishBlock3"></div>
-      </div>
-    </div>  
-
-    <div id="resultBox">
-      <div id="bladerList"></div>
-    </div>
-
   
-  </div>
+    <div id="label-legend-container">
+        <div class="legend-item"><span class="legend-color label-black"></span>G1</div>
+        <div class="legend-item"><span class="legend-color label-gray"></span>G2</div>
+        <div class="legend-item"><span class="legend-color label-orange"></span>G3(O)</div>
+        <div class="legend-item"><span class="legend-color label-yellow"></span>G3(R)</div>
+        <div class="legend-item"><span class="legend-color label-lightblue"></span>S1</div>
+        <div class="legend-item"><span class="legend-color label-blue"></span>アンバサダー</div>
+        <div class="legend-item"><span class="legend-color label-green"></span>その他</div>
+    </div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-
-    const supabaseUrl = 'https://ddmjevqneetbmahtcqdl.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkbWpldnFuZWV0Ym1haHRjcWRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5NzM5MTksImV4cCI6MjA3ODU0OTkxOX0.L63jZ8n7MjsTuGaNYYyRWvxOM-gzYlFzIMuZ4gvgHrk';
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const inputPassword = urlParams.get('id'); 
-    let targetBlader = 'よっしー'; 
-
-    if (inputPassword) {
-      const { data: userData, error } = await supabase
-        .from('UserDB')
-        .select('Name')
-        .eq('Password', inputPassword)
-        .single(); // 1件だけ取得
-
-      if (userData && userData.Name) {
-        targetBlader = userData.Name;
-      } else {
-        console.warn('該当するユーザーがいません');
-      }
-    }
-
-
-    const finishMap = {
-      "Spin": "SF",
-      "Burst": "BF",
-      "Over": "OF",
-      "Xtreme": "XF"
-    };
-
-    // 開閉処理（delegate）
-    document.querySelectorAll('.gear-card').forEach(card => {
-      const head = card.querySelector('.gear-head');
-      head.addEventListener('click', () => {
-        card.classList.toggle('open');
-      });
-    });
-
-
-async function calcResults() {
-  // 画面要素
-  const bladeTitle = document.getElementById('bladeTitle');
-  const bladeSpec = document.getElementById('bladeSpec');
-  const bladeImage = document.getElementById('bladeImage');
-  const totalPointsEl = document.getElementById('totalPoints');
-  const totalNegPointsEl = document.getElementById('totalNegPoints');
-  const overallRateEl = document.getElementById('overallRate');
-
-  // fetch ResultDB
-  const { data, error } = await supabase.from('ResultDB').select('*');
-  if (error) {
-    console.error('ResultDB fetch error', error);
-    return;
-  }
-  const rows = data || [];
-
-  // --- opponentごとの合計で勝敗判定 ---
-  const opponents = {};
-  rows.forEach(row => {
-    const { LBlader, RBlader, LPoint, RPoint } = row;
-    if (typeof LPoint !== 'number' || typeof RPoint !== 'number') return;
-
-    let isLeft=false, myPoint, oppPoint, opponent;
-    if (LBlader === targetBlader) {
-      isLeft = true;
-      myPoint = LPoint;
-      oppPoint = RPoint;
-      opponent = RBlader;
-    } else if (RBlader === targetBlader) {
-      isLeft = false;
-      myPoint = RPoint;
-      oppPoint = LPoint;
-      opponent = LBlader;
-    } else return;
-
-    if (!opponents[opponent]) opponents[opponent] = { myTotal:0, oppTotal:0, lTotal:0, rTotal:0, lWins:0, rWins:0 };
-    opponents[opponent].myTotal += myPoint;
-    opponents[opponent].oppTotal += oppPoint;
-
-    // L/Rサイドカウント
-    if (isLeft) opponents[opponent].lTotal += 1;
-    else opponents[opponent].rTotal += 1;
-  });
-
-  // 勝敗判定
-  let totalWins=0, totalLosses=0, totalDraws=0;
-  let lWins=0, lTotal=0, rWins=0, rTotal=0;
-
-  Object.values(opponents).forEach(v => {
-    if (v.myTotal > v.oppTotal) totalWins++;
-    else if (v.myTotal < v.oppTotal) totalLosses++;
-    else totalDraws++;
-
-    if (v.lTotal > 0) {
-      lTotal++;
-      if (v.myTotal > v.oppTotal) lWins++;
-    }
-    if (v.rTotal > 0) {
-      rTotal++;
-      if (v.myTotal > v.oppTotal) rWins++;
-    }
-  });
-
-  const lRate = lTotal ? `${((lWins/lTotal)*100).toFixed(1)}%` : '-';
-  const rRate = rTotal ? `${((rWins/rTotal)*100).toFixed(1)}%` : '-';
-  const overallRate = (totalWins + totalLosses + totalDraws) ? `${((totalWins / (totalWins+totalLosses+totalDraws))*100).toFixed(1)}%` : '-';
-
-  bladeTitle.textContent = targetBlader;
-  bladeSpec.textContent = `勝: ${totalWins} / 敗: ${totalLosses} / 引き分け: ${totalDraws}`;
-  overallRateEl.textContent = overallRate;
-
-  // --- 得点/失点はレコード単位で計算 ---
-  let totalWinPoints = 0, totalLosePoints = 0;
-  rows.forEach(row => {
-    const { LBlader, RBlader, LPoint, RPoint } = row;
-    if (typeof LPoint !== 'number' || typeof RPoint !== 'number') return;
-    let myPoint;
-    if (LBlader === targetBlader) myPoint = LPoint;
-    else if (RBlader === targetBlader) myPoint = RPoint;
-    else return;
-
-    if (myPoint > 0) totalWinPoints += myPoint;
-    if (myPoint < 0) totalLosePoints += myPoint;
-  });
-
-  totalPointsEl.textContent = totalWinPoints;
-  totalNegPointsEl.textContent = totalLosePoints;
-
-  // L/Rサイド勝率
-  document.getElementById('lSideRate').textContent = lRate;
-  document.getElementById('rSideRate').textContent = rRate;
-
-  // --- 以下、Gearごとの統計表示 ---
-  const { data: userData, error: userError } = await supabase
-    .from('UserDB')
-    .select('Name, Blade1, Ratchet1, Bit1, Blade2, Ratchet2, Bit2, Blade3, Ratchet3, Bit3')
-    .eq('Name', targetBlader)
-    .single();
-
-  if (userError || !userData) return;
-
-  for (let i = 1; i <= 3; i++) {
-    const blade = userData[`Blade${i}`] || '';
-    const ratchet = userData[`Ratchet${i}`] || '';
-    const bit = userData[`Bit${i}`] || '';
-    const title = `${blade} ${ratchet} ${bit}`.trim();
-
-    document.getElementById(`gearTitle${i}`).textContent = title || '(未設定)';
-    document.getElementById(`gearWinRateVal${i}`).textContent = '-';
-    document.getElementById(`gearPointsVal${i}`).textContent = '0';
-    document.getElementById(`gearNegPointsVal${i}`).textContent = '0';
-
-    const thumbEl = document.getElementById(`gearThumb${i}`);
-    thumbEl.innerHTML = '';
-
-    if (blade) {
-      const imgUrl = `https://beymetchannel.github.io/image-server/images/${blade}.png`;
-
-      thumbEl.innerHTML = `<img src="${imgUrl}" alt="${blade}">`;
-    } else {
-      thumbEl.textContent = '–';
-    }
-
-    // 該当ギアの試合抽出
-    const relevantMatches = rows.filter(row => {
-      if (row.LBlader === targetBlader) return row.LBey === title;
-      if (row.RBlader === targetBlader) return row.RBey === title;
-      return false;
-    });
-
-    let wins=0, points=0, negPoints=0;
-    const finishStats = { SF:{win:0,lose:0}, BF:{win:0,lose:0}, OF:{win:0,lose:0}, XF:{win:0,lose:0} };
-
-    relevantMatches.forEach(row => {
-      const isLeft = row.LBlader === targetBlader;
-      const myPoint = isLeft ? row.LPoint : row.RPoint;
-      const oppPoint = isLeft ? row.RPoint : row.LPoint;
-
-      if (myPoint > oppPoint) wins++;
-      if (myPoint > 0) points += myPoint;
-      if (myPoint < 0) negPoints += myPoint;
-
-      const finKey = finishMap[row.Finish];
-      if (!finKey) return;
-      if (myPoint > oppPoint) finishStats[finKey].win++;
-      else if (myPoint < oppPoint) finishStats[finKey].lose++;
-    });
-
-    const totalMatches = relevantMatches.length;
-    const winRate = totalMatches ? `${((wins/totalMatches)*100).toFixed(1)}%` : '-';
-
-    document.getElementById(`gearWinRateVal${i}`).textContent = winRate;
-    document.getElementById(`gearPointsVal${i}`).textContent = points;
-    document.getElementById(`gearNegPointsVal${i}`).textContent = negPoints;
-
-    // 横棒グラフ
-    const finishBlock = document.getElementById(`finishBlock${i}`);
-    let maxCount = 1;
-    ['SF','BF','OF','XF'].forEach(k => {
-      maxCount = Math.max(maxCount, finishStats[k].win, finishStats[k].lose);
-    });
-
-    let html = '';
-    ['SF','BF','OF','XF'].forEach(k => {
-      const w = finishStats[k].win;
-      const l = finishStats[k].lose;
-      html += `
-        <div class="finish-wrap">
-          <div class="finish-label">${k}</div>
-          <div class="result-small">
-            <div class="win-row">
-              <div class="finish-text">WIN: ${w}</div>
-              <div class="bar-container">
-                <div class="bar-win" style="width:${(w/maxCount)*100}%"></div>
-              </div>
+    <div class="calendar-container">
+        <div id="calendar-wrapper">
             </div>
-            <div class="lose-row">
-              <div class="finish-text">LOSE: ${l}</div>
-              <div class="bar-container">
-                <div class="bar-lose" style="width:${(l/maxCount)*100}%"></div>
-              </div>
+    </div>
+
+    <div id="event-modal" style="display: none;">
+        <div id="modal-content">
             </div>
-          </div>
-        </div>
-      `;
-    });
-    finishBlock.innerHTML = html;
-  } // end for gear
-}
+    </div>
 
-calcResults();
-
-
-async function calcRanking(myName) {
-  // UserDB から全ブレーダー一覧取得
-  const { data: userList, error: userListErr } = await supabase
-    .from("UserDB")
-    .select("Name");
-
-  if (userListErr) {
-    console.error('UserDB fetch error', userListErr);
-    return;
-  }
-  const allUsers = (userList || []).map(u => u.Name);
-
-  // ResultDB の全バトルデータ取得
-  const { data: battleList = [], error: battleErr } = await supabase
-    .from("ResultDB")
-    .select("*");
-
-  if (battleErr) {
-    console.error('ResultDB fetch error', battleErr);
-    return;
-  }
-
-  // 基礎集計用データ構造
-  const stats = {}; // goals を入れておく（表示用）
-  const opponentsMap = {}; // opponentsMap[player][opponent] = { myTotal, oppTotal }
-
-  function ensurePlayer(p) {
-    if (!stats[p]) stats[p] = { goalsFor:0, goalsAgainst:0 };
-    if (!opponentsMap[p]) opponentsMap[p] = {};
-  }
-
-  // 全試合を走査して得点集計 + 対戦相手ごとの合算値を作る
-  battleList.forEach(b => {
-    const L = b.LBlader;
-    const R = b.RBlader;
-    const Lscore = typeof b.LPoint === 'number' ? b.LPoint : 0;
-    const Rscore = typeof b.RPoint === 'number' ? b.RPoint : 0;
-
-    // プレイヤー確保
-    ensurePlayer(L);
-    ensurePlayer(R);
-
-    // 総得点集計（レコード単位の合算）
-    stats[L].goalsFor += Lscore;
-    stats[L].goalsAgainst += Rscore;
-    stats[R].goalsFor += Rscore;
-    stats[R].goalsAgainst += Lscore;
-
-    // opponentsMap に該当ペアを追加/更新
-    if (!opponentsMap[L][R]) opponentsMap[L][R] = { myTotal:0, oppTotal:0 };
-    if (!opponentsMap[R][L]) opponentsMap[R][L] = { myTotal:0, oppTotal:0 };
-
-    // L 側の記録にこの試合の得点を加算（合算は myTotal と oppTotal）
-    opponentsMap[L][R].myTotal += Lscore;
-    opponentsMap[L][R].oppTotal += Rscore;
-
-    // R 側の記録は逆に加算
-    opponentsMap[R][L].myTotal += Rscore;
-    opponentsMap[R][L].oppTotal += Lscore;
-  });
-
-  // opponentsMap を元に、各選手の勝/負/分を決定（相手ごとの合算で判定）
-  const finalStats = {}; // { win, lose, draw, goalsFor, goalsAgainst }
-  // 初期化（表示対象は UserDB 登録者に限定）
-  allUsers.forEach(name => {
-    finalStats[name] = { win:0, lose:0, draw:0, goalsFor: (stats[name]?.goalsFor || 0), goalsAgainst: (stats[name]?.goalsAgainst || 0) };
-  });
-
-  // ただし opponentsMap に含まれる相手が UserDB にない場合でも、勝敗カウントの対象としたいなら
-  // allUsers のみを対象にしている点に注意（必要なら stats にある全キー基準に切替可能）
-  allUsers.forEach(player => {
-    const opponents = opponentsMap[player] || {};
-    Object.keys(opponents).forEach(opponent => {
-      // 対戦相手が UserDB に載っていない場合でも合算判定に含めたいならコメント外してください
-      // if (!finalStats[opponent]) return;
-
-      const pair = opponents[opponent];
-      const myTotal = pair.myTotal;
-      const oppTotal = pair.oppTotal;
-
-      if (myTotal > oppTotal) finalStats[player].win++;
-      else if (myTotal < oppTotal) finalStats[player].lose++;
-      else finalStats[player].draw++;
-    });
-  });
-
-  // ランキング配列作成
-  const rankingArray = allUsers.map(name => {
-    const fs = finalStats[name] || { win:0, lose:0, draw:0, goalsFor:0, goalsAgainst:0 };
-    const totalMatches = fs.win + fs.lose + fs.draw;
-    const winrate = totalMatches === 0 ? 0 : fs.win / totalMatches; // 勝 ÷ (勝+負+分)
-    const goalDiff = fs.goalsFor - fs.goalsAgainst;
-    return {
-      name,
-      winrate,
-      goalDiff,
-      goalsFor: fs.goalsFor,
-      raw: fs
+<script>
+    const JAPAN_PREFECTURES_BY_REGION = {
+        "北海道": ["北海道"],
+        "東北地方": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
+        "関東地方": ["茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県"],
+        "中部地方": ["新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県"],
+        "近畿地方": ["三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"],
+        "中国地方": ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
+        "四国地方": ["徳島県", "香川県", "愛媛県", "高知県"],
+        "九州・沖縄地方": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"]
     };
-  });
 
-  // ソート：①勝率降順 → ②得失点差降順 → ③総得点降順 → ④名前昇順
-  rankingArray.sort((a, b) => {
-    if (b.winrate !== a.winrate) return b.winrate - a.winrate;
-    if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
-    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
-    return a.name.localeCompare(b.name);
-  });
+    let TARGET_START_YEAR = new Date().getFullYear(); 
+    let TARGET_START_MONTH = new Date().getMonth() + 1; 
+    let TARGET_MAX_DATE = new Date(); 
 
-  // 自分の順位表示
-  const myIndex = rankingArray.findIndex(r => r.name === myName);
-  const myRankText = myIndex === -1 ? '-' : String(myIndex + 1);
-  document.getElementById("rankingResult").textContent = myRankText;
-
-  const rankEl = document.getElementById("rankingResult");
-  const rankValue = Number(myRankText);
-  if (!isNaN(rankValue) && rankValue > 0 && rankValue <= 4) {
-    rankEl.classList.add("rank-warning");
-  } else {
-    rankEl.classList.remove("rank-warning");
-  }
-
-}
-calcRanking(targetBlader);
+    let ALL_BEYBLADE_EVENTS = [];
+    
+    const searchButton = document.getElementById('search-button');
+    const prefectureContainer = document.getElementById('prefecture-checkbox-container');
+    const cityInput = document.getElementById('city-input'); 
+    const filterStatus = document.getElementById('filter-status');
+    const calendarWrapper = document.getElementById('calendar-wrapper');
+    const eventModal = document.getElementById('event-modal');
+    const modalContent = document.getElementById('modal-content');
 
 
+    function parseDate(dateStr) {
+        const match = dateStr.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
+        if (!match) return null;
+        
+        return {
+            year: parseInt(match[1], 10),
+            month: parseInt(match[2], 10), 
+            day: parseInt(match[3], 10)
+        };
+    }
 
+    function showEventDetails(event) {
+        modalContent.innerHTML = `
+            <h3>${event.name}</h3>
+            <p><strong>${event.type}</strong>
+            <p><strong>日時:</strong> ${event.date}${event.time}</p>
+            <p><strong>種別:</strong> </p>
+            <p><strong>人数:</strong> ${event.capacity}</p>
+            <p><strong>会場:</strong> ${event.location}</p>
+            <p><strong>住所:</strong> ${event.address}</p>
+            <p><strong>応募:</strong> ${event.eligibility}<br>${event.entry}</p>
+            <p>${event.details}</p>
+        `;
+        
+        eventModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+    }
 
-async function loadBladerList(targetBlader) {
-  const { data, error } = await supabase
-    .from("UserDB")
-    .select("Name");
-
-  if (error) { console.error(error); return; }
-
-  const listBox = document.getElementById("bladerList");
-  listBox.innerHTML = "";
-
-  for (const user of data) {
-    if (user.Name === targetBlader) continue;
-
-    const result = await getMatchResult(targetBlader, user.Name);
-
-    const card = document.createElement("div");
-    card.className = "result-blader-card";
-
-    const matchDetails = await getMatchDetails(targetBlader, user.Name);
-
-    card.innerHTML = `
-      <div class="top-row">
-        <div class="result-name">${user.Name}</div>
-        <div class="result-status">${result}</div>
-      </div>
-      <div class="match-detail" style="display:none;">
-        ${matchDetails.map(match => `
-          <div class="match-row">
-            <div class="lbey">${match.LBey}</div>
-            <div class="finish-l">${match.FinishL}</div>
-            <div class="finish-r">${match.FinishR}</div>
-            <div class="rbey">${match.RBey}</div>
-          </div>
-        `).join('')}
-      </div>
-    `;
-
-    card.addEventListener('click', () => {
-      const detailDiv = card.querySelector('.match-detail');
-      detailDiv.style.display = detailDiv.style.display === 'none' ? 'block' : 'none';
+    function closeEventModal() {
+        eventModal.style.display = 'none';
+        document.body.style.overflow = ''; 
+    }
+    
+    eventModal.addEventListener('click', (e) => {
+        if (e.target === eventModal) {
+            closeEventModal();
+        }
     });
 
-    listBox.appendChild(card);
-  }
-}
+    async function loadDataAndInitialize() {
+        try {
+            const response = await fetch('./events1.json'); 
+            
+            if (!response.ok) {
+                throw new Error('スケジュールデータ (events.json) の読み込みに失敗しました。');
+            }
+            
+            const fetchedJson = await response.json();
+            
+            ALL_BEYBLADE_EVENTS = fetchedJson
+                .map(event => ({
+                    ...event,
+                    parsedDate: parseDate(event.date)
+                }))
+                .filter(event => event.parsedDate);
 
-async function getMatchResult(a, b) {
-  const { data: matches1 } = await supabase
-    .from('ResultDB')
-    .select('LPoint, RPoint')
-    .eq('LBlader', a)
-    .eq('RBlader', b);
-  const { data: matches2 } = await supabase
-    .from('ResultDB')
-    .select('LPoint, RPoint')
-    .eq('RBlader', a)
-    .eq('LBlader', b);
+            if (ALL_BEYBLADE_EVENTS.length > 0) {
+                const dates = ALL_BEYBLADE_EVENTS.map(event => new Date(event.parsedDate.year, event.parsedDate.month - 1, event.parsedDate.day));
+                
+                const minDate = new Date(Math.min(...dates));
+                TARGET_MAX_DATE = new Date(Math.max(...dates));
 
-  const allMatches = [...matches1, ...matches2];
-  if (!allMatches.length) return "-";
+                TARGET_START_YEAR = minDate.getFullYear();
+                TARGET_START_MONTH = minDate.getMonth() + 1;
+            }
+            
+            populatePrefectureSelect();
+            
+            handleSearch(false); 
+            filterStatus.textContent = `${ALL_BEYBLADE_EVENTS.length} 件のイベントを読み込みました。`;
 
-  let win = 0, lose = 0, draw = 0;
-  for (const match of allMatches) {
-    let aPoint, bPoint;
-    if (matches1.includes(match)) {
-      aPoint = match.LPoint; bPoint = match.RPoint;
-    } else {
-      aPoint = match.RPoint; bPoint = match.LPoint;
-    }
-    if (aPoint > bPoint) win++;
-    else if (aPoint < bPoint) lose++;
-    else draw++;
-  }
-  if (win > lose) return "Win";
-  else if (win < lose) return "Lose";
-  else return draw > 0 ? "Draw" : "-";
-}
-
-async function getMatchDetails(a, b) {
-  const { data: matches1 } = await supabase
-    .from('ResultDB')
-    .select('LBlader, LBey, RBlader, RBey, Finish, LPoint, RPoint')
-    .eq('LBlader', a)
-    .eq('RBlader', b);
-
-  const { data: matches2 } = await supabase
-    .from('ResultDB')
-    .select('LBlader, LBey, RBlader, RBey, Finish, LPoint, RPoint')
-    .eq('RBlader', a)
-    .eq('LBlader', b);
-
-  const allMatches = [...matches1, ...matches2];
-
-  // ▼ フィニッシュ変換表
-  const finishMap = {
-    "Spin": "SF",
-    "Burst": "BF",
-    "Over": "OF",
-    "Xtreme": "XF"
-  };
-
-  return allMatches.map(match => {
-    let LBeyName, RBeyName, LPoint, RPoint;
-
-    const isNormalOrder = matches1.includes(match);
-
-    if (isNormalOrder) {
-      LBeyName = match.LBey.split(' ')[0];
-      RBeyName = match.RBey.split(' ')[0];
-      LPoint = match.LPoint;
-      RPoint = match.RPoint;
-    } else {
-      LBeyName = match.RBey.split(' ')[0];
-      RBeyName = match.LBey.split(' ')[0];
-      LPoint = match.RPoint;
-      RPoint = match.LPoint;
+        } catch (error) {
+            filterStatus.textContent = `エラー: ${error.message}`;
+            generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+        }
     }
 
-    // ▼ Finish を L側・R側に分解（例: "Burst L" → L側=BF, R側=""）
-    let finishL = "";
-    let finishR = "";
+    function populatePrefectureSelect() {
+        prefectureContainer.innerHTML = ''; 
 
-    if (match.Finish) {
-      const [finType, finSide] = match.Finish.split(" ");
+        for (const region in JAPAN_PREFECTURES_BY_REGION) {
+            const prefectures = JAPAN_PREFECTURES_BY_REGION[region];
+            
+            const regionGroup = document.createElement('div');
+            regionGroup.classList.add('region-group');
 
-      const shortCode = finishMap[finType] || finType;
+            const headerContainer = document.createElement('div');
+            headerContainer.classList.add('region-header-container');
+            
+            const headerTitle = document.createElement('div');
+            headerTitle.classList.add('region-header');
+            headerTitle.textContent = region;
+            
+            const regionCheckbox = document.createElement('input');
+            regionCheckbox.type = 'checkbox';
+            regionCheckbox.classList.add('region-select-checkbox');
+            regionCheckbox.id = `region-select-${region}`;
+            
+            const regionCheckboxLabel = document.createElement('label');
+            regionCheckboxLabel.classList.add('region-select-label');
+            regionCheckboxLabel.setAttribute('for', regionCheckbox.id);
+            regionCheckboxLabel.appendChild(regionCheckbox);
+            
+            regionCheckboxLabel.appendChild(document.createTextNode('全選択')); 
 
-      if (finSide === "L") finishL = shortCode;
-      if (finSide === "R") finishR = shortCode;
+            headerContainer.appendChild(headerTitle);
+            headerContainer.appendChild(regionCheckboxLabel);
+            regionGroup.appendChild(headerContainer); 
+
+            const checkboxWrapper = document.createElement('div');
+            checkboxWrapper.classList.add('checkbox-wrapper');
+            
+            prefectures.forEach(pref => {
+                const label = document.createElement('label');
+                label.classList.add('pref-label');
+                label.setAttribute('data-region', region); 
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = pref;
+                checkbox.name = 'prefecture';
+                
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(pref));
+                
+                checkbox.addEventListener('change', () => {
+                    label.classList.toggle('checked', checkbox.checked); 
+                    updateRegionCheckboxState(region);
+                    handleSearch(); 
+                });
+
+                checkboxWrapper.appendChild(label);
+            });
+
+            regionGroup.appendChild(checkboxWrapper);
+            prefectureContainer.appendChild(regionGroup);
+
+            headerTitle.addEventListener('click', () => {
+                checkboxWrapper.classList.toggle('open');
+            });
+            
+            regionCheckbox.addEventListener('change', () => {
+                const select = regionCheckbox.checked;
+                toggleRegionSelection(region, select);
+                handleSearch(); 
+            });
+            
+             regionCheckboxLabel.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+            });
+        }
     }
 
-    return {
-      LBey: LBeyName,
-      RBey: RBeyName,
-      FinishL: finishL,
-      FinishR: finishR
-    };
-  });
-}
+    function updateRegionCheckboxState(region) {
+        const total = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]`).length;
+        const checked = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]:checked`).length;
+        
+        const regionCheckbox = document.getElementById(`region-select-${region}`);
+
+        if (!regionCheckbox) return;
+
+        if (checked === 0) {
+            regionCheckbox.checked = false;
+            regionCheckbox.indeterminate = false; 
+        } else if (checked === total) {
+            regionCheckbox.checked = true;
+            regionCheckbox.indeterminate = false;
+        } else {
+            regionCheckbox.checked = false;
+            regionCheckbox.indeterminate = true;
+        }
+    }
 
 
+    function toggleRegionSelection(region, select) {
+        prefectureContainer.querySelectorAll(`[data-region="${region}"]`).forEach(label => {
+            const checkbox = label.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = select;
+                label.classList.toggle('checked', select);
+            }
+        });
+    }
 
-loadBladerList(targetBlader);
+    function getColorClass(eventType) {
+        if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
+            return { class: 'label-yellow', label: '' };
+        } else if (eventType.includes("G3大会（オープン") || eventType.includes("オープンクラス")) {
+            return { class: 'label-orange', label: '' };
+        } else if (eventType.includes("S1イベント")) {
+            return { class: 'label-lightblue', label: '' };
+        } else if (eventType.includes("アンバサダーイベント")) {
+            return { class: 'label-blue', label: '' };
+        } else if (eventType.includes("G2大会")) {
+            return { class: 'label-gray', label: '' };
+        } else if (eventType.includes("G1大会")) {
+            return { class: 'label-black', label: '' };
+        } else {
+            return { class: 'label-green', label: '' }; 
+        }
+    }
 
+    function generateCalendar(events, startYear, startMonth, maxDate) {
+        calendarWrapper.innerHTML = ''; 
+        
+        const maxYear = maxDate.getFullYear();
+        const maxMonth = maxDate.getMonth() + 1;
+
+        let currentYear = startYear;
+        let currentMonth = startMonth;
+
+        while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
+            
+            const date = new Date(currentYear, currentMonth - 1, 1);
+            
+            const gridWrapperContainer = document.createElement('div');
+            gridWrapperContainer.classList.add('calendar-grid-wrapper');
+
+            const gridWrapper = document.createElement('div');
+            gridWrapper.classList.add('calendar-grid');
+            gridWrapper.innerHTML = `
+                <div class="day-header">日</div>
+                <div class="day-header">月</div>
+                <div class="day-header">火</div>
+                <div class="day-header">水</div>
+                <div class="day-header">木</div>
+                <div class="day-header">金</div>
+                <div class="day-header">土</div>
+            `;
+            
+            const startDay = date.getDay(); 
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate(); 
+
+            for (let i = 0; i < startDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('day-cell');
+                emptyCell.style.backgroundColor = '#f9f9f9'; 
+                gridWrapper.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('day-cell');
+                
+                const dayNumber = document.createElement('span');
+                dayNumber.classList.add('day-number');
+                
+                dayNumber.textContent = `${currentMonth}/${day}`;
+                
+                dayCell.appendChild(dayNumber);
+
+                const dailyEvents = events.filter(event => {
+                    const pd = event.parsedDate;
+                    return pd && pd.year === currentYear && pd.month === currentMonth && pd.day === day;
+                });
+
+                dailyEvents.forEach(event => {
+                    const { class: colorClass, label } = getColorClass(event.type);
+                    const eventLabel = document.createElement('span');
+                    eventLabel.classList.add('event-label', colorClass);
+                    
+                    const timeParts = event.time.split('：');
+                    const displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
+
+                    eventLabel.textContent = `${displayTime} ${label}`;
+                    
+                    eventLabel.onclick = (e) => {
+                        e.stopPropagation(); 
+                        showEventDetails(event);
+                    };
+
+                    dayCell.appendChild(eventLabel);
+                });
+
+                gridWrapper.appendChild(dayCell);
+            }
+
+            gridWrapperContainer.appendChild(gridWrapper);
+            calendarWrapper.appendChild(gridWrapperContainer);
+
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+        }
+    }
+
+    function handleSearch(updateStatus = true) {
+        if (ALL_BEYBLADE_EVENTS.length === 0) {
+            generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+            return;
+        }
+        
+        const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
+            .filter(cb => !cb.classList.contains('region-select-checkbox')) 
+            .map(checkbox => checkbox.value.toLowerCase());
+        
+        const citySearchText = cityInput.value.trim().toLowerCase();
+        
+        let filteredEvents = ALL_BEYBLADE_EVENTS;
+        
+        let filterDescription = [];
+
+        if (selectedPrefectures.length > 0) {
+            filteredEvents = filteredEvents.filter(event => {
+                const searchTarget = [
+                    event.address, 
+                    event.location,
+                    event.name,
+                    event.details
+                ].join(' ').toLowerCase();
+                
+                return selectedPrefectures.some(pref => searchTarget.includes(pref));
+            });
+            filterDescription.push(`都道府県: ${selectedPrefectures.join('、').toUpperCase()}`);
+        }
+
+        if (citySearchText !== "") {
+            filteredEvents = filteredEvents.filter(event => {
+                const searchTarget = [
+                    event.address, 
+                    event.location,
+                    event.name,
+                    event.details
+                ].join(' ').toLowerCase();
+
+                return searchTarget.includes(citySearchText);
+            });
+            filterDescription.push(`キーワード: "${citySearchText}"`);
+        }
+        
+        if (updateStatus) {
+            const descriptionText = filterDescription.length > 0 
+                ? `${filterDescription.join(' / ')} に一致する ${filteredEvents.length} 件のイベントを表示中`
+                : `全地域のイベントを表示中 (${ALL_BEYBLADE_EVENTS.length}件)。`; 
+            filterStatus.textContent = descriptionText;
+        }
+        
+        generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+    }
+
+    searchButton.addEventListener('click', () => handleSearch()); 
+    cityInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
+
+    loadDataAndInitialize();
 
 </script>
 </body>
 </html>
+
+
