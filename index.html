@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcuticon" type="image/x-icon" href="BeyCalendarIcon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="BeyCalendarIcon.png">
+    <link rel="icon" href="BeyCalendarIcon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BEYカレンダー">
@@ -35,10 +36,17 @@
             background-color: #ffffff; 
             display: flex;
             flex-wrap: wrap; 
-            gap: 10px;
+            gap: 5px;
             align-items: center;
         }
         .search-container label { font-weight: bold; margin-right: 5px; }
+
+        .search-container p{ 
+            color: #505050;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 0px;
+        }
 
         .keyword-search-group {
             display: flex;
@@ -55,6 +63,7 @@
             align-self: flex-start; 
             margin-bottom: 5px;
         }
+        
         .keyword-search-group input[type="text"] {
             padding: 8px;
             border: 1px solid #cccccc;
@@ -62,6 +71,14 @@
             flex-grow: 1; 
             margin: 0;
         }
+
+        .type-search-label {
+            color: #505050; 
+            font-size: 14px;
+            align-self: flex-start; 
+            margin-bottom: 0px;
+        }
+
         .search-button-icon {
             padding: 8px 12px;
             background-color: #dbdbdb; 
@@ -82,14 +99,16 @@
             border: 1px solid #cccccc; 
             background-color: #ffffff; 
         }
+        /* --- 修正: 月ごとの区切りを削除（年月の見出し追加NGへの対応） --- */
         .calendar-grid-wrapper {
-            margin-top: 15px;
-            border-top: 1px solid #cccccc;
+            margin-top: 0; 
+            border-top: none; 
         }
         .calendar-grid-wrapper:first-child {
             margin-top: 0;
             border-top: none;
         }
+        /* ------------------------------------------------------------- */
 
         .calendar-grid { 
             display: grid; 
@@ -99,7 +118,7 @@
         .day-header { 
             background-color: #f1f1f1; 
             font-size: 10px; 
-            padding: 8px 5px; 
+            padding: 5px 5px; 
             text-align: center; 
             border-right: 1px solid #cccccc; 
             border-bottom: 1px solid #cccccc; 
@@ -114,7 +133,17 @@
             margin-bottom: 3px; 
             display: block; 
             text-align: center; 
+            cursor: pointer; 
         }
+        .day-number:hover {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        
+        .day-number.has-events {
+            text-decoration: underline;
+        }
+
         .calendar-grid .day-cell:nth-child(7n) .day-number { 
             color: #5555cc; 
         }
@@ -144,6 +173,7 @@
         .label-gray { background-color: #f06163; color: white; } 
         .label-black { background-color: #845EC2; color: white; } 
         .label-green { background-color: #FAF871; color: #505050; }
+        .label-meetup { background-color: #A0FA8D; color: #505050; } 
         
         .pref-label {
             display: inline-block;
@@ -212,32 +242,58 @@
             padding-bottom: 5px;
         }
 
-        #event-modal {
-            display: none; 
-            position: fixed; 
-            z-index: 1000; 
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.7); 
-            backdrop-filter: blur(2px);
+        .fixed-close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
+            display: flex;
             justify-content: center;
             align-items: center;
+            cursor: pointer;
+            z-index: 2000; 
+            backdrop-filter: blur(2px);
+            line-height: 1;
+            transition: background-color 0.2s;
         }
+        .fixed-close-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+      
+      #event-modal {
+          display: flex; 
+          position: fixed; 
+          z-index: 1000; 
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100dvh;
+          background-color: rgba(0, 0, 0, 0.7); 
+          backdrop-filter: blur(2px);
+          justify-content: center;
+          align-items: center;
+      }
 
-        #modal-content {
-            background-color: #ffffff;
-            margin: 15% auto; 
-            padding: 20px;
-            border: 1px solid #cccccc;
-            border-radius: 8px;
-            width: 90%; 
-            max-width: 500px; 
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.3s;
-        }
+      #modal-content {
+          background-color: #ffffff;
+          max-height: 90vh; 
+          margin-top: 5vh;
+          margin-bottom: 5vh;
+          padding: 20px;
+          border: 1px solid #cccccc;
+          border-radius: 8px;
+          width: 90%; 
+          max-width: 500px; 
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+          animation: fadeIn 0.3s;
+          overflow-y: auto; 
+      }
 
         #modal-content h3 {
             color: #505050; 
@@ -247,7 +303,8 @@
         }
         
         #modal-content p {
-            margin: 5px 0;
+            font-size: 14px;
+            margin: 8px 0;
             line-height: 1.5;
             border-bottom: 0.5px solid #cccccc;
             color: #505050;
@@ -255,41 +312,201 @@
         }
         
         #modal-content strong {
+            font-size: 14px;
             display: inline-block;
-            width: 50px;
             color: #505050;
+        }
+        
+        #modal-content a {
+            color: #505050; 
+            text-decoration: underline; 
         }
         
         #label-legend-container {
             width: 100%;
-            margin: 0px; 
-            display: flex;
-            flex-wrap: wrap; 
-            justify-content: center;
+            max-width: 1000px;
+            margin: 0px auto; 
+            display: grid;
+            grid-template-columns: repeat(7, 1fr); 
+            gap: 2px;
             align-items: center;
-            font-size: 9px;
             color: #505050;
-            gap: 5px;
+            padding: 0px; 
         }
 
         .legend-item {
             display: flex;
             align-items: center;
+            justify-content: center;
             white-space: nowrap; 
+            cursor: pointer;
+            border: 1px solid #dcdcdc; 
+            padding: 6px 0; 
+            border-radius: 5px;
+            font-size: 10px;
+            background-color: #ffffff; 
+            color: #aaaaaa;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            width: 100%; 
         }
 
-        .legend-color {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
-            margin-right: 5px;
-            border: 1px solid #c0c0c0; /* 見やすいように枠線を追加 */
+        .legend-item:hover {
+            border-color: #b0b0b0;
+            color: #808080;
+        }
+
+        .legend-item.active {
+            border-color: transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        .legend-item.active.style-G1 {
+            background-color: #845EC2;
+            color: white;
+        }
+        .legend-item.active.style-G2 {
+            background-color: #f06163;
+            color: white;
+        }
+        .legend-item.active.style-G3O {
+            background-color: #FF9772;
+            color: #303030;
+        }
+        .legend-item.active.style-G3R {
+            background-color: #FFC75F;
+            color: #303030;
+        }
+        .legend-item.active.style-S1AMB {
+            background-color: #6de7d7;
+            color: #303030;
+        }
+        .legend-item.active.style-Meetup {
+            background-color: #acff5f;
+            color: #303030;
+        }
+        .legend-item.active.style-Other {
+            background-color: #FAF871;
+            color: #303030;
         }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1); }
+        }
+
+        .event-list-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100dvh;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+            overflow-y: hidden;
+            padding: 20px 0;
+            box-sizing: border-box;
+        }
+
+        .event-list-modal-content {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 600px;
+            max-height: calc(100dvh - 40px);
+            overflow-y: auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .event-list-modal-content h3 {
+            font-size: 16px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #B3FF52;
+            text-align: center;
+            color: #505050;
+            margin: 0px;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            color: #505050;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            align-self: flex-start;
+        }
+
+        .type-G1 { background-color: #845EC2; color: white; }
+        .type-G2 { background-color: #f06163; color: white; }
+        .type-G3O { background-color: #FF9772; }
+        .type-G3R { background-color: #FFC75F; }
+        .type-S1 { background-color: #6de7d7; }
+        .type-Amb { background-color: #6de7b8; }
+        .type-Meetup { background-color: #A0FA8D; } 
+        .type-Other { background-color: #FAF871; }
+
+
+        .event-card {
+            display: flex;
+            align-items: stretch; 
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #f9f9f9;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            gap: 10px;
+        }
+        .event-card:hover {
+            background-color: #eef;
+        }
+
+        .event-time-col {
+            flex: 0 0 40px;
+            font-size: 10px;
+            display: flex;
+            align-items: center; 
+            justify-content: center;
+            border-right: 1px solid #e0e0e0;
+            padding-right: 5px;
+        }
+        
+        .event-time-text {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+
+        .event-details-col {
+            flex: 1; 
+            display: flex;
+            flex-direction: column; 
+            justify-content: center;
+            gap: 3px;
+            overflow: hidden; 
+        }
+
+        .event-name {
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.3;
+            color: #505050;
+        }
+
+        .event-address {
+            font-size: 12px;
+            color: #777;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     </style>
 </head>
@@ -302,25 +519,18 @@
         </div>
         
         <div class="keyword-search-group" style="margin-top: 10px;color: #505050;">
-            <label for="city-input">キーワード検索:</label>
+            <label for="city-input">キーワード検索</label>
             <div class="keyword-search-input-wrapper">
                 <input type="text" id="city-input" placeholder="市町村名やイベント名など">
                 <button id="search-button" class="search-button-icon">🔍</button>
             </div>
         </div>
-        <div id="filter-status" style="color: #505050;font-size:10px;"></div>
+        <p>イベントタイプ絞り込み</p>
+        <div id="label-legend-container"></div>
+        
+    </div>
 
-    </div>
-  
-    <div id="label-legend-container">
-        <div class="legend-item"><span class="legend-color label-black"></span>G1</div>
-        <div class="legend-item"><span class="legend-color label-gray"></span>G2</div>
-        <div class="legend-item"><span class="legend-color label-orange"></span>G3(O)</div>
-        <div class="legend-item"><span class="legend-color label-yellow"></span>G3(R)</div>
-        <div class="legend-item"><span class="legend-color label-lightblue"></span>S1</div>
-        <div class="legend-item"><span class="legend-color label-blue"></span>アンバサダー</div>
-        <div class="legend-item"><span class="legend-color label-green"></span>その他</div>
-    </div>
+    <div id="filter-status" style="color: #505050;font-size:10px;text-align: center;"></div>
 
     <div class="calendar-container">
         <div id="calendar-wrapper">
@@ -332,7 +542,13 @@
             </div>
     </div>
 
-<script>
+<script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const supabaseUrl = 'https://yyrsscvofuoufkujetgf.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const JAPAN_PREFECTURES_BY_REGION = {
         "北海道": ["北海道"],
         "東北地方": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
@@ -344,11 +560,31 @@
         "九州・沖縄地方": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"]
     };
 
+    const JAPANESE_WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+    
+    const EVENT_TYPES_LEGEND = [
+        { key: 'G1', label: 'G1', styleClass: 'style-G1', searchKeywords: ['G1大会'] },
+        { key: 'G2', label: 'G2', styleClass: 'style-G2', searchKeywords: ['G2大会'] },
+        { key: 'G3O', label: 'G3(O)', styleClass: 'style-G3O', searchKeywords: ['G3大会（オープン', 'G3大会/チーム戦（オープン'] },
+        { key: 'G3R', label: 'G3(R)', styleClass: 'style-G3R', searchKeywords: ['G3大会（レギュラー', 'G3大会/チーム戦（レギュラー'] },
+        { key: 'S1AMB', label: 'S1,AMB', styleClass: 'style-S1AMB', searchKeywords: ['S1イベント', 'アンバサダーイベント'] },
+        { key: 'Meetup', label: '交流会', styleClass: 'style-Meetup', searchKeywords: ['交流会'] }, 
+        { key: 'Other', label: 'その他', styleClass: 'style-Other', searchKeywords: [] }
+    ];
+
     let TARGET_START_YEAR = new Date().getFullYear(); 
     let TARGET_START_MONTH = new Date().getMonth() + 1; 
     let TARGET_MAX_DATE = new Date(); 
 
     let ALL_BEYBLADE_EVENTS = [];
+    let filteredEvents = []; 
+    let returnToDayDate = null; 
+    
+    let activeEventTypes = EVENT_TYPES_LEGEND.map(item => item.key); 
+    let selectedPrefecturesFromStorage = [];
+    let citySearchTextFromStorage = '';
+    let expandedRegionsFromStorage = []; 
+
     
     const searchButton = document.getElementById('search-button');
     const prefectureContainer = document.getElementById('prefecture-checkbox-container');
@@ -357,67 +593,276 @@
     const calendarWrapper = document.getElementById('calendar-wrapper');
     const eventModal = document.getElementById('event-modal');
     const modalContent = document.getElementById('modal-content');
+    const legendContainer = document.getElementById('label-legend-container');
 
-    
-    function parseDate(dateStr) {
-        const match = dateStr.match(/(\d{4})年[\s\n]*(\d{1,2})月[\s\n]*(\d{1,2})日/); 
-        
-        if (!match) {
-            console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
-            return null;
-        }
-        
-        return {
-            year: parseInt(match[1], 10),
-            month: parseInt(match[2], 10), 
-            day: parseInt(match[3], 10)
+
+    function saveSearchState() {
+        const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
+            .map(wrapper => {
+                const regionHeader = wrapper.closest('.region-group').querySelector('.region-header');
+                return regionHeader ? regionHeader.textContent : null;
+            })
+            .filter(name => name); 
+
+        const state = {
+            prefectures: Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                .filter(cb => !cb.classList.contains('region-select-checkbox'))
+                .map(checkbox => checkbox.value),
+            keyword: cityInput.value.trim(),
+            eventTypes: activeEventTypes,
+            expandedRegions: expandedRegions 
         };
+        localStorage.setItem('beyCalendarSearchState', JSON.stringify(state));
     }
 
-function showEventDetails(event) {
-    // 改行(\n)をHTMLの<br>に変換する処理を削除し、そのまま表示させます。
+    function loadSearchState() {
+        const savedState = localStorage.getItem('beyCalendarSearchState');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                if (state.keyword !== undefined) {
+                    citySearchTextFromStorage = state.keyword;
+                }
+                if (Array.isArray(state.prefectures)) {
+                    selectedPrefecturesFromStorage = state.prefectures;
+                }
+                if (Array.isArray(state.eventTypes)) {
+                    activeEventTypes = state.eventTypes;
+                }
+                if (Array.isArray(state.expandedRegions)) {
+                    expandedRegionsFromStorage = state.expandedRegions;
+                }
+            } catch (e) {
+                console.error('Failed to parse search state from localStorage:', e);
+            }
+        }
+    }
 
-    // 💡 修正ポイント 1: "定員数："を削除
-    // replace()は安全なので、存在しない場合もエラーになりません
-    let displayCapacity = event.capacity.replace('定員数 ', '');
-    
-    // 💡 修正ポイント 2: "参加資格："を削除
-    let displayEligibility = event.eligibility.replace('参加資格：', '');
-    
-    // JSONデータ内の改行(\n)はそのまま表示（HTMLではスペースとして扱われます）
-    
-    modalContent.innerHTML = `
-        <p>${event.type}</p>
-        <h3>${event.name}</h3>
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+        if (match) {
+            return `${match[1].padStart(2, '0')}：${match[2]}`;
+        }
+        return timeStr; 
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
         
-        <p>
-            <strong>日時:</strong> ${event.time}（ ${event.date} ）
-        </p>
-        <p>
-            <strong>定員:</strong> ${displayCapacity} 
-        </p>
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    }
+
+    function linkifyText(text) {
+        if (!text) return '';
         
-        <p><strong>会場:</strong> ${event.location}</p>
-        <p><strong>住所:</strong> ${event.address}</p>
+        let processedText = text.replace(/\n/g, '<br>');
+
+        const urlRegex = /((?:https?:\/\/|www\.)[^\s()<>]+)/g;
         
-        <p>
-            <strong>受付:</strong> ${displayEligibility}
-            <br>
-            ${event.entry}
-        </p>
+        return processedText.replace(urlRegex, (fullMatch) => {
+            let url = fullMatch;
+            let trailing = '';
+
+            const unwantedSingleChars = ['(', ')'];
+            while (url.length > 0 && unwantedSingleChars.includes(url.slice(-1))) {
+                trailing = url.slice(-1) + trailing;
+                url = url.slice(0, -1);
+            }
+            
+            let href = url;
+            if (url.startsWith('www.') && !url.match(/^https?:\/\//i)) {
+                href = 'http://' + url;
+            }
+            
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>${trailing}`;
+        });
+    }
+
+
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+
+        const jpMatch = dateStr.match(/(\d{4})年[\s\n]*(\d{1,2})月[\s\n]*(\d{1,2})日/);
+        if (jpMatch) {
+            return {
+                year: parseInt(jpMatch[1], 10),
+                month: parseInt(jpMatch[2], 10), 
+                day: parseInt(jpMatch[3], 10)
+            };
+        }
+
+        const isoMatch = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (isoMatch) {
+            return {
+                year: parseInt(isoMatch[1], 10),
+                month: parseInt(isoMatch[2], 10),
+                day: parseInt(isoMatch[3], 10)
+            };
+        }
+
+        console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
+        return null;
+    }
+
+    function getTimeValue(timeStr) {
+        if (!timeStr) return 99999; 
         
-        <p><strong>詳細:</strong> ${event.details}</p>
-    `;
+        const match = timeStr.match(/(\d{1,2})[:：](\d{2})/);
+        
+        if (match) {
+            const hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
+            return hours * 60 + minutes;
+        }
+        return 99999; 
+    }
+
+    function getColorClass(eventType) {
+        if (!eventType) return { class: 'label-green', label: '' }; 
+        
+        if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
+            return { class: 'label-yellow', label: '' };
+        } else if (eventType.includes("G3大会/チーム戦（G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
+            return { class: 'label-label', label: '' };
+        } else if (eventType.includes("G3大会（オープン") || eventType.includes("オープンクラス")) {
+            return { class: 'label-orange', label: '' };
+        } else if (eventType.includes("G3大会/チーム戦（オープン") || eventType.includes("オープンクラス")) {
+            return { class: 'label-orange', label: '' };
+        } else if (eventType.includes("S1イベント") || eventType.includes("アンバサダーイベント")) {
+            return { class: 'label-lightblue', label: '' };
+        } else if (eventType.includes("交流会")) { 
+            return { class: 'label-meetup', label: '' };
+        } else if (eventType.includes("G2大会")) {
+            return { class: 'label-gray', label: '' };
+        } else if (eventType.includes("G1大会")) {
+            return { class: 'label-black', label: '' };
+        } else {
+            return { class: 'label-green', label: '' }; 
+        }
+    }
+
+    function getBadgeClass(eventType) {
+        const { class: colorClass } = getColorClass(eventType);
+        if(colorClass === 'label-black') return 'type-G1';
+        if(colorClass === 'label-gray') return 'type-G2';
+        if(colorClass === 'label-orange') return 'type-G3O';
+        if(colorClass === 'label-yellow') return 'type-G3R';
+        if(colorClass === 'label-lightblue') return 'type-S1';
+        if(colorClass === 'label-meetup') return 'type-Meetup'; 
+        if(colorClass === 'label-blue') return 'type-Amb';
+        return 'type-Other';
+    }
     
-    eventModal.style.display = 'flex';
-    document.body.style.overflow = 'hidden'; 
-}
-      
+    function cleanEventTypeText(eventType) {
+        if (!eventType) return '';
+        return eventType.replace('B4ストアカップ', '').trim();
+    }
+
+
+    function showEventDetails(event) {
+        
+        const eventTypeText = cleanEventTypeText(event.type);
+        const badgeClass = getBadgeClass(event.type);
+        const timeVal = event.time ? `${event.time} (${event.date})` : `(${event.date})`;
+        
+        const eligibilityRaw = event.eligibility ? event.eligibility.replace('参加資格：', '').trim() : '';
+        const eligibilityContent = linkifyText(eligibilityRaw);
+        const entryContent = linkifyText(event.entry || '');
+        const detailsContent = linkifyText(event.details || '');
+
+        const capacityPresent = !!event.capacity;
+        const feePresent = !!event.fee && event.fee !== '-';
+        let capacityFeeHtml = '';
+        if (capacityPresent || feePresent) {
+            capacityFeeHtml = `
+                <p>
+                    <strong>定員:</strong> ${event.capacity|| '-'}${feePresent ?` (${event.fee})` : ''} 
+                </p>
+            `;
+        }
+
+        const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
+
+        const address = event.address || '';
+        const mapLink = address ? `href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}"` : '';
+        const addressText = address ? `<a ${mapLink} target="_blank" rel="noopener noreferrer">${address}</a>` : '';
+        
+        const addressHtml = `<p><strong>住所:</strong> ${addressText}</p>`;
+        
+        const tel = event.tel || '';
+        const telDisplay = tel.replace(/\n/g, '<br>');
+        const telLink = tel.replace(/[^\d+]/g, ''); 
+        const eventName = event.name.replace('B4G2_','');
+        
+        const telHtml = tel ? 
+            `<p><strong>電話:</strong> <a href="tel:${telLink}">${telDisplay}</a></p>` : 
+            '';
+
+        const eligibilityEntryPresent = eligibilityRaw || event.entry;
+        const eligibilityEntryHtml = eligibilityEntryPresent ? `
+            <p>
+                <strong>受付:</strong> ${eligibilityContent || '-'} (${entryContent || '-'})
+            </p>
+        ` : '';
+        
+        const owner = event.owner || '';
+        const ownerFlg = event.ownerFlg;
+        let ownerHtml = '';
+
+        if (owner && ownerFlg) {
+            const xUrl = `https://x.com/${owner}`;
+            ownerHtml = `
+                <p>
+                    <strong>運営:</strong> <a href="${xUrl}" target="_blank" rel="noopener noreferrer">${owner}</a>
+                </p>
+            `;
+        }
+
+        const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
+
+        modalContent.innerHTML = `
+            <button class="fixed-close-btn" onclick="closeEventModal()">×</button>
+            
+            <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
+            <h3>${eventName}</h3>
+            
+            <p>
+                <strong>日時:</strong> ${timeVal}
+            </p>
+            
+            ${capacityFeeHtml}
+            ${locationHtml}
+            ${addressHtml}
+            ${telHtml}
+            ${eligibilityEntryHtml}
+            ${ownerHtml}
+            ${detailsHtml}
+        `;
+        
+        eventModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+    }
       
     function closeEventModal() {
         eventModal.style.display = 'none';
-        document.body.style.overflow = ''; 
+        
+        if (returnToDayDate) {
+            const eventsForDay = filteredEvents.filter(event => 
+                event.dateString === returnToDayDate
+            );
+            
+            eventsForDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+            
+            createDayEventModal(returnToDayDate, eventsForDay);
+            returnToDayDate = null; 
+        } else {
+            document.body.style.overflow = ''; 
+        }
     }
+    window.closeEventModal = closeEventModal;
     
     eventModal.addEventListener('click', (e) => {
         if (e.target === eventModal) {
@@ -425,22 +870,196 @@ function showEventDetails(event) {
         }
     });
 
-    async function loadDataAndInitialize() {
+
+    
+
+    function createDayEventModal(dateString, dayEvents) {
+        document.querySelector('.event-list-modal-overlay')?.remove();
+
+        const date = new Date(dateString);
+        const dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
+
+        const overlay = document.createElement('div');
+        overlay.classList.add('event-list-modal-overlay');
+
+        const closeButton = document.createElement('button');
+        closeButton.classList.add('fixed-close-btn');
+        closeButton.innerHTML = '×';
+        
+        closeButton.onclick = () => {
+            overlay.remove();
+            document.body.style.overflow = ''; 
+        };
+        
+        overlay.appendChild(closeButton);
+
+        const content = document.createElement('div');
+        content.classList.add('event-list-modal-content');
+
+        const header = document.createElement('h3');
+        header.textContent = dateFormatted + (dayEvents.length > 0 ? ` ${dayEvents.length}件のイベント` : ' のイベントはありません');
+        content.appendChild(header);
+
+        const listContainer = document.createElement('div');
+
+        if (dayEvents.length > 0) {
+            dayEvents.forEach(event => {
+                const card = document.createElement('div');
+                card.classList.add('event-card');
+                
+                card.onclick = () => {
+                    returnToDayDate = dateString; 
+                    showEventDetails(event);
+                    overlay.remove(); 
+                };
+
+                const timeCol = document.createElement('div');
+                timeCol.classList.add('event-time-col');
+                
+                let timeText = event.time || '未定';
+                const timeMatch = timeText.match(/\d{1,2}[:：]\d{2}/);
+                if (timeMatch) {
+                    timeText = timeMatch[0].replace('：', ':'); 
+                } else if (timeText.includes('：')) {
+                    timeText = timeText.split('：')[0];
+                }
+                
+                const timeTextNode = document.createElement('span');
+                timeTextNode.classList.add('event-time-text');
+                timeTextNode.textContent = timeText;
+                timeCol.appendChild(timeTextNode);
+                card.appendChild(timeCol);
+
+                const detailsCol = document.createElement('div');
+                detailsCol.classList.add('event-details-col');
+                
+                const eventTypeText = cleanEventTypeText(event.type);
+
+                const typeBadge = document.createElement('div');
+                typeBadge.textContent = eventTypeText;
+                typeBadge.classList.add('event-type-badge');
+                
+                const badgeClass = getBadgeClass(event.type);
+                typeBadge.classList.add(badgeClass);
+                
+                detailsCol.appendChild(typeBadge);
+
+                const name = document.createElement('div');
+                name.textContent = event.name.replace('B4G2_','');
+                name.classList.add('event-name');
+                detailsCol.appendChild(name);
+
+                const address = document.createElement('div');
+                address.textContent = event.address || '';
+                address.classList.add('event-address');
+                detailsCol.appendChild(address);
+
+                card.appendChild(detailsCol);
+                listContainer.appendChild(card);
+            });
+        }
+
+        content.appendChild(listContainer);
+        overlay.appendChild(content);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                document.body.style.overflow = ''; 
+            }
+        });
+
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+    }
+
+
+    async function fetchSupabaseEvents() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() - 1);
+        
         try {
-            const response = await fetch('./events.json'); 
-            
-            if (!response.ok) {
-                throw new Error('スケジュールデータ (events.json) の読み込みに失敗しました。');
+            const { data, error } = await supabase
+                .from('EventDB')
+                .select('*')
+                .eq('checkFlg', true);
+
+            if (error) {
+                console.error('Supabase fetch error:', error);
+                return [];
             }
             
-            const fetchedJson = await response.json();
+            const filteredData = data.filter(evt => {
+                const eventDateParsed = parseDate(evt.date);
+                if (!eventDateParsed) return false;
+
+                const eventDate = new Date(eventDateParsed.year, eventDateParsed.month - 1, eventDateParsed.day);
+                eventDate.setHours(0, 0, 0, 0); 
+                
+                return eventDate.getTime() >= targetDate.getTime();
+            });
             
-            ALL_BEYBLADE_EVENTS = fetchedJson
-                .map(event => ({
-                    ...event,
-                    parsedDate: parseDate(event.date)
-                }))
-                .filter(event => event.parsedDate);
+            return filteredData.map(evt => ({
+                name: evt.name,
+                date: formatDate(evt.date), 
+                time: formatTime(evt.time),
+                location: evt.location,
+                address: evt.address,
+                type: evt.type || '交流会', 
+                fee: evt.fee,
+                capacity: evt.capacity,
+                eligibility: evt.eligibility,
+                entry: evt.entry,
+                detailTitle: evt.detailTitle,
+                details: evt.details,
+                tel: evt.tel,
+                owner: evt.owner,
+                ownerFlg: evt.ownerFlg
+            }));
+        } catch (err) {
+            console.error('Supabase connection failed:', err);
+            return [];
+        }
+    }
+    
+    async function loadDataAndInitialize() {
+        loadSearchState();
+
+        try {
+            const jsonPromise = fetch('./events.json')
+                .then(res => {
+                    if(!res.ok) throw new Error('JSON fetch failed');
+                    return res.json();
+                })
+                .catch(err => {
+                    console.warn('events.json読み込みエラー:', err);
+                    return [];
+                });
+
+            const [jsonEvents, supabaseEvents] = await Promise.all([
+                jsonPromise,
+                fetchSupabaseEvents()
+            ]);
+            
+            const combinedEvents = [...jsonEvents, ...supabaseEvents];
+            
+            ALL_BEYBLADE_EVENTS = combinedEvents
+                .map(event => {
+                    const parsedDate = parseDate(event.date);
+                    if (!parsedDate) return null;
+                    
+                    const dateString = `${parsedDate.year}-${String(parsedDate.month).padStart(2, '0')}-${String(parsedDate.day).padStart(2, '0')}`;
+                    
+                    return {
+                        ...event,
+                        parsedDate: parsedDate,
+                        dateString: dateString 
+                    };
+                })
+                .filter(event => event); 
 
             if (ALL_BEYBLADE_EVENTS.length > 0) {
                 const dates = ALL_BEYBLADE_EVENTS.map(event => new Date(event.parsedDate.year, event.parsedDate.month - 1, event.parsedDate.day));
@@ -452,15 +1071,57 @@ function showEventDetails(event) {
                 TARGET_START_MONTH = minDate.getMonth() + 1;
             }
             
+            filteredEvents = ALL_BEYBLADE_EVENTS;
+
             populatePrefectureSelect();
+            populateLegendButtons(); 
             
-            handleSearch(false); 
-            filterStatus.textContent = `${ALL_BEYBLADE_EVENTS.length} 件のイベントを読み込みました。`;
+            cityInput.value = citySearchTextFromStorage;
+            restorePrefectureSelection(selectedPrefecturesFromStorage);
+            
+            restoreRegionExpansion(expandedRegionsFromStorage);
+
+            handleSearch(true); 
 
         } catch (error) {
-            filterStatus.textContent = `エラー: ${error.message}`;
+            console.error(error);
+            filterStatus.textContent = `データ読み込みエラー: ${error.message}`;
             generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
         }
+    }
+
+    function populateLegendButtons() {
+        legendContainer.innerHTML = '';
+        
+        EVENT_TYPES_LEGEND.forEach(item => {
+            const legendItem = document.createElement('div');
+            legendItem.classList.add('legend-item');
+            legendItem.classList.add(item.styleClass); 
+            
+            if (activeEventTypes.includes(item.key)) {
+                legendItem.classList.add('active');
+            }
+
+            legendItem.appendChild(document.createTextNode(item.label));
+            
+            legendItem.addEventListener('click', () => {
+                legendItem.classList.toggle('active');
+                toggleEventType(item.key);
+                handleSearch(); 
+            });
+
+            legendContainer.appendChild(legendItem);
+        });
+    }
+
+    function toggleEventType(key) {
+        const index = activeEventTypes.indexOf(key);
+        if (index > -1) {
+            activeEventTypes.splice(index, 1);
+        } else {
+            activeEventTypes.push(key);
+        }
+        saveSearchState();
     }
 
     function populatePrefectureSelect() {
@@ -497,6 +1158,7 @@ function showEventDetails(event) {
 
             const checkboxWrapper = document.createElement('div');
             checkboxWrapper.classList.add('checkbox-wrapper');
+            checkboxWrapper.dataset.regionName = region; 
             
             prefectures.forEach(pref => {
                 const label = document.createElement('label');
@@ -525,9 +1187,10 @@ function showEventDetails(event) {
 
             headerTitle.addEventListener('click', () => {
                 checkboxWrapper.classList.toggle('open');
+                saveSearchState(); 
             });
             
-            regionCheckbox.addEventListener('change', () => {
+             regionCheckbox.addEventListener('change', () => {
                 const select = regionCheckbox.checked;
                 toggleRegionSelection(region, select);
                 handleSearch(); 
@@ -538,6 +1201,42 @@ function showEventDetails(event) {
             });
         }
     }
+
+    function restorePrefectureSelection(selectedPrefectures) {
+        if (selectedPrefectures.length === 0) return;
+
+        const allPrefCheckboxes = prefectureContainer.querySelectorAll('input[type="checkbox"][name="prefecture"]');
+        const regionsToUpdate = new Set();
+
+        allPrefCheckboxes.forEach(checkbox => {
+            if (selectedPrefectures.includes(checkbox.value)) {
+                checkbox.checked = true;
+                const label = checkbox.closest('.pref-label');
+                if (label) {
+                    label.classList.add('checked');
+                    regionsToUpdate.add(label.getAttribute('data-region'));
+                }
+            }
+        });
+        
+        regionsToUpdate.forEach(region => {
+            updateRegionCheckboxState(region);
+            const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${region}"]`);
+            if (checkboxWrapper) {
+                checkboxWrapper.classList.add('open');
+            }
+        });
+    }
+
+    function restoreRegionExpansion(expandedRegions) {
+        expandedRegions.forEach(regionName => {
+            const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${regionName}"]`);
+            if (checkboxWrapper) {
+                checkboxWrapper.classList.add('open');
+            }
+        });
+    }
+
 
     function updateRegionCheckboxState(region) {
         const total = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]`).length;
@@ -559,7 +1258,6 @@ function showEventDetails(event) {
         }
     }
 
-
     function toggleRegionSelection(region, select) {
         prefectureContainer.querySelectorAll(`[data-region="${region}"]`).forEach(label => {
             const checkbox = label.querySelector('input[type="checkbox"]');
@@ -568,24 +1266,6 @@ function showEventDetails(event) {
                 label.classList.toggle('checked', select);
             }
         });
-    }
-
-    function getColorClass(eventType) {
-        if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
-            return { class: 'label-yellow', label: '' };
-        } else if (eventType.includes("G3大会（オープン") || eventType.includes("オープンクラス")) {
-            return { class: 'label-orange', label: '' };
-        } else if (eventType.includes("S1イベント")) {
-            return { class: 'label-lightblue', label: '' };
-        } else if (eventType.includes("アンバサダーイベント")) {
-            return { class: 'label-blue', label: '' };
-        } else if (eventType.includes("G2大会")) {
-            return { class: 'label-gray', label: '' };
-        } else if (eventType.includes("G1大会")) {
-            return { class: 'label-black', label: '' };
-        } else {
-            return { class: 'label-green', label: '' }; 
-        }
     }
 
     function generateCalendar(events, startYear, startMonth, maxDate) {
@@ -633,27 +1313,37 @@ function showEventDetails(event) {
                 const dayNumber = document.createElement('span');
                 dayNumber.classList.add('day-number');
                 
-                dayNumber.textContent = `${currentMonth}/${day}`;
+                dayNumber.textContent = `${currentMonth}/${day}`
                 
-                dayCell.appendChild(dayNumber);
+                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                dayNumber.dataset.date = dateString;
 
                 const dailyEvents = events.filter(event => {
                     const pd = event.parsedDate;
                     return pd && pd.year === currentYear && pd.month === currentMonth && pd.day === day;
                 });
+                
+                if (dailyEvents.length > 0) {
+                    dayNumber.classList.add('has-events');
+                }
+
+                dayCell.appendChild(dayNumber);
+                
+                dailyEvents.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
 
                 dailyEvents.forEach(event => {
                     const { class: colorClass, label } = getColorClass(event.type);
                     const eventLabel = document.createElement('span');
                     eventLabel.classList.add('event-label', colorClass);
                     
-                    const timeParts = event.time.split('：');
+                    const timeParts = (event.time || '').split('：');
                     const displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
 
                     eventLabel.textContent = `${displayTime} ${label}`;
                     
                     eventLabel.onclick = (e) => {
                         e.stopPropagation(); 
+                        returnToDayDate = null; 
                         showEventDetails(event);
                     };
 
@@ -675,7 +1365,30 @@ function showEventDetails(event) {
     }
 
     function handleSearch(updateStatus = true) {
+        if (cityInput) {
+            cityInput.blur(); 
+        }
+
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            const originalContent = viewport.getAttribute('content');
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
+            setTimeout(() => {
+                viewport.setAttribute('content', originalContent || 'width=device-width, initial-scale=1.0');
+            }, 300);
+        }
+        
+        saveSearchState();
+
+        if (activeEventTypes.length === 0) {
+            filteredEvents = [];
+            filterStatus.textContent = "表示するイベントを選択してください。";
+            generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+            return;
+        }
+
         if (ALL_BEYBLADE_EVENTS.length === 0) {
+            filterStatus.textContent = "イベントデータがありません。";
             generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
             return;
         }
@@ -686,31 +1399,31 @@ function showEventDetails(event) {
         
         const citySearchText = cityInput.value.trim().toLowerCase();
         
-        let filteredEvents = ALL_BEYBLADE_EVENTS;
+        let localFilteredEvents = ALL_BEYBLADE_EVENTS;
         
         let filterDescription = [];
 
         if (selectedPrefectures.length > 0) {
-            filteredEvents = filteredEvents.filter(event => {
+            localFilteredEvents = localFilteredEvents.filter(event => {
                 const searchTarget = [
-                    event.address, 
-                    event.location,
-                    event.name,
-                    event.details
+                    event.address || '', 
+                    event.location || '',
+                    event.name || '',
+                    event.details || ''
                 ].join(' ').toLowerCase();
                 
-                return selectedPrefectures.some(pref => searchTarget.includes(pref));
+                return selectedPrefectures.some(pref => searchTarget.includes(pref.replace('県', '').replace('府', '').replace('都', '').replace('道', ''))); 
             });
-            filterDescription.push(`都道府県: ${selectedPrefectures.join('、').toUpperCase()}`);
+            filterDescription.push(`都道府県: ${selectedPrefectures.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('、')}`);
         }
 
         if (citySearchText !== "") {
-            filteredEvents = filteredEvents.filter(event => {
+            localFilteredEvents = localFilteredEvents.filter(event => {
                 const searchTarget = [
-                    event.address, 
-                    event.location,
-                    event.name,
-                    event.details
+                    event.address || '', 
+                    event.location || '',
+                    event.name || '',
+                    event.details || ''
                 ].join(' ').toLowerCase();
 
                 return searchTarget.includes(citySearchText);
@@ -718,14 +1431,71 @@ function showEventDetails(event) {
             filterDescription.push(`キーワード: "${citySearchText}"`);
         }
         
-        if (updateStatus) {
-            const descriptionText = filterDescription.length > 0 
-                ? `${filterDescription.join(' / ')} に一致する ${filteredEvents.length} 件のイベントを表示中`
-                : `全地域のイベントを表示中 (${ALL_BEYBLADE_EVENTS.length}件)。`; 
-            filterStatus.textContent = descriptionText;
+        if (activeEventTypes.length > 0) {
+            const allowedKeywords = activeEventTypes.flatMap(key => 
+                EVENT_TYPES_LEGEND.find(item => item.key === key)?.searchKeywords || []
+            );
+            
+            const includeOther = activeEventTypes.includes('Other');
+            const otherTypesKeywords = EVENT_TYPES_LEGEND.filter(item => item.key !== 'Other').flatMap(item => item.searchKeywords);
+            
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                const eventType = event.type || ''; 
+                
+                const isMatch = allowedKeywords.some(keyword => eventType.includes(keyword));
+                
+                if (includeOther) {
+                    const isOther = !otherTypesKeywords.some(keyword => eventType.includes(keyword));
+                    return isMatch || isOther;
+                }
+                
+                return isMatch;
+            });
+            
+            if (activeEventTypes.length < EVENT_TYPES_LEGEND.length) {
+                filterDescription.push(`${activeEventTypes.map(key => EVENT_TYPES_LEGEND.find(item => item.key === key)?.label || '').join('、')}`);
+            }
         }
+
+
+        filteredEvents = localFilteredEvents;
+
+        const descriptionText = filterDescription.length > 0 
+            ? `${filterDescription.join(' / ')} に一致する ${filteredEvents.length} 件のイベントを表示中`
+            : `全イベントを表示中 (${ALL_BEYBLADE_EVENTS.length}件)`; 
+        filterStatus.textContent = descriptionText;
+
         
         generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+        
+        addDayNumberClickHandlers();
+    }
+
+    function addDayNumberClickHandlers() {
+        const allDayElements = document.querySelectorAll('.day-number');
+
+        allDayElements.forEach(dayEl => {
+            dayEl.removeEventListener('click', dayClickHandler);
+            dayEl.addEventListener('click', dayClickHandler);
+        });
+    }
+
+    function dayClickHandler(e) {
+        const dayEl = e.currentTarget;
+        const dateString = dayEl.dataset.date; 
+
+        if (!dateString) {
+            console.error("day-number要素にdata-date属性がありません。");
+            return;
+        }
+
+        const eventsForDay = filteredEvents.filter(event => 
+            event.dateString === dateString
+        );
+        
+        eventsForDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+
+        createDayEventModal(dateString, eventsForDay);
     }
 
     searchButton.addEventListener('click', () => handleSearch()); 
@@ -735,1194 +1505,8 @@ function showEventDetails(event) {
         }
     });
 
-    loadDataAndInitialize();<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcuticon" type="image/x-icon" href="favicon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="交流会登録フォーム">
-    <link rel="icon" href="favicon.png">
-    <title>交流会登録フォーム</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
-            background-color: #f7f9fb;
-            margin: 0px;
-        }
-        .main-container {
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-            background-color: #ffffff;
-            border-radius: 4px;
-            padding: 1.5rem;
-        }
-        .header-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #505050;
-            margin-bottom: 10px;
-            border-bottom-width: 1px;
-            padding-bottom: 5px;
-        }
-        .owner-box {
-            margin-bottom: 10px;
-            padding: 1rem;
-            background-color: #DCFCE7;
-            border-radius: 4px;
-        }
-        .owner-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #16A34A;
-            margin-bottom: 0.25rem;
-        }
-        .owner-id-wrapper {
-            display: flex;
-            align-items: center; 
-            justify-content: space-between; 
-            gap: 1rem; 
-        }
-        .owner-full-name {
-            font-size: 18px; 
-            font-weight: 800;
-            color: #505050;
-            display: block; 
-            overflow: hidden; 
-        }
-        .owner-screen-name {
-            font-size: 14px; 
-            font-weight: 500;
-            color: #808080;
-            display: block; 
-            overflow: hidden; 
-        }
-        .event-cards-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .event-card {
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-        }
-        .card-summary {
-            display: flex;
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 10px 5px;
-            cursor: pointer;
-            outline: none;
-        }
-        .card-title-wrapper {
-            display: flex;
-            flex-direction: column; 
-            justify-content: center;
-            border-left: 3px solid #B3FF52; 
-            padding-left: 10px;
-            margin-left: 5px;
-            color: #505050;
-        }
-        .card-date-line {
-            font-size: 12px; 
-            font-weight: 500;
-            color: #808080; 
-        }
-        .card-name-line {
-            font-size: 14px; 
-            font-weight: 700;
-            color: #505050; 
-        }
-        
-        .status-area {
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
-            align-items: center; 
-            gap: 1rem;
-        }
-        .chevron-icon-wrapper {
-            color: #cccccc;
-            transition: transform 200ms ease-in-out;
-        }
-        .event-card[open] .chevron-icon-wrapper {
-            transform: rotate(180deg);
-        }
-        .card-content {
-            padding: 10px;
-            border-top: 1px dashed #cccccc;
-            background-color: #ffffff;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        .label-text {
-            display: block;
-            font-size: 12px;
-            padding-left: 10px;
-            font-weight: bold;
-            color: #808080;
-        }
-        .input-field {
-            margin-top: 0.25rem;
-            display: block; 
-            width: 100%; 
-            padding: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            transition: all 150ms ease-in-out; 
-            background-color: #ffffff;
-            font-size: 16px;
-            color: #505050;
-        }
-        .input-field:focus {
-            outline: 2px solid transparent;
-            outline-offset: 2px;
-            border-color: #6beb71; 
-        }
-        
-        .input-field[type="date"],
-        .input-field[type="time"] {
-            -webkit-appearance: none; 
-            appearance: none;
-            font-size: 16px; 
-            padding: 10px;   
-            width: 100%;
-            box-sizing: border-box; 
-        }
-        
-        select.input-field {
-            -webkit-appearance: none; 
-            appearance: none;
-            background-image: none; 
-            padding: 10px; 
-            height: auto; 
-        }
-        
-        .input-field::-ms-clear {
-            display: none;
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
-            margin-top: 1rem;
-        }
-        .clear-button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #374151;
-            background-color: #e5e7eb;
-            border-radius: 4px;
-            transition: background-color 150ms; 
-            width: 80px;
-            border: 1px solid #cccccc;
-        }
-        .clear-button:hover {
-            background-color: #d1d5db;
-        }
-        .register-button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #505050;
-            background-color: #B3FF52;
-            border-radius: 4px;
-            transition: background-color 150ms; 
-            width: 80px;
-            border: 1px solid #dcdcdc;
-        }
-        .register-button:hover {
-            background-color: #B3FF52;
-        }
-        .register-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .delete-button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #ffffff;
-            background-color: #f06163;
-            border-radius: 4px;
-            transition: background-color 150ms; 
-            border-color:#505050;
-            border: 1px;
-            width: 80px;
-            border: 1px solid #dcdcdc;
-        }
-        .delete-button:hover {
-            background-color: #f06163;
-        }
-        .message-box {
-            margin-top: 2rem;
-            padding: 0.75rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
-        }
-        .message-box.hidden {
-            display: none;
-        }
-        details[open] summary ~ * {
-            animation: sweep .3s ease-in-out;
-        }
-        @keyframes sweep {
-            0%    {opacity: 0;
-                transform: translateY(-10px)}
-            100%  {opacity: 1;
-                transform: translateY(0)}
-        }
-    </style>
-</head>
-<body class="page-wrapper">
-
-    <div class="main-container">
-        <h1 class="header-title">交流会登録フォーム</h1>
-        
-        <div class="owner-box">
-            <p class="owner-label">主催者アカウント</p>
-            <div class="owner-id-wrapper">
-                <div class="flex-grow min-w-0">
-                    <span id="ownerNameDisplay" class="owner-full-name">アカウント名取得中...</span> 
-                    <span id="ownerIdAt" class="owner-screen-name"></span>
-                </div>
-            </div>
-        </div>
-        
-        <div id="eventForm">
-            <div id="eventCards" class="event-cards-container">
-                <details id="card_1" class="event-card group">
-                    <summary class="card-summary">
-                        <div class="card-title-wrapper">
-                            <div class="card-date-line" id="dateDisplay_1">交流会①</div>
-                            <div class="card-name-line" id="nameDisplay_1"></div>
-                        </div>
-                        <div class="status-area">
-                            <span id="statusDisplay_1" class="status-text"></span> 
-                            <span class="chevron-icon-wrapper">
-                                <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </span>
-                        </div>
-                    </summary>
-                    <div class="card-content">
-                        <input type="hidden" name="eventNum_1" value="1">
-                        <div>
-                            <label for="name_1" class="label-text">イベント名</label>
-                            <input type="text" id="name_1" name="name_1" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="date_1" class="label-text">日付</label>
-                            <input type="date" id="date_1" name="date_1" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="time_1" class="label-text">時刻</label>
-                            <input type="time" id="time_1" name="time_1" class="input-field">
-                        </div>
-                        <div>
-                            <label for="location_1" class="label-text">会場</label>
-                            <input type="text" id="location_1" name="location_1" class="input-field">
-                        </div>
-                        <div>
-                            <label for="address_1" class="label-text">住所</label>
-                            <input type="text" id="address_1" name="address_1" class="input-field" placeholder="必ず都道府県から入力して下さい">
-                        </div>
-                        <div>
-                            <label for="capacity_1" class="label-text">定員</label>
-                            <input type="text" id="capacity_1" name="capacity_1" placeholder="例: 30名" class="input-field">
-                        </div>
-                        <div>
-                            <label for="fee_1" class="label-text">参加費</label>
-                            <input type="text" id="fee_1" name="fee_1" value="参加費：無料" class="input-field">
-                        </div>
-                        <div>
-                            <label for="eligibility_1" class="label-text">参加資格</label>
-                            <select id="eligibility_1" name="eligibility_1" class="input-field">
-                                <option value="6歳以上(オープン)" selected>6歳以上(オープン)</option>
-                                <option value="12歳未満(レギュラー)">12歳未満(レギュラー)</option>
-                                <option value="年齢制限なし">年齢制限なし</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="entry_1" class="label-text">当日受付</label>
-                            <select id="entry_1" name="entry_1" class="input-field">
-                                <option value="当日受付:なし" selected>当日受付:なし</option>
-                                <option value="当日受付:あり">当日受付:あり</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="ownerFlg_1" class="label-text">Xアカウントのリンク</label>
-                            <select id="ownerFlg_1" name="ownerFlg_1" class="input-field">
-                                <option value="true" selected>掲載する</option>
-                                <option value="false">掲載しない(DM以外での参加方法を明記してください)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="details_1" class="label-text">募集方法</label>
-                            <textarea id="details_1" name="details_1" rows="8" class="input-field"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button type="button" onclick="deleteEvent(1)" id="deleteButton_1" class="delete-button">削除</button>
-                            <button type="button" onclick="clearCard(1, true)" class="clear-button">Clear</button>
-                            <button type="button" onclick="registerEvent(1)" id="registerButton_1" class="register-button">登録</button>
-                        </div>
-                    </div>
-                </details>
-
-                <details id="card_2" class="event-card group">
-                    <summary class="card-summary">
-                        <div class="card-title-wrapper">
-                            <div class="card-date-line" id="dateDisplay_2">交流会②</div>
-                            <div class="card-name-line" id="nameDisplay_2"></div>
-                        </div>
-                        <div class="status-area">
-                            <span id="statusDisplay_2" class="status-text"></span> 
-                            <span class="chevron-icon-wrapper">
-                                <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </span>
-                        </div>
-                    </summary>
-                    <div class="card-content">
-                        <input type="hidden" name="eventNum_2" value="2">
-                        <div>
-                            <label for="name_2" class="label-text">イベント名</label>
-                            <input type="text" id="name_2" name="name_2" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="date_2" class="label-text">日付</label>
-                            <input type="date" id="date_2" name="date_2" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="time_2" class="label-text">時刻</label>
-                            <input type="time" id="time_2" name="time_2" class="input-field">
-                        </div>
-                        <div>
-                            <label for="location_2" class="label-text">会場</label>
-                            <input type="text" id="location_2" name="location_2" class="input-field">
-                        </div>
-                        <div>
-                            <label for="address_2" class="label-text">住所</label>
-                            <input type="text" id="address_2" name="address_2" class="input-field" placeholder="必ず都道府県から入力して下さい">
-                        </div>
-                        <div>
-                            <label for="capacity_2" class="label-text">定員</label>
-                            <input type="text" id="capacity_2" name="capacity_2" placeholder="例: 30名" class="input-field">
-                        </div>
-                        <div>
-                            <label for="fee_2" class="label-text">参加費</label>
-                            <input type="text" id="fee_2" name="fee_2" value="参加費：無料" class="input-field">
-                        </div>
-                        <div>
-                            <label for="eligibility_2" class="label-text">参加資格</label>
-                            <select id="eligibility_2" name="eligibility_2" class="input-field">
-                                <option value="6歳以上(オープン)" selected>6歳以上(オープン)</option>
-                                <option value="12歳未満(レギュラー)">12歳未満(レギュラー)</option>
-                                <option value="年齢制限なし">年齢制限なし</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="entry_2" class="label-text">当日受付</label>
-                            <select id="entry_2" name="entry_2" class="input-field">
-                                <option value="当日受付:なし" selected>当日受付:なし</option>
-                                <option value="当日受付:あり">当日受付:あり</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="ownerFlg_2" class="label-text">Xアカウントのリンク</label>
-                            <select id="ownerFlg_2" name="ownerFlg_2" class="input-field">
-                                <option value="true" selected>掲載する</option>
-                                <option value="false">掲載しない(DM以外での参加方法を明記してください)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="details_2" class="label-text">募集方法</label>
-                            <textarea id="details_2" name="details_2" rows="8" class="input-field"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button type="button" onclick="deleteEvent(2)" id="deleteButton_2" class="delete-button">削除</button>
-                            <button type="button" onclick="clearCard(2, true)" class="clear-button">Clear</button>
-                            <button type="button" onclick="registerEvent(2)" id="registerButton_2" class="register-button">登録</button>
-                        </div>
-                    </div>
-                </details>
-                
-                <details id="card_3" class="event-card group">
-                    <summary class="card-summary">
-                        <div class="card-title-wrapper">
-                            <div class="card-date-line" id="dateDisplay_3">交流会③</div>
-                            <div class="card-name-line" id="nameDisplay_3"></div>
-                        </div>
-                        <div class="status-area">
-                            <span id="statusDisplay_3" class="status-text"></span> 
-                            <span class="chevron-icon-wrapper">
-                                <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </span>
-                        </div>
-                    </summary>
-                    <div class="card-content">
-                        <input type="hidden" name="eventNum_3" value="3">
-                        <div>
-                            <label for="name_3" class="label-text">イベント名</span></label>
-                            <input type="text" id="name_3" name="name_3" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="date_3" class="label-text">日付</label>
-                            <input type="date" id="date_3" name="date_3" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="time_3" class="label-text">時刻</label>
-                            <input type="time" id="time_3" name="time_3" class="input-field">
-                        </div>
-                        <div>
-                            <label for="location_3" class="label-text">会場</label>
-                            <input type="text" id="location_3" name="location_3" class="input-field">
-                        </div>
-                        <div>
-                            <label for="address_3" class="label-text">住所</label>
-                            <input type="text" id="address_3" name="address_3" class="input-field" placeholder="必ず都道府県から入力して下さい">
-                        </div>
-                        <div>
-                            <label for="capacity_3" class="label-text">定員</label>
-                            <input type="text" id="capacity_3" name="capacity_3" placeholder="例: 30名" class="input-field">
-                        </div>
-                        <div>
-                            <label for="fee_3" class="label-text">参加費</label>
-                            <input type="text" id="fee_3" name="fee_3" value="参加費：無料" class="input-field">
-                        </div>
-                        <div>
-                            <label for="eligibility_3" class="label-text">参加資格</label>
-                            <select id="eligibility_3" name="eligibility_3" class="input-field">
-                                <option value="6歳以上(オープン)" selected>6歳以上(オープン)</option>
-                                <option value="12歳未満(レギュラー)">12歳未満(レギュラー)</option>
-                                <option value="年齢制限なし">年齢制限なし</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="entry_3" class="label-text">当日受付</label>
-                            <select id="entry_3" name="entry_3" class="input-field">
-                                <option value="当日受付:なし" selected>当日受付:なし</option>
-                                <option value="当日受付:あり">当日受付:あり</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="ownerFlg_3" class="label-text">Xアカウントのリンク</label>
-                            <select id="ownerFlg_3" name="ownerFlg_3" class="input-field">
-                                <option value="true" selected>掲載する</option>
-                                <option value="false">掲載しない(DM以外での参加方法を明記してください)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="details_3" class="label-text">募集方法</label>
-                            <textarea id="details_3" name="details_3" rows="8" class="input-field"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button type="button" onclick="deleteEvent(3)" id="deleteButton_3" class="delete-button">削除</button>
-                            <button type="button" onclick="clearCard(3, true)" class="clear-button">Clear</button>
-                            <button type="button" onclick="registerEvent(3)" id="registerButton_3" class="register-button">登録</button>
-                        </div>
-                    </div>
-                </details>
-
-                <details id="card_4" class="event-card group">
-                    <summary class="card-summary">
-                        <div class="card-title-wrapper">
-                            <div class="card-date-line" id="dateDisplay_4">交流会④</div>
-                            <div class="card-name-line" id="nameDisplay_4"></div>
-                        </div>
-                        <div class="status-area">
-                            <span id="statusDisplay_4" class="status-text"></span> 
-                            <span class="chevron-icon-wrapper">
-                                <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </span>
-                        </div>
-                    </summary>
-                    <div class="card-content">
-                        <input type="hidden" name="eventNum_4" value="4">
-                        <div>
-                            <label for="name_4" class="label-text">イベント名</span></label>
-                            <input type="text" id="name_4" name="name_4" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="date_4" class="label-text">日付</label>
-                            <input type="date" id="date_4" name="date_4" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="time_4" class="label-text">時刻</label>
-                            <input type="time" id="time_4" name="time_4" class="input-field">
-                        </div>
-                        <div>
-                            <label for="location_4" class="label-text">会場</label>
-                            <input type="text" id="location_4" name="location_4" class="input-field">
-                        </div>
-                        <div>
-                            <label for="address_4" class="label-text">住所</label>
-                            <input type="text" id="address_4" name="address_4" class="input-field" placeholder="必ず都道府県から入力して下さい">
-                        </div>
-                        <div>
-                            <label for="capacity_4" class="label-text">定員</label>
-                            <input type="text" id="capacity_4" name="capacity_4" placeholder="例: 30名" class="input-field">
-                        </div>
-                        <div>
-                            <label for="fee_4" class="label-text">参加費</label>
-                            <input type="text" id="fee_4" name="fee_4" value="参加費：無料" class="input-field">
-                        </div>
-                        <div>
-                            <label for="eligibility_4" class="label-text">参加資格</label>
-                            <select id="eligibility_4" name="eligibility_4" class="input-field">
-                                <option value="6歳以上(オープン)" selected>6歳以上(オープン)</option>
-                                <option value="12歳未満(レギュラー)">12歳未満(レギュラー)</option>
-                                <option value="年齢制限なし">年齢制限なし</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="entry_4" class="label-text">当日受付</label>
-                            <select id="entry_4" name="entry_4" class="input-field">
-                                <option value="当日受付:なし" selected>当日受付:なし</option>
-                                <option value="当日受付:あり">当日受付:あり</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="ownerFlg_4" class="label-text">Xアカウントのリンク</label>
-                            <select id="ownerFlg_4" name="ownerFlg_4" class="input-field">
-                                <option value="true" selected>掲載する</option>
-                                <option value="false">掲載しない(DM以外での参加方法を明記してください)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="details_4" class="label-text">募集方法</label>
-                            <textarea id="details_4" name="details_4" rows="8" class="input-field"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button type="button" onclick="deleteEvent(4)" id="deleteButton_4" class="delete-button">削除</button>
-                            <button type="button" onclick="clearCard(4, true)" class="clear-button">Clear</button>
-                            <button type="button" onclick="registerEvent(4)" id="registerButton_4" class="register-button">登録</button>
-                        </div>
-                    </div>
-                </details>
-
-                <details id="card_5" class="event-card group">
-                    <summary class="card-summary">
-                        <div class="card-title-wrapper">
-                            <div class="card-date-line" id="dateDisplay_5">交流会⑤</div>
-                            <div class="card-name-line" id="nameDisplay_5"></div>
-                        </div>
-                        <div class="status-area">
-                            <span id="statusDisplay_5" class="status-text"></span> 
-                            <span class="chevron-icon-wrapper">
-                                <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </span>
-                        </div>
-                    </summary>
-                    <div class="card-content">
-                        <input type="hidden" name="eventNum_5" value="5">
-                        <div>
-                            <label for="name_5" class="label-text">イベント名</span></label>
-                            <input type="text" id="name_5" name="name_5" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="date_5" class="label-text">日付</label>
-                            <input type="date" id="date_5" name="date_5" required class="input-field">
-                        </div>
-                        <div>
-                            <label for="time_5" class="label-text">時刻</label>
-                            <input type="time" id="time_5" name="time_5" class="input-field">
-                        </div>
-                        <div>
-                            <label for="location_5" class="label-text">会場</label>
-                            <input type="text" id="location_5" name="location_5" class="input-field">
-                        </div>
-                        <div>
-                            <label for="address_5" class="label-text">住所</label>
-                            <input type="text" id="address_5" name="address_5" class="input-field" placeholder="必ず都道府県から入力して下さい">
-                        </div>
-                        <div>
-                            <label for="capacity_5" class="label-text">定員</label>
-                            <input type="text" id="capacity_5" name="capacity_5" placeholder="例: 30名" class="input-field">
-                        </div>
-                        <div>
-                            <label for="fee_5" class="label-text">参加費</label>
-                            <input type="text" id="fee_5" name="fee_5" value="参加費：無料" class="input-field">
-                        </div>
-                        <div>
-                            <label for="eligibility_5" class="label-text">参加資格</label>
-                            <select id="eligibility_5" name="eligibility_5" class="input-field">
-                                <option value="6歳以上(オープン)" selected>6歳以上(オープン)</option>
-                                <option value="12歳未満(レギュラー)">12歳未満(レギュラー)</option>
-                                <option value="年齢制限なし">年齢制限なし</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="entry_5" class="label-text">当日受付</label>
-                            <select id="entry_5" name="entry_5" class="input-field">
-                                <option value="当日受付:なし" selected>当日受付:なし</option>
-                                <option value="当日受付:あり">当日受付:あり</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="ownerFlg_5" class="label-text">Xアカウントのリンク</label>
-                            <select id="ownerFlg_5" name="ownerFlg_5" class="input-field">
-                                <option value="true" selected>掲載する</option>
-                                <option value="false">掲載しない(DM以外での参加方法を明記してください)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="details_5" class="label-text">募集方法</label>
-                            <textarea id="details_5" name="details_5" rows="8" class="input-field"></textarea>
-                        </div>
-                        <div class="button-group">
-                            <button type="button" onclick="deleteEvent(5)" id="deleteButton_5" class="delete-button">削除</button>
-                            <button type="button" onclick="clearCard(5, true)" class="clear-button">Clear</button>
-                            <button type="button" onclick="registerEvent(5)" id="registerButton_5" class="register-button">登録</button>
-                        </div>
-                    </div>
-                </details>
-            </div>
-            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                <a href="#" 
-                id="beyCalendarLink"
-                target="_blank" 
-                rel="noopener noreferrer"
-                style="font-size: 16px; font-weight: 700; color: #1e40af; text-decoration: underline;">
-                    最新のBEYカレンダーを確認はこちらから 
-                </a>
-            </div>
-            
-            <div id="message" class="message-box hidden" role="alert"></div>
-        </div>
-    </div>
-
-<script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    const supabaseUrl = 'https://yyrsscvofuoufkujetgf.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-    
-    const messageDiv = document.getElementById('message');
-    const eventNums = [1, 2, 3, 4, 5]; 
-    const initialCheckFlgs = {};
-    const initialData = {}; 
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlId = urlParams.get('id');
-    const CURRENT_OWNER_ID = urlId ? urlId : '@TEST'; 
-    
-    const defaultFee = '参加費：無料';
-
-    async function fetchOwnerName(ownerId) {
-        const nameDisplay = document.getElementById('ownerNameDisplay');
-        const idDisplay = document.getElementById('ownerIdAt');
-        const screenName = ownerId.replace('@', '');
-        const xUrl = `https://x.com/${screenName}`;
-        
-        nameDisplay.textContent = screenName;
-        idDisplay.textContent = ownerId; 
-
-        try {
-            const response = await fetch(xUrl);
-            const html = await response.text();
-            
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const userNameElement = doc.querySelector('[data-testid="UserName"]'); 
-            
-            if (userNameElement) {
-                const nameText = userNameElement.parentElement.parentElement.previousElementSibling.textContent;
-                
-                if (nameText && nameText.trim().length > 0) {
-                    nameDisplay.textContent = nameText.trim();
-                }
-            }
-        } catch (e) {
-            console.warn("Xアカウント名の取得に失敗しました (CORSまたはSPAレンダリングが原因の可能性が高い)。");
-            nameDisplay.textContent = screenName; 
-            idDisplay.textContent = `エラー: ${ownerId}`;
-        }
-    }
-
-    function showMessage(text, isError = false, isWarning = false) {
-        messageDiv.innerHTML = text;
-        messageDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-yellow-100', 'text-yellow-700');
-        
-        if (isError) {
-            messageDiv.classList.add('bg-red-100', 'text-red-700');
-        } else if (isWarning) {
-            messageDiv.classList.add('bg-yellow-100', 'text-yellow-700');
-        } else {
-            messageDiv.classList.add('bg-green-100', 'text-green-700');
-        }
-    }
-
-    async function sendEmailNotification(type, num, data = null) {
-        const emailApiUrl = `${supabaseUrl}/functions/v1/resend-email`;
-        const recipient = 'beymet.channel@gmail.com';
-        
-        try {
-            const response = await fetch(emailApiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    ownerId: CURRENT_OWNER_ID,
-                    eventNum: num,
-                    changeType: type,
-                    eventData: data, 
-                    recipient: recipient,
-                })
-            });
-            if (!response.ok) {
-                let errorDetails = `Status: ${response.status} ${response.statusText}`;
-                try {
-                    const errorBody = await response.json();
-                    if (errorBody && errorBody.error) {
-                       errorDetails = errorBody.error;
-                    } else if (errorBody && errorBody.message) {
-                       errorDetails = errorBody.message;
-                    }
-                } catch (e) {}
-                
-                console.error(`メール送信APIエラー: ${errorDetails}`);
-                throw new Error(`API呼び出しエラーが発生しました。詳細: ${errorDetails}`);
-            } else {
-                console.log('メール通知を送信しました。');
-            }
-        } catch (error) {
-            console.error('メール通知送信中にエラーが発生しました:', error);
-            const displayError = error.message.includes('Failed to fetch') 
-                ? '通信エラーが発生しました。Edge Functionがデプロイされているか、サーバー側のCORS設定を確認してください。' 
-                : error.message;
-            showMessage(`メール通知送信中にエラーが発生しました: ${displayError}`, true);
-        }
-    }
-    
-    function areRequiredFieldsFilled(num) {
-        const nameInput = document.getElementById(`name_${num}`);
-        const dateInput = document.getElementById(`date_${num}`);
-        return nameInput.value.trim() !== '' && dateInput.value.trim() !== '';
-    }
-
-    function updateStatusDisplay(num) {
-        const isChecked = initialCheckFlgs[num];
-        const isRequiredFilled = areRequiredFieldsFilled(num);
-        const statusDisplay = document.getElementById(`statusDisplay_${num}`);
-        
-        const nameValue = document.getElementById(`name_${num}`).value.trim();
-        const dateValue = document.getElementById(`date_${num}`).value.trim();
-        
-        const dateDisplay = document.querySelector(`#card_${num} summary .card-date-line`); 
-        const nameDisplay = document.querySelector(`#card_${num} summary .card-name-line`); 
-        const defaultTitle = `交流会${['①', '②', '③', '④', '⑤'][num - 1]}`;
-
-        if (dateDisplay && nameDisplay) {
-            if (nameValue !== '' && dateValue !== '') {
-                try {
-                    const dateObj = new Date(dateValue);
-                    if (!isNaN(dateObj.getTime())) { 
-                        const formattedDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
-                        dateDisplay.textContent = formattedDate; 
-                        nameDisplay.textContent = nameValue; 
-                    } else {
-                        dateDisplay.textContent = defaultTitle; 
-                        nameDisplay.textContent = ''; 
-                    }
-                } catch (e) {
-                    dateDisplay.textContent = defaultTitle;
-                    nameDisplay.textContent = '';
-                }
-            } else {
-                dateDisplay.textContent = defaultTitle;
-                nameDisplay.textContent = '';
-            }
-        }
-
-        if (!statusDisplay) return;
-
-        let isPastDate = false;
-        if (dateValue) {
-            const eventDate = new Date(dateValue);
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); 
-
-            const yesterday = new Date(today);
-            yesterday.setDate(yesterday.getDate() - 1); 
-
-            if (eventDate <= yesterday) {
-                isPastDate = true;
-            }
-        }
-        
-        if (isPastDate && isChecked) {
-            statusDisplay.innerHTML = '<span class="text-red-600">🔴掲載終了</span>';
-        } else if (isChecked) {
-            statusDisplay.innerHTML = '<span class="text-green-600">🟢掲載中</span>';
-        } else {
-            if (isRequiredFilled) {
-                statusDisplay.innerHTML = '<span class="text-yellow-600">🟡未掲載</span>'; 
-            } else {
-                statusDisplay.innerHTML = '<span class="text-red-600">🔴未入力</span>';
-            }
-        }
-    }
-
-    function setupStatusListeners() {
-        eventNums.forEach(num => {
-            const cardDiv = document.querySelector(`#card_${num}`);
-            if (cardDiv) {
-                cardDiv.querySelectorAll('input, select, textarea').forEach(input => {
-                    input.addEventListener('input', () => updateStatusDisplay(num));
-                    input.addEventListener('change', () => updateStatusDisplay(num));
-                });
-                updateStatusDisplay(num);
-            }
-        });
-    }
-
-    function getEventData(num) {
-        const dateInput = document.getElementById(`date_${num}`);
-        const feeValue = document.getElementById(`fee_${num}`).value;
-        
-        return {
-            owner: CURRENT_OWNER_ID,
-            eventNum: num,
-            date: dateInput.value || null,
-            name: document.getElementById(`name_${num}`).value || null,
-            time: document.getElementById(`time_${num}`).value || null,
-            location: document.getElementById(`location_${num}`).value || null,
-            fee: feeValue, 
-            capacity: document.getElementById(`capacity_${num}`).value || null,
-            entry: document.getElementById(`entry_${num}`).value || '当日受付:なし',
-            eligibility: document.getElementById(`eligibility_${num}`).value || '6歳以上(オープン)',
-            address: document.getElementById(`address_${num}`).value || null,
-            details: document.getElementById(`details_${num}`).value || null,
-            ownerFlg: document.getElementById(`ownerFlg_${num}`).value === 'true', 
-        };
-    }
-
-    function formatDataForComparison(data) {
-        const formatted = {};
-        for (const key in data) {
-            if (key === 'owner' || key === 'eventNum') continue;
-            let value = data[key];
-            if (key === 'date' || key === 'name' || key === 'time' || key === 'location' || key === 'address' || key === 'capacity' || key === 'details' || key === 'fee') {
-                formatted[key] = (value === null || value === '') ? null : value.toString().trim();
-            } else if (key === 'ownerFlg') {
-                formatted[key] = !!value;
-            } else {
-                formatted[key] = value;
-            }
-        }
-        
-        formatted.entry = formatted.entry === '当日受付:なし' ? '当日受付:なし' : formatted.entry;
-        formatted.eligibility = formatted.eligibility === '6歳以上(オープン)' ? '6歳以上(オープン)' : formatted.eligibility;
-
-        if (formatted.date === '') formatted.date = null;
-        if (formatted.name === '') formatted.name = null;
-        
-        return formatted;
-    }
-
-    function checkIfDataChanged(num) {
-        const currentData = getEventData(num);
-        const initial = initialData[num];
-
-        if (!initial) {
-             return Object.values(formatDataForComparison(currentData)).some(val => val !== null && val !== '参加費：無料' && val !== '当日受付:なし' && val !== '6歳以上(オープン)' && val !== true);
-        }
-
-        const currentFormatted = formatDataForComparison(currentData);
-        const initialFormatted = formatDataForComparison(initial);
-        
-        delete initialFormatted.checkFlg;
-        return JSON.stringify(currentFormatted) !== JSON.stringify(initialFormatted);
-    }
-    
-    function validateEventData(data) {
-        const errors = [];
-        
-        ['name', 'date'].forEach(fieldKey => {
-            if (!data[fieldKey] || data[fieldKey].toString().trim() === '') {
-                errors.push(`「${fieldKey === 'name' ? 'イベント名' : '日付'}」が未入力です。`);
-            }
-        });
-        
-        const prefectures = [
-            "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
-            "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
-            "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県",
-            "静岡県", "愛知県", "三重県", "滋賀県", "京都府", "大阪府", "兵庫県",
-            "奈良県", "和歌山県", "鳥取県", "島根県", "岡山県", "広島県", "山口県",
-            "徳島県", "香川県", "愛媛県", "高知県", "福岡県", "佐賀県", "長崎県",
-            "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"
-        ];
-        const address = data.address ? data.address.trim() : '';
-        if (address && !prefectures.some(p => address.startsWith(p))) {
-            errors.push(`住所が都道府県名から始まっていません。例: 東京都...`);
-        }
-        
-        return errors;
-    }
-
-    window.clearCard = function(num, showConfirmation = true) {
-        if (showConfirmation) {
-            const isConfirmed = confirm(`イベント${num} の入力内容をクリアします。よろしいですか？\n\n(登録ボタンもしくは削除ボタンを押すまではベイカレンダーに反映はされません)`);
-            if (!isConfirmed) {
-                showMessage(`イベント${num} のClear処理をキャンセルしました。`, false, true);
-                return;
-            }
-        }
-
-        const cardElement = document.getElementById(`card_${num}`);
-        if (cardElement) {
-            cardElement.querySelectorAll('input:not([type="hidden"]), textarea').forEach(input => {
-                if (input.name.startsWith('fee_')) {
-                    input.value = defaultFee; 
-                } else {
-                    input.value = ''; 
-                }
-            });
-            cardElement.querySelectorAll('select').forEach(select => {
-                if (select.name.startsWith('eligibility_')) {
-                    select.value = '6歳以上(オープン)';
-                } else if (select.name.startsWith('entry_')) {
-                    select.value = '当日受付:なし';
-                } else if (select.name.startsWith('ownerFlg_')) {
-                    select.value = 'true';
-                }
-            });
-            
-            updateStatusDisplay(num); 
-            if (showConfirmation) {
-                showMessage(`イベント${num} の入力内容をクリアしました。`, false, true);
-            }
-        }
-    }
-
-    window.deleteEvent = async function(num) {
-        const isConfirmed = confirm(`イベント${num} をベイカレンダーから削除します。よろしいですか？\n\nこの操作は取り消せません。`);
-        if (!isConfirmed) {
-            showMessage(`削除処理をキャンセルしました。`, false, true);
-            return;
-        }
-        
-        const deleteButton = document.getElementById(`deleteButton_${num}`);
-        const originalText = deleteButton.textContent;
-        deleteButton.disabled = true;
-        deleteButton.textContent = '削除中...';
-        messageDiv.classList.add('hidden');
-        
-        try {
-            window.clearCard(num, false); 
-            const dataToClear = {
-                owner: CURRENT_OWNER_ID,
-                eventNum: num,
-                date: null,
-                name: null,
-                time: null,
-                location: null,
-                fee: '参加費：無料', 
-                capacity: null,
-                entry: '当日受付:なし',
-                eligibility: '6歳以上(オープン)',
-                address: null,
-                details: null,
-                checkFlg: false, 
-                ownerFlg: true,
-            };
-            const { error } = await supabase
-                .from('EventDB')
-                .upsert([dataToClear], { onConflict: 'owner,eventNum' });
-            if (error) {
-                throw error;
-            }
-            
-            showMessage(`イベント${num}を削除しました。ベイカレンダーからも削除されます。`, false);
-            initialCheckFlgs[num] = false; 
-            updateStatusDisplay(num);
-            
-            initialData[num] = { ...dataToClear, checkFlg: false }; 
-            
-            const cardElement = document.getElementById(`card_${num}`);
-            if (cardElement && cardElement.open) {
-                cardElement.open = false;
-            }
-            
-            await sendEmailNotification('delete', num, dataToClear);
-        } catch (error) {
-            console.error(`[Event #${num} 削除Supabaseエラー]`, error);
-            let errorMessage = `イベント${num}の削除に失敗しました。<br>`;
-            if (error.message) {
-                errorMessage += `<strong>エラーメッセージ:</strong> ${error.message}`;
-            }
-            showMessage(errorMessage, true);
-        } finally {
-            deleteButton.disabled = false;
-            deleteButton.textContent = originalText;
-        }
-    }
-
-    window.registerEvent = async function(num) {
-        const registerButton = document.getElementById(`registerButton_${num}`);
-        const originalText = registerButton.textContent;
-        registerButton.disabled = true;
-        registerButton.textContent = '登録中...';
-        messageDiv.classList.add('hidden');
-
-        const data = getEventData(num);
-        const validationErrors = validateEventData(data);
-        if (validationErrors.length > 0) {
-            const errorHtml = validationErrors.map(err => `<li>${err}</li>`).join('');
-            showMessage(`イベント${num}のデータチェックエラー:<ul class="list-disc ml-4 mt-1">${errorHtml}</ul>`, true);
-            registerButton.disabled = false;
-            registerButton.textContent = originalText;
-            return;
-        }
-        
-        if (!checkIfDataChanged(num)) {
-            showMessage(`イベント${num}: **イベント内容が既存の登録情報と変更されていません。**`, false, true);
-            registerButton.disabled = false;
-            registerButton.textContent = originalText;
-            return;
-        }
-
-        const isConfirmed = confirm(`イベント${num} の入力内容でベイカレンダーに反映します。よろしいですか？`);
-        if (!isConfirmed) {
-            showMessage(`イベント${num} の登録処理をキャンセルしました。`, false, true);
-            registerButton.disabled = false;
-            registerButton.textContent = originalText;
-            return;
-        }
-
-        const dataToSubmit = { 
-            ...data,
-            checkFlg: true, 
-        };
-        try {
-            const { data: updatedData, error } = await supabase
-                .from('EventDB')
-                .upsert([dataToSubmit], { onConflict: 'owner,eventNum' }) 
-                .select()
-                .single();
-            if (error) {
-                throw error;
-            }
-            
-            showMessage(`イベント${num}のデータを更新しました。\n\n**ベイカレンダーをご確認ください。**`, false);
-            const cardElement = document.getElementById(`card_${num}`);
-            if (cardElement && cardElement.open) {
-                cardElement.open = false;
-            }
-
-            if (updatedData) {
-                initialCheckFlgs[num] = updatedData.checkFlg;
-                initialData[num] = updatedData; 
-                updateStatusDisplay(num); 
-            }
-            
-            await sendEmailNotification('register', num, updatedData);
-        } catch (error) {
-            console.error(`[Event #${num} Supabaseエラー]`, error);
-            let errorMessage = `イベント${num}の登録に失敗しました。<br>`;
-            if (error.code) {
-                errorMessage += `<br><strong>エラーコード:</strong> ${error.code}`;
-            }
-            if (error.message) {
-                errorMessage += `<br><strong>DBからのメッセージ:</strong> ${error.message}`;
-            }
-            errorMessage += `<br><br>詳細なエラーはブラウザのコンソールに出力されています。ご確認ください。`;
-            showMessage(errorMessage, true);
-        } finally {
-            registerButton.disabled = false;
-            registerButton.textContent = originalText;
-        }
-    }
-    
-    window.addEventListener('load', async () => {
-        await fetchOwnerName(CURRENT_OWNER_ID); 
-
-        const { data: events, error } = await supabase
-            .from('EventDB')
-            .select('*')
-            .eq('owner', CURRENT_OWNER_ID) 
-            .in('eventNum', eventNums)
-            .order('eventNum', { ascending: true }); 
-
-        if (error) {
-            console.error("データロードエラー:", error);
-        }
-
-        eventNums.forEach(num => {
-            const event = events ? events.find(e => e.eventNum === num) : null;
-            const eventNameField = document.getElementById(`name_${num}`);
-            
-            initialCheckFlgs[num] = event ? (event.checkFlg || false) : false; 
-            initialData[num] = event ? event : null; 
-
-            if (eventNameField && event) {
-                eventNameField.value = event.name || '';
-                document.getElementById(`date_${num}`).value = event.date || '';
-                document.getElementById(`time_${num}`).value = event.time || '';
-                document.getElementById(`location_${num}`).value = event.location || '';
-                
-                const feeInput = document.getElementById(`fee_${num}`);
-                if (event.fee !== null && event.fee !== undefined) {
-                    feeInput.value = event.fee;
-                } else {
-                    feeInput.value = defaultFee;
-                }
-
-                document.getElementById(`capacity_${num}`).value = event.capacity || '';
-                
-                const eligibilitySelect = document.getElementById(`eligibility_${num}`);
-                if (eligibilitySelect) eligibilitySelect.value = event.eligibility || '6歳以上(オープン)'; 
-                
-                document.getElementById(`address_${num}`).value = event.address || '';
-                const entrySelect = document.getElementById(`entry_${num}`);
-                if (entrySelect) entrySelect.value = event.entry || '当日受付:なし'; 
-                
-                const ownerFlgSelect = document.getElementById(`ownerFlg_${num}`);
-                if (ownerFlgSelect) ownerFlgSelect.value = event.ownerFlg === true ? 'true' : 'false';
-
-                document.getElementById(`details_${num}`).value = event.details || '';
-                
-                console.log(`EventNum ${num} のデータをロードしました。`);
-            } else if (!event) {
-                 document.getElementById(`fee_${num}`).value = defaultFee;
-                 document.getElementById(`eligibility_${num}`).value = '6歳以上(オープン)';
-                 document.getElementById(`entry_${num}`).value = '当日受付:なし';
-                 document.getElementById(`ownerFlg_${num}`).value = 'true';
-            }
-        });
-        
-        setupStatusListeners();
-        
-        const calendarLink = document.getElementById('beyCalendarLink');
-        if (calendarLink) {
-            calendarLink.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                const baseUrl = 'https://beymetchannel.github.io/BeyCalendar/';
-                const cacheBuster = `?ts=${new Date().getTime()}`;
-                const newUrl = baseUrl + cacheBuster;
-                
-                window.open(newUrl, '_blank');
-            });
-        }
-    });
-</script>
-</body>
-</html>
+    loadDataAndInitialize();
 
 </script>
 </body>
 </html>
-
-
-
