@@ -290,7 +290,12 @@
           max-width: 500px; 
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
           animation: fadeIn 0.3s;
-          overflow-y: auto; 
+          /* overflow-y: auto; <-- スライドインアニメーションのために内側の要素で管理 */
+          
+          /* --- スライドアニメーションのために追加/変更 --- */
+          position: relative;
+          overflow: hidden; 
+          /* ------------------------------------- */
       }
 
         #modal-content h3 {
@@ -416,9 +421,31 @@
             width: 95%;
             max-width: 600px;
             max-height: calc(100dvh - 40px);
-            overflow-y: auto;
+            /* overflow-y: auto; <-- スライドアニメーションのために内側の要素で管理 */
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            
+            /* --- スライドアニメーションのために追加/変更 --- */
             position: relative;
+            overflow: hidden; 
+            /* ------------------------------------- */
+        }
+        
+        /* --- 新しいスライドアニメーションのキーフレーム --- */
+        @keyframes slideInFromRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* スライドインを適用するクラス */
+        .content-slide-in-next {
+            animation: slideInFromRight 0.3s ease-out forwards;
+        }
+        .content-slide-in-prev {
+            animation: slideInFromLeft 0.3s ease-out forwards;
         }
 
         .event-list-modal-content h3 {
@@ -777,7 +804,8 @@
     }
     
     // --- イベント詳細モーダル内容更新関数（スワイプ用） ---
-    function updateEventDetailsModal(event, eventList) {
+    // direction パラメータを追加: 'next' または 'prev'
+    function updateEventDetailsModal(event, eventList, direction = null) {
         
         const eventTypeText = cleanEventTypeText(event.type);
         const badgeClass = getBadgeClass(event.type);
@@ -802,7 +830,8 @@
         const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
 
         const address = event.address || '';
-        const mapLink = address ? `href="https://maps.google.com/maps?q=${encodeURIComponent(address)}"` : ''; 
+        // NOTE: linkifyText will handle the map link creation based on address
+        const mapLink = address ? `href="http://maps.google.com/?q=${encodeURIComponent(address)}"` : ''; 
         const addressText = address ? `<a ${mapLink} target="_blank" rel="noopener noreferrer">${address}</a>` : '';
         
         const addressHtml = `<p><strong>住所:</strong> ${addressText}</p>`;
@@ -841,7 +870,14 @@
         // スワイプナビゲーション表示を追加
         const navIndicator = eventList.length > 1 ? ` (${currentEventIndex + 1}/${eventList.length})` : '';
 
-        modalContent.innerHTML = `
+        // 新しいコンテンツを格納するラッパー要素を作成
+        const newContentWrapper = document.createElement('div');
+        // event-modal-contentのpadding(20px)をここで再現し、内側のコンテンツはスクロール可能にする
+        newContentWrapper.style.padding = '20px';
+        newContentWrapper.style.maxHeight = '90vh';
+        newContentWrapper.style.overflowY = 'auto';
+
+        newContentWrapper.innerHTML = `
             <button class="fixed-close-btn" onclick="closeEventModal()">×</button>
             
             <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
@@ -860,6 +896,20 @@
             ${detailsHtml}
         `;
         
+        // アニメーションクラスを適用
+        if (direction === 'next') {
+            newContentWrapper.classList.add('content-slide-in-next');
+        } else if (direction === 'prev') {
+            newContentWrapper.classList.add('content-slide-in-prev');
+        }
+
+        // 既存のコンテンツを新しいラッパー要素で置き換える
+        modalContent.innerHTML = '';
+        // modalContentのpadding(20px)はCSSから削除し、newContentWrapperに移したため、
+        // #modal-contentの背景色がスライドするコンテンツに追従するようになる
+        modalContent.style.padding = '0'; 
+        modalContent.appendChild(newContentWrapper);
+
         // コンテンツ更新後にスワイプを再設定
         setupSwipe(modalContent, showPrevEvent, showNextEvent);
     }
@@ -885,7 +935,7 @@
         swipeableEvents = eventList;
         currentEventIndex = index;
 
-        // モーダルコンテンツの更新
+        // モーダルコンテンツの更新 (初回表示は direction = null)
         updateEventDetailsModal(event, eventList);
         
         // モーダルを表示
@@ -898,8 +948,8 @@
         if (currentEventIndex > 0) {
             currentEventIndex--;
             const prevEvent = swipeableEvents[currentEventIndex];
-            // returnToDayDateは維持したまま、モーダルを再描画
-            updateEventDetailsModal(prevEvent, swipeableEvents); 
+            // direction = 'prev' を渡す
+            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
         }
     }
 
@@ -907,13 +957,15 @@
         if (currentEventIndex < swipeableEvents.length - 1) {
             currentEventIndex++;
             const nextEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(nextEvent, swipeableEvents); 
+            // direction = 'next' を渡す
+            updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
         }
     }
     
     function closeEventModal() {
         eventModal.style.display = 'none';
-        
+        modalContent.style.padding = '20px'; // モーダルを閉じる際にpaddingを元に戻す
+
         if (returnToDayDate) {
             const eventsForDay = filteredEvents.filter(event => 
                 event.dateString === returnToDayDate
@@ -977,19 +1029,24 @@
 
 
     // --- 日付別イベント一覧モーダル内容更新関数（スワイプ用） ---
-    function updateDayModalContent(contentElement, currentDateString, currentDayEvents) {
+    // direction パラメータを追加: 'next' または 'prev'
+    function updateDayModalContent(contentElement, currentDateString, currentDayEvents, direction = null) {
         
-        // 既存の内容をクリア
-        while (contentElement.firstChild) {
-            contentElement.removeChild(contentElement.firstChild);
-        }
+        // 新しいコンテンツを格納するラッパー要素を作成
+        const newContentWrapper = document.createElement('div');
+        newContentWrapper.classList.add('day-list-content-wrapper');
+        // event-list-modal-contentのpadding(10px)をここで再現し、内側のコンテンツはスクロール可能にする
+        newContentWrapper.style.padding = '10px';
+        newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)';
+        newContentWrapper.style.overflowY = 'auto';
+
 
         const date = new Date(currentDateString);
         const dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
 
         const header = document.createElement('h3');
         header.textContent = dateFormatted + (currentDayEvents.length > 0 ? ` ${currentDayEvents.length}件のイベント` : ' のイベントはありません');
-        contentElement.appendChild(header);
+        newContentWrapper.appendChild(header);
 
         const listContainer = document.createElement('div');
 
@@ -1048,9 +1105,21 @@
                 card.appendChild(detailsCol);
                 listContainer.appendChild(card);
             });
+            
+            newContentWrapper.appendChild(listContainer);
         }
 
-        contentElement.appendChild(listContainer);
+        // アニメーションを適用
+        if (direction === 'next') {
+            newContentWrapper.classList.add('content-slide-in-next');
+        } else if (direction === 'prev') {
+            newContentWrapper.classList.add('content-slide-in-prev');
+        }
+
+        // 既存のコンテンツを新しいラッパー要素で置き換える
+        contentElement.innerHTML = '';
+        contentElement.style.padding = '0'; // paddingを内側ラッパーに移したため削除
+        contentElement.appendChild(newContentWrapper);
     }
     // --------------------------------------------------------------------
 
@@ -1086,7 +1155,8 @@
                 const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
                 eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = prevDate;
-                updateDayModalContent(content, prevDate, eventsForPrevDay);
+                // direction = 'prev' を渡す
+                updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev'); 
             }
         }
 
@@ -1097,11 +1167,12 @@
                 const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
                 eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = nextDate;
-                updateDayModalContent(content, nextDate, eventsForNextDay);
+                // direction = 'next' を渡す
+                updateDayModalContent(content, nextDate, eventsForNextDay, 'next'); 
             }
         }
 
-        // 初期コンテンツの設定
+        // 初期コンテンツの設定 (初回表示は direction = null)
         updateDayModalContent(content, dateString, dayEvents);
         
         // スワイプの設定
