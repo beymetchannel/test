@@ -18,10 +18,10 @@
         body {
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
             margin: 0;
-            padding: 10px;
+            /* PWAのセーフエリア（ホームインジケーターなど）に対応するための修正 */
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
             background-color: #f4f4f4;
             overflow-x: hidden;
-            top: calc(20px + env(safe-area-inset-top)); 
         }
         h1 {
             text-align: center;
@@ -241,6 +241,7 @@
             padding-bottom: 5px;
         }
 
+        /* Day List Modal と Event Details Modal の両方で使われます */
         .fixed-close-btn {
             position: fixed;
             top: calc(20px + env(safe-area-inset-top)); 
@@ -270,7 +271,7 @@
           position: fixed;
           z-index: 1000;
           left: 0;
-          top: calc(20px + env(safe-area-inset-top)); 
+          top: 0; 
           width: 100%;
           height: 100dvh;
           background-color: rgba(0, 0, 0, 0.7);
@@ -282,7 +283,6 @@
       #modal-content {
           background-color: #ffffff;
           max-height: 90dvh; 
-
           margin-bottom: 5dvh; 
           padding: 20px;
           border: 1px solid #cccccc;
@@ -291,18 +291,15 @@
           max-width: 500px;
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
           animation: fadeIn 0.3s;
-
-
           position: relative;
           overflow: hidden;
-
       }
 
         #modal-content h3 {
             color: #505050;
             border-bottom: 2px solid #B3FF52;
             padding-bottom: 5px;
-            margin-top: max(5dvh, env(safe-area-inset-top)); 
+            margin-top: 0;
         }
 
         #modal-content p {
@@ -425,8 +422,9 @@
             max-width: 600px;
             max-height: 100%;
             position: relative;
-            overflow: hidden;
-
+            /* 修正1: 垂直方向のスクロールを許可 */
+            overflow-y: auto; 
+            overflow-x: hidden; 
         }
 
         @keyframes slideInFromRight {
@@ -485,6 +483,7 @@
             cursor: pointer;
             transition: background-color 0.2s;
             gap: 10px;
+            margin-bottom: 5px; /* カード間のスペースを追加 */
         }
         .event-card:hover {
             background-color: rgb(245, 245, 245);
@@ -569,7 +568,7 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
     const supabaseUrl = 'https://yyrsscvofuoufkujetgf.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhN65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const JAPAN_PREFECTURES_BY_REGION = {
@@ -611,7 +610,6 @@
     let swipeableEvents = []; 
     let currentEventIndex = -1;
     let uniqueEventDates = []; 
-    let allDatesInRange = []; // 追加: 全日付範囲の配列
 
     
     const searchButton = document.getElementById('search-button');
@@ -734,27 +732,6 @@
         console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
         return null;
     }
-
-    // 追加: カレンダー期間内のすべての日付を生成する関数
-    function getAllDatesInRange(startYear, startMonth, maxDate) {
-        const allDates = [];
-        const endDate = new Date(maxDate.getFullYear(), maxDate.getMonth(), maxDate.getDate());
-        
-        let currentDate = new Date(startYear, startMonth - 1, 1); 
-
-        while (currentDate <= endDate) {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth() + 1;
-            const day = currentDate.getDate();
-            
-            const dateString = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            allDates.push(dateString);
-
-            currentDate.setDate(currentDate.getDate() + 1);
-        }
-        
-        return allDates;
-    }
     
     function getUniqueEventDates(events) {
         const dateStrings = events.map(e => e.dateString).filter(d => d);
@@ -834,7 +811,7 @@
         if (capacityPresent || feePresent) {
              capacityFeeHtml = `
                 <p>
-                    <strong>定員:</strong> ${event.capacity|| '-'}${feePresent ?` (${event.fee})` : ''} 
+                    <strong>定員:</strong> ${event.capacity|| '-'}${(feePresent && event.fee) ?` (${event.fee})` : ''} 
                 </p>
              `;
         }
@@ -886,7 +863,6 @@
         newContentWrapper.style.overflowY = 'auto';
 
         newContentWrapper.innerHTML = `
-            <button class="fixed-close-btn" onclick="closeEventModal()">×</button>
             
             <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
             <h3>${eventName}</h3>
@@ -938,6 +914,12 @@
 
         updateEventDetailsModal(event, eventList);
         
+        const closeButton = document.createElement('button');
+        closeButton.classList.add('fixed-close-btn');
+        closeButton.innerHTML = '×';
+        closeButton.onclick = closeEventModal;
+        eventModal.appendChild(closeButton);
+
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
     }
@@ -961,6 +943,11 @@
     function closeEventModal() {
         eventModal.style.display = 'none';
         modalContent.style.padding = '20px';
+
+        const closeButton = eventModal.querySelector('.fixed-close-btn');
+        if (closeButton) {
+            closeButton.remove();
+        }
 
         if (returnToDayDate) {
             const eventsForDay = filteredEvents.filter(event => 
@@ -1023,17 +1010,13 @@
         const newContentWrapper = document.createElement('div');
         newContentWrapper.classList.add('day-list-content-wrapper');
         newContentWrapper.style.padding = '10px';
-        newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)';
-        newContentWrapper.style.overflowY = 'auto';
+        /* 修正2: 冗長な高さとスクロール設定を削除。親要素(.event-list-modal-content)がスクロールを管理する */
+        // newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)'; 
+        // newContentWrapper.style.overflowY = 'auto'; 
 
 
         const date = new Date(currentDateString);
-        // Dateオブジェクトが不正な場合は、日付のパースエラーが発生している可能性があるため、フォールバック
-        let dateFormatted = '日付不明';
-        if (!isNaN(date.getTime())) {
-            dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
-        }
-
+        const dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
 
         const header = document.createElement('h3');
         header.textContent = dateFormatted + (currentDayEvents.length > 0 ? ` ${currentDayEvents.length}件のイベント` : ' のイベントはありません');
@@ -1133,15 +1116,13 @@
         content.classList.add('event-list-modal-content');
         
 
-        // 修正: uniqueEventDatesの代わりにallDatesInRangeを使用
-        let currentDayIndex = allDatesInRange.indexOf(dateString);
+        let currentDayIndex = uniqueEventDates.indexOf(dateString);
         let currentDateString = dateString;
 
         function showPrevDay() {
-            // 修正: allDatesInRangeを基準にインデックスをチェック
             if (currentDayIndex > 0) {
                 currentDayIndex--;
-                const prevDate = allDatesInRange[currentDayIndex]; // 修正
+                const prevDate = uniqueEventDates[currentDayIndex];
                 const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
                 eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = prevDate;
@@ -1151,10 +1132,9 @@
         }
 
         function showNextDay() {
-            // 修正: allDatesInRangeを基準にインデックスをチェック
-            if (currentDayIndex < allDatesInRange.length - 1) { // 修正
+            if (currentDayIndex < uniqueEventDates.length - 1) {
                 currentDayIndex++;
-                const nextDate = allDatesInRange[currentDayIndex]; // 修正
+                const nextDate = uniqueEventDates[currentDayIndex];
                 const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
                 eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = nextDate;
@@ -1295,15 +1275,6 @@
             restorePrefectureSelection(selectedPrefecturesFromStorage);
             
             restoreRegionExpansion(expandedRegionsFromStorage);
-
-            // 追加: 全日付範囲の配列を生成
-            if (ALL_BEYBLADE_EVENTS.length > 0) {
-                allDatesInRange = getAllDatesInRange(TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
-            } else {
-                 // イベントが1件もない場合は現在月のみを対象とする
-                 const today = new Date();
-                 allDatesInRange = getAllDatesInRange(today.getFullYear(), today.getMonth() + 1, today);
-            }
 
             handleSearch(true); 
 
@@ -1690,7 +1661,6 @@
         });
 
         filteredEvents = localFilteredEvents;
-        // uniqueEventDatesは現在もカレンダーのイベントハイライトには使われる可能性があるため維持
         uniqueEventDates = getUniqueEventDates(filteredEvents); 
 
 
