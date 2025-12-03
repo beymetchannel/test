@@ -436,12 +436,12 @@
             z-index: 1500; 
             display: flex;
             flex-direction: column; 
-            justify-content: flex-end; /* 画面下寄せに */
+            justify-content: flex-end; /* 修正: 中央寄せ -> 画面下寄せに */
             align-items: center;
             overflow: hidden; 
-            border-radius: 0; 
+            border-radius: 0; /* 修正: 親は全画面オーバーレイのため角丸不要 */
             transition: opacity 0.5s;
-            padding-bottom: 20px; /* 画面下からのマージン */
+            padding-bottom: 20px; /* 追加: 画面下からのマージン */
         }
 
         .swipe-guide-content {
@@ -458,10 +458,7 @@
             width: 120px; 
             height: 160px;
             position: absolute;
-            top: 50%; 
-            left: 50%; 
-            margin-left: -60px; 
-            margin-top: 0px; 
+            top: -50%; 
             animation: swipeAnim 4s ease-in-out infinite; 
             filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
         }
@@ -469,21 +466,21 @@
         .swipe-text {
             color: white;
             font-weight: bold;
-            font-size: 24px; 
+            font-size: 28px; 
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
             position: absolute;
-            top: 50%; /* 修正: 親要素 (swipe-guide-content) の垂直中央 */
-            left: 0; /* 追加: 中央に配置するために左端から配置 */
-            transform: translateY(-50%); /* 追加: 要素自体の高さの半分だけ上に戻し、垂直中央寄せを完了 */
+            top: 0%; 
             width: 100%;
             text-align: center;
+            z-index: 1000;
         }
 
         @keyframes swipeAnim {
-            0% { transform: translate(-100px, 0) scale(1); opacity: 1; }
-            33% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } 
-            66% { transform: translate(-100px, 0) scale(1.1); opacity: 0.9; } 
-            100% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } 
+            0% { transform: translate(-130px, 0) scale(1); opacity: 1; }
+            25% { transform: translate(130px, 0) scale(1); opacity: 0.9; } 
+            50% { transform: translate(-130px, 0) scale(1); opacity: 0.9; } 
+            75% { transform: translate(130px, 0) scale(1); opacity: 0.9; } 
+            100% { transform: translate(-130px, 0) scale(1); opacity: 0.9; } 
         }
         /* --- スワイプガイド用CSSの修正ここまで --- */
 
