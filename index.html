@@ -21,8 +21,6 @@
             padding: 10px;
             background-color: #f4f4f4;
             overflow-x: hidden;
-            /* 修正1: body の top を削除。コンテンツのズレは padding-top で対応すべき */
-            /* top: calc(20px + env(safe-area-inset-top)); */ 
         }
         h1 {
             text-align: center;
@@ -272,7 +270,6 @@
           position: fixed;
           z-index: 1000;
           left: 0;
-          /* 修正2: モーダルは画面上端から開始 (top: 0) し、コンテンツ内でセーフエリアを考慮します */
           top: 0; 
           width: 100%;
           height: 100dvh;
@@ -301,8 +298,6 @@
             color: #505050;
             border-bottom: 2px solid #B3FF52;
             padding-bottom: 5px;
-            /* 修正3: モーダル内のコンテンツヘッダーの大きなマージンを削除 */
-            /* margin-top: max(5dvh, env(safe-area-inset-top)); */ 
             margin-top: 0;
         }
 
@@ -411,7 +406,6 @@
             align-items: center;
             z-index: 1100;
             overflow-y: hidden;
-            /* セーフエリア対応は padding で行う */
             padding-top: max(20px, env(safe-area-inset-top));
             padding-bottom: max(20px, env(safe-area-inset-bottom));
             padding-left: 0;
@@ -427,8 +421,9 @@
             max-width: 600px;
             max-height: 100%;
             position: relative;
-            overflow: hidden;
-
+            /* 修正1: 垂直方向のスクロールを許可 */
+            overflow-y: auto; 
+            overflow-x: hidden; 
         }
 
         @keyframes slideInFromRight {
@@ -487,6 +482,7 @@
             cursor: pointer;
             transition: background-color 0.2s;
             gap: 10px;
+            margin-bottom: 5px; /* カード間のスペースを追加 */
         }
         .event-card:hover {
             background-color: rgb(245, 245, 245);
@@ -866,6 +862,7 @@
         newContentWrapper.style.overflowY = 'auto';
 
         newContentWrapper.innerHTML = `
+            
             <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
             <h3>${eventName}</h3>
             
@@ -916,7 +913,6 @@
 
         updateEventDetailsModal(event, eventList);
         
-        // 修正5: 閉じるボタンを #event-modal (固定要素) の直下に動的に追加
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
@@ -947,7 +943,6 @@
         eventModal.style.display = 'none';
         modalContent.style.padding = '20px';
 
-        // 修正6: 閉じるボタンを削除
         const closeButton = eventModal.querySelector('.fixed-close-btn');
         if (closeButton) {
             closeButton.remove();
@@ -1014,8 +1009,9 @@
         const newContentWrapper = document.createElement('div');
         newContentWrapper.classList.add('day-list-content-wrapper');
         newContentWrapper.style.padding = '10px';
-        newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)';
-        newContentWrapper.style.overflowY = 'auto';
+        /* 修正2: 冗長な高さとスクロール設定を削除。親要素(.event-list-modal-content)がスクロールを管理する */
+        // newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)'; 
+        // newContentWrapper.style.overflowY = 'auto'; 
 
 
         const date = new Date(currentDateString);
@@ -1104,7 +1100,6 @@
         const overlay = document.createElement('div');
         overlay.classList.add('event-list-modal-overlay');
 
-        // 日別リストのモーダルでは、閉じるボタンは overlay (fixed) の子要素で問題ない
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
