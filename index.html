@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <link rel="shortcuticon" type="image/x-icon" href="BeyCalendarIcon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="BeyCalendarIcon.png">
     <link rel="icon" href="BeyCalendarIcon.png">
@@ -15,33 +15,35 @@
             box-sizing: border-box;
         }
 
-        body { 
+        body {
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
-            margin: 0; 
-            padding: 10px; 
-            background-color: #f4f4f4; 
-            overflow-x: hidden; 
+            margin: 0;
+            padding: 10px;
+            background-color: #f4f4f4;
+            overflow-x: hidden;
+            /* 修正1: body の top を削除。コンテンツのズレは padding-top で対応すべき */
+            /* top: calc(20px + env(safe-area-inset-top)); */ 
         }
-        h1 { 
-            text-align: center; 
-            color: #505050; 
-            margin: 10px 0; 
+        h1 {
+            text-align: center;
+            color: #505050;
+            margin: 10px 0;
         }
-        
-        .search-container { 
-            width: 100%; 
-            max-width: 1000px; 
-            margin: 10px auto; 
-            padding: 15px; 
-            background-color: #ffffff; 
+
+        .search-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 10px auto;
+            padding: 15px;
+            background-color: #ffffff;
             display: flex;
-            flex-wrap: wrap; 
+            flex-wrap: wrap;
             gap: 5px;
             align-items: center;
         }
         .search-container label { font-weight: bold; margin-right: 5px; }
 
-        .search-container p{ 
+        .search-container p{
             color: #505050;
             font-size: 13px;
             font-weight: bold;
@@ -50,9 +52,9 @@
 
         .keyword-search-group {
             display: flex;
-            align-items: flex-end; 
+            align-items: flex-end;
             flex-basis: 100%;
-            flex-direction: column; 
+            flex-direction: column;
         }
         .keyword-search-input-wrapper {
             display: flex;
@@ -60,44 +62,44 @@
         }
         .keyword-search-group label {
             font-size: 14px;
-            align-self: flex-start; 
+            align-self: flex-start;
             margin-bottom: 5px;
         }
-        
+
         .keyword-search-group input[type="text"] {
             padding: 8px;
             border: 1px solid #cccccc;
-            border-radius: 4px 0 0 4px; 
-            flex-grow: 1; 
+            border-radius: 4px 0 0 4px;
+            flex-grow: 1;
             margin: 0;
         }
 
         .type-search-label {
-            color: #505050; 
+            color: #505050;
             font-size: 14px;
-            align-self: flex-start; 
+            align-self: flex-start;
             margin-bottom: 0px;
         }
 
         .search-button-icon {
             padding: 8px 12px;
-            background-color: #dbdbdb; 
-            color: #505050; 
+            background-color: #dbdbdb;
+            color: #505050;
             border: none;
-            border-radius: 0 4px 4px 0; 
+            border-radius: 0 4px 4px 0;
             cursor: pointer;
             transition: background-color 0.2s;
-            height: 36px; 
+            height: 36px;
             line-height: 1.2;
             box-sizing: border-box;
         }
 
-        .calendar-container { 
-            width: 100%; 
-            max-width: 1000px; 
-            margin: 10px auto; 
-            border: 1px solid #cccccc; 
-            background-color: #ffffff; 
+        .calendar-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 10px auto;
+            border: 1px solid #cccccc;
+            background-color: #ffffff;
         }
         .calendar-grid-wrapper {
             margin-top: 15px;
@@ -108,71 +110,71 @@
             border-top: none;
         }
 
-        .calendar-grid { 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            border-left: 1px solid #cccccc; 
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-left: 1px solid #cccccc;
         }
-        .day-header { 
-            background-color: #f1f1f1; 
-            font-size: 10px; 
-            padding: 5px 5px; 
-            text-align: center; 
-            border-right: 1px solid #cccccc; 
-            border-bottom: 1px solid #cccccc; 
+        .day-header {
+            background-color: #f1f1f1;
+            font-size: 10px;
+            padding: 5px 5px;
+            text-align: center;
+            border-right: 1px solid #cccccc;
+            border-bottom: 1px solid #cccccc;
             color: #505050;
         }
 
         .day-cell { min-height: 40px; padding: 5px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
-        
-        .day-number { 
-            font-size: 10px; 
-            color: #505050; 
-            margin-bottom: 3px; 
-            display: block; 
-            text-align: center; 
-            cursor: pointer; 
+
+        .day-number {
+            font-size: 10px;
+            color: #505050;
+            margin-bottom: 3px;
+            display: block;
+            text-align: center;
+            cursor: pointer;
         }
         .day-number:hover {
             font-weight: bold;
             text-decoration: underline;
         }
-        
+
         .day-number.has-events {
             text-decoration: underline;
         }
 
-        .calendar-grid .day-cell:nth-child(7n) .day-number { 
-            color: #5555cc; 
+        .calendar-grid .day-cell:nth-child(7n) .day-number {
+            color: #5555cc;
         }
-        .calendar-grid .day-cell:nth-child(7n+1) .day-number { 
-            color: #cc5588; 
+        .calendar-grid .day-cell:nth-child(7n+1) .day-number {
+            color: #cc5588;
         }
-        .day-cell:nth-child(7n) { background-color: #f4f4f4; } 
-        .day-cell:nth-child(7n+1) { background-color: #f4f4f4; } 
-        
-        .event-label { 
+        .day-cell:nth-child(7n) { background-color: #f4f4f4; }
+        .day-cell:nth-child(7n+1) { background-color: #f4f4f4; }
+
+        .event-label {
             text-align: center;
-            display: block; 
-            font-size: 10px; 
-            padding: 2px 0px; 
-            margin-bottom: 1px; 
-            border-radius: 3px; 
-            font-weight: 600; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+            display: block;
+            font-size: 10px;
+            padding: 2px 0px;
+            margin-bottom: 1px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             cursor: pointer;
         }
-        .label-yellow { background-color: #FFC75F; color: #505050; } 
-        .label-orange { background-color: #FF9772; color: #505050; } 
-        .label-lightblue { background-color: #6de7d7; color: #505050; } 
-        .label-blue { background-color: #6de7b8; color: #505050; } 
-        .label-gray { background-color: #f06163; color: white; } 
-        .label-black { background-color: #845EC2; color: white; } 
+        .label-yellow { background-color: #FFC75F; color: #505050; }
+        .label-orange { background-color: #FF9772; color: #505050; }
+        .label-lightblue { background-color: #6de7d7; color: #505050; }
+        .label-blue { background-color: #6de7b8; color: #505050; }
+        .label-gray { background-color: #f06163; color: white; }
+        .label-black { background-color: #845EC2; color: white; }
         .label-green { background-color: #FAF871; color: #505050; }
-        .label-meetup { background-color: #A0FA8D; color: #505050; } 
-        
+        .label-meetup { background-color: #A0FA8D; color: #505050; }
+
         .pref-label {
             display: inline-block;
             padding: 4px 8px;
@@ -180,7 +182,7 @@
             border: 1px solid #cccccc;
             border-radius: 4px;
             cursor: pointer;
-            background-color: #f4f4f4; 
+            background-color: #f4f4f4;
             font-size: 0.8em;
             user-select: none;
             transition: background-color 0.1s;
@@ -188,7 +190,7 @@
         }
         .pref-label input[type="checkbox"] { display: none; }
         .pref-label.checked {
-            background-color: #B3FF52; 
+            background-color: #B3FF52;
             color: #505050;
             font-weight: bold;
         }
@@ -197,28 +199,28 @@
             margin-bottom: 5px;
             border-bottom: 1px dashed #cccccc;
         }
-        .region-header-container { 
+        .region-header-container {
             display: flex;
-            justify-content: space-between; 
-            align-items: center; 
+            justify-content: space-between;
+            align-items: center;
             padding: 5px 0;
             cursor: pointer;
         }
         .region-header {
             font-weight: bold;
             color: #505050;
-            border-left: 3px solid #B3FF52; 
+            border-left: 3px solid #B3FF52;
             padding-left: 10px;
-            margin: 0; 
-            flex-grow: 1; 
+            margin: 0;
+            flex-grow: 1;
         }
-        
+
         .region-select-label {
             display: flex;
             align-items: center;
             cursor: pointer;
             font-size: 0.8em;
-            font-weight: normal; 
+            font-weight: normal;
             margin-left: 5px;
             color: #505050;
         }
@@ -235,15 +237,16 @@
             padding-right: 8px;
         }
         .checkbox-wrapper.open {
-            max-height: 500px; 
+            max-height: 500px;
             padding-top: 5px;
             padding-bottom: 5px;
         }
 
+        /* Day List Modal と Event Details Modal の両方で使われます */
         .fixed-close-btn {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: calc(20px + env(safe-area-inset-top)); 
+            right: calc(20px + env(safe-area-inset-right));
             width: 40px;
             height: 40px;
             background-color: rgba(0, 0, 0, 0.6);
@@ -255,7 +258,7 @@
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            z-index: 2000; 
+            z-index: 2000;
             backdrop-filter: blur(2px);
             line-height: 1;
             transition: background-color 0.2s;
@@ -263,16 +266,17 @@
         .fixed-close-btn:hover {
             background-color: rgba(0, 0, 0, 0.8);
         }
-      
+
       #event-modal {
-          display: flex; 
-          position: fixed; 
-          z-index: 1000; 
+          display: flex;
+          position: fixed;
+          z-index: 1000;
           left: 0;
-          top: 0;
+          /* 修正2: モーダルは画面上端から開始 (top: 0) し、コンテンツ内でセーフエリアを考慮します */
+          top: 0; 
           width: 100%;
           height: 100dvh;
-          background-color: rgba(0, 0, 0, 0.7); 
+          background-color: rgba(0, 0, 0, 0.7);
           backdrop-filter: blur(2px);
           justify-content: center;
           align-items: center;
@@ -280,78 +284,75 @@
 
       #modal-content {
           background-color: #ffffff;
-          max-height: 90vh; 
-          margin-top: 5vh;
-          margin-bottom: 5vh;
+          max-height: 90dvh; 
+          margin-bottom: 5dvh; 
           padding: 20px;
           border: 1px solid #cccccc;
           border-radius: 8px;
-          width: 90%; 
-          max-width: 500px; 
+          width: 90%;
+          max-width: 500px;
           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
           animation: fadeIn 0.3s;
-          /* overflow-y: auto; <-- スライドインアニメーションのために内側の要素で管理 */
-          
-          /* --- スライドアニメーションのために追加/変更 --- */
           position: relative;
-          overflow: hidden; 
-          /* ------------------------------------- */
+          overflow: hidden;
       }
 
         #modal-content h3 {
-            color: #505050; 
+            color: #505050;
             border-bottom: 2px solid #B3FF52;
             padding-bottom: 5px;
+            /* 修正3: モーダル内のコンテンツヘッダーの大きなマージンを削除 */
+            /* margin-top: max(5dvh, env(safe-area-inset-top)); */ 
             margin-top: 0;
         }
-        
+
         #modal-content p {
             font-size: 14px;
             margin: 8px 0;
             line-height: 1.5;
             border-bottom: 0.5px solid #cccccc;
             color: #505050;
-            word-break: break-word; 
+            word-break: break-word;
         }
-        
+
         #modal-content strong {
             font-size: 14px;
             display: inline-block;
             color: #505050;
         }
-        
+
         #modal-content a {
-            color: #505050; 
-            text-decoration: underline; 
+            color: #505050;
+            text-decoration: underline;
         }
-        
+
         #label-legend-container {
             width: 100%;
             max-width: 1000px;
-            margin: 0px auto; 
+            margin: 0px auto;
             display: grid;
-            grid-template-columns: repeat(7, 1fr); 
+            grid-template-columns: repeat(7, 1fr);
             gap: 2px;
             align-items: center;
             color: #505050;
-            padding: 0px; 
+            padding: 0px;
         }
 
         .legend-item {
             display: flex;
             align-items: center;
             justify-content: center;
-            white-space: nowrap; 
+            white-space: nowrap;
             cursor: pointer;
-            border: 1px solid #dcdcdc; 
-            padding: 6px 0; 
+            border: 1px solid #dcdcdc;
+            padding: 6px 0;
             border-radius: 5px;
             font-size: 10px;
-            background-color: #ffffff; 
+            background-color: #ffffff;
             color: #aaaaaa;
             transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            width: 100%; 
+            width: 100%;
         }
 
         .legend-item:hover {
@@ -410,7 +411,11 @@
             align-items: center;
             z-index: 1100;
             overflow-y: hidden;
-            padding: 20px 0;
+            /* セーフエリア対応は padding で行う */
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: 0;
+            padding-right: 0;
             box-sizing: border-box;
         }
 
@@ -420,17 +425,12 @@
             border-radius: 8px;
             width: 95%;
             max-width: 600px;
-            max-height: calc(100dvh - 40px);
-            /* overflow-y: auto; <-- スライドアニメーションのために内側の要素で管理 */
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            
-            /* --- スライドアニメーションのために追加/変更 --- */
+            max-height: 100%;
             position: relative;
-            overflow: hidden; 
-            /* ------------------------------------- */
+            overflow: hidden;
+
         }
-        
-        /* --- 新しいスライドアニメーションのキーフレーム --- */
+
         @keyframes slideInFromRight {
             from { transform: translateX(50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -439,8 +439,8 @@
             from { transform: translateX(-50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        
-        /* スライドインを適用するクラス */
+
+
         .content-slide-in-next {
             animation: slideInFromRight 0.3s ease-out forwards;
         }
@@ -473,35 +473,35 @@
         .type-G3R { background-color: #FFC75F; }
         .type-S1 { background-color: #6de7d7; }
         .type-Amb { background-color: #6de7b8; }
-        .type-Meetup { background-color: #A0FA8D; } 
+        .type-Meetup { background-color: #A0FA8D; }
         .type-Other { background-color: #FAF871; }
 
 
         .event-card {
             display: flex;
-            align-items: stretch; 
+            align-items: stretch;
             padding: 10px;
             border-radius: 6px;
-            background-color: #f9f9f9;
+            background-color: #ffffff;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: background-color 0.2s;
             gap: 10px;
         }
         .event-card:hover {
-            background-color: #eef;
+            background-color: rgb(245, 245, 245);
         }
 
         .event-time-col {
             flex: 0 0 40px;
             font-size: 10px;
             display: flex;
-            align-items: center; 
+            align-items: center;
             justify-content: center;
             border-right: 1px solid #e0e0e0;
             padding-right: 5px;
         }
-        
+
         .event-time-text {
             font-size: 1.1em;
             font-weight: bold;
@@ -510,12 +510,12 @@
         }
 
         .event-details-col {
-            flex: 1; 
+            flex: 1;
             display: flex;
-            flex-direction: column; 
+            flex-direction: column;
             justify-content: center;
             gap: 3px;
-            overflow: hidden; 
+            overflow: hidden;
         }
 
         .event-name {
@@ -610,11 +610,9 @@
     let citySearchTextFromStorage = '';
     let expandedRegionsFromStorage = []; 
     
-    // --- スワイプ機能用のグローバル変数 ---
     let swipeableEvents = []; 
     let currentEventIndex = -1;
     let uniqueEventDates = []; 
-    // ------------------------------------
 
     
     const searchButton = document.getElementById('search-button');
@@ -738,15 +736,11 @@
         return null;
     }
     
-    // --- スワイプ機能用のヘルパー関数 ---
     function getUniqueEventDates(events) {
         const dateStrings = events.map(e => e.dateString).filter(d => d);
-        // Dateオブジェクトに変換してソートすることで、日付として正しく並べ替える
         const sortedDates = dateStrings.sort((a, b) => new Date(a) - new Date(b));
-        // 重複を除いたリストを返す
         return [...new Set(sortedDates)];
     }
-    // ------------------------------------
 
 
     function getTimeValue(timeStr) {
@@ -802,9 +796,7 @@
         if (!eventType) return '';
         return eventType.replace('B4ストアカップ', '').trim();
     }
-    
-    // --- イベント詳細モーダル内容更新関数（スワイプ用） ---
-    // direction パラメータを追加: 'next' または 'prev'
+
     function updateEventDetailsModal(event, eventList, direction = null) {
         
         const eventTypeText = cleanEventTypeText(event.type);
@@ -830,7 +822,6 @@
         const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
 
         const address = event.address || '';
-        // NOTE: linkifyText will handle the map link creation based on address
         const mapLink = address ? `href="http://maps.google.com/?q=${encodeURIComponent(address)}"` : ''; 
         const addressText = address ? `<a ${mapLink} target="_blank" rel="noopener noreferrer">${address}</a>` : '';
         
@@ -867,21 +858,16 @@
 
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
         
-        // スワイプナビゲーション表示を追加
         const navIndicator = eventList.length > 1 ? ` (${currentEventIndex + 1}/${eventList.length})` : '';
 
-        // 新しいコンテンツを格納するラッパー要素を作成
         const newContentWrapper = document.createElement('div');
-        // event-modal-contentのpadding(20px)をここで再現し、内側のコンテンツはスクロール可能にする
         newContentWrapper.style.padding = '20px';
         newContentWrapper.style.maxHeight = '90vh';
         newContentWrapper.style.overflowY = 'auto';
 
         newContentWrapper.innerHTML = `
-            <button class="fixed-close-btn" onclick="closeEventModal()">×</button>
-            
             <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
-            <h3>${eventName}${navIndicator}</h3>
+            <h3>${eventName}</h3>
             
             <p>
                 <strong>日時:</strong> ${timeVal}
@@ -892,33 +878,26 @@
             ${addressHtml}
             ${telHtml}
             ${eligibilityEntryHtml}
-            ${ownerHtml}
             ${detailsHtml}
+            ${ownerHtml}
         `;
         
-        // アニメーションクラスを適用
         if (direction === 'next') {
             newContentWrapper.classList.add('content-slide-in-next');
         } else if (direction === 'prev') {
             newContentWrapper.classList.add('content-slide-in-prev');
         }
 
-        // 既存のコンテンツを新しいラッパー要素で置き換える
         modalContent.innerHTML = '';
-        // modalContentのpadding(20px)はCSSから削除し、newContentWrapperに移したため、
-        // #modal-contentの背景色がスライドするコンテンツに追従するようになる
         modalContent.style.padding = '0'; 
         modalContent.appendChild(newContentWrapper);
 
-        // コンテンツ更新後にスワイプを再設定
         setupSwipe(modalContent, showPrevEvent, showNextEvent);
     }
-    // --------------------------------------------------------------------
 
 
     function showEventDetails(event, eventList = filteredEvents) {
         
-        // イベントリストを日付と時間でソートし、swipableEventsに設定
         eventList.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
@@ -935,20 +914,23 @@
         swipeableEvents = eventList;
         currentEventIndex = index;
 
-        // モーダルコンテンツの更新 (初回表示は direction = null)
         updateEventDetailsModal(event, eventList);
         
-        // モーダルを表示
+        // 修正5: 閉じるボタンを #event-modal (固定要素) の直下に動的に追加
+        const closeButton = document.createElement('button');
+        closeButton.classList.add('fixed-close-btn');
+        closeButton.innerHTML = '×';
+        closeButton.onclick = closeEventModal;
+        eventModal.appendChild(closeButton);
+
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
     }
     
-    // --- スワイプナビゲーション関数（イベント詳細用） ---
     function showPrevEvent() {
         if (currentEventIndex > 0) {
             currentEventIndex--;
             const prevEvent = swipeableEvents[currentEventIndex];
-            // direction = 'prev' を渡す
             updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
         }
     }
@@ -957,14 +939,19 @@
         if (currentEventIndex < swipeableEvents.length - 1) {
             currentEventIndex++;
             const nextEvent = swipeableEvents[currentEventIndex];
-            // direction = 'next' を渡す
             updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
         }
     }
     
     function closeEventModal() {
         eventModal.style.display = 'none';
-        modalContent.style.padding = '20px'; // モーダルを閉じる際にpaddingを元に戻す
+        modalContent.style.padding = '20px';
+
+        // 修正6: 閉じるボタンを削除
+        const closeButton = eventModal.querySelector('.fixed-close-btn');
+        if (closeButton) {
+            closeButton.remove();
+        }
 
         if (returnToDayDate) {
             const eventsForDay = filteredEvents.filter(event => 
@@ -987,13 +974,11 @@
         }
     });
 
-    // --- スワイプ検出の共通ロジック ---
     function setupSwipe(element, onSwipeRight, onSwipeLeft) {
         let touchstartX = 0;
         let touchendX = 0;
         const SWIPE_THRESHOLD = 50; 
 
-        // 既存のイベントリスナーがあれば削除してから再設定（コンテンツが切り替わるため）
         element.removeEventListener('touchstart', element.touchStartHandler);
         element.removeEventListener('touchend', element.touchEndHandler);
 
@@ -1015,27 +1000,19 @@
                 return; 
             }
 
-            // 右スワイプ (diff > 0) -> 前の項目へ (onSwipeRight)
             if (diff > 0) {
                 onSwipeRight();
             } 
-            // 左スワイプ (diff < 0) -> 次の項目へ (onSwipeLeft)
             else {
                 onSwipeLeft();
             }
         }
     }
-    // ------------------------------------
 
-
-    // --- 日付別イベント一覧モーダル内容更新関数（スワイプ用） ---
-    // direction パラメータを追加: 'next' または 'prev'
     function updateDayModalContent(contentElement, currentDateString, currentDayEvents, direction = null) {
         
-        // 新しいコンテンツを格納するラッパー要素を作成
         const newContentWrapper = document.createElement('div');
         newContentWrapper.classList.add('day-list-content-wrapper');
-        // event-list-modal-contentのpadding(10px)をここで再現し、内側のコンテンツはスクロール可能にする
         newContentWrapper.style.padding = '10px';
         newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)';
         newContentWrapper.style.overflowY = 'auto';
@@ -1057,7 +1034,7 @@
                 
                 card.onclick = () => {
                     returnToDayDate = currentDateString; 
-                    showEventDetails(event, currentDayEvents); // その日のイベントリストを渡して、その中でのスワイプを可能にする
+                    showEventDetails(event, currentDayEvents); 
                     contentElement.closest('.event-list-modal-overlay').remove(); 
                 };
 
@@ -1109,19 +1086,16 @@
             newContentWrapper.appendChild(listContainer);
         }
 
-        // アニメーションを適用
         if (direction === 'next') {
             newContentWrapper.classList.add('content-slide-in-next');
         } else if (direction === 'prev') {
             newContentWrapper.classList.add('content-slide-in-prev');
         }
 
-        // 既存のコンテンツを新しいラッパー要素で置き換える
         contentElement.innerHTML = '';
-        contentElement.style.padding = '0'; // paddingを内側ラッパーに移したため削除
+        contentElement.style.padding = '0'; 
         contentElement.appendChild(newContentWrapper);
     }
-    // --------------------------------------------------------------------
 
 
     function createDayEventModal(dateString, dayEvents) {
@@ -1130,6 +1104,7 @@
         const overlay = document.createElement('div');
         overlay.classList.add('event-list-modal-overlay');
 
+        // 日別リストのモーダルでは、閉じるボタンは overlay (fixed) の子要素で問題ない
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
@@ -1144,7 +1119,7 @@
         const content = document.createElement('div');
         content.classList.add('event-list-modal-content');
         
-        // --- スワイプ機能の実装 ---
+
         let currentDayIndex = uniqueEventDates.indexOf(dateString);
         let currentDateString = dateString;
 
@@ -1155,7 +1130,7 @@
                 const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
                 eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = prevDate;
-                // direction = 'prev' を渡す
+
                 updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev'); 
             }
         }
@@ -1167,17 +1142,14 @@
                 const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
                 eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = nextDate;
-                // direction = 'next' を渡す
+
                 updateDayModalContent(content, nextDate, eventsForNextDay, 'next'); 
             }
         }
 
-        // 初期コンテンツの設定 (初回表示は direction = null)
         updateDayModalContent(content, dateString, dayEvents);
         
-        // スワイプの設定
         setupSwipe(content, showPrevDay, showNextDay); 
-        // ------------------------
 
         overlay.appendChild(content);
 
@@ -1280,7 +1252,6 @@
                 })
                 .filter(event => event); 
             
-            // イベントを日付と時間でソート
             ALL_BEYBLADE_EVENTS.sort((a, b) => {
                 if (a.dateString !== b.dateString) {
                     return new Date(a.dateString) - new Date(b.dateString);
@@ -1685,7 +1656,7 @@
             }
         }
         
-        // フィルタリング後、再度日付と時間でソート
+
         localFilteredEvents.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
@@ -1694,7 +1665,6 @@
         });
 
         filteredEvents = localFilteredEvents;
-        // 日付別モーダルのスワイプ用にユニークな日付リストを更新
         uniqueEventDates = getUniqueEventDates(filteredEvents); 
 
 
