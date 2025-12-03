@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+スワイプガイド<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -423,25 +423,25 @@
             position: relative;
             overflow-y: auto; 
             overflow-x: hidden; 
+            animation: fadeIn 0.3s;
         }
 
-        /* --- スワイプガイド用CSSの修正 (モーダルオーバーレイ全体に表示) --- */
         .swipe-guide-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%; /* 親 (.event-list-modal-overlay) 全体を覆う */
+            height: 100%; 
             background-color: rgba(0, 0, 0, 0.5); 
             z-index: 1500; 
             display: flex;
             flex-direction: column; 
-            justify-content: flex-end; /* 修正: 中央寄せ -> 画面下寄せに */
+            justify-content: flex-end; 
             align-items: center;
             overflow: hidden; 
-            border-radius: 0; /* 修正: 親は全画面オーバーレイのため角丸不要 */
+            border-radius: 0; 
             transition: opacity 0.5s;
-            padding-bottom: 20px; /* 追加: 画面下からのマージン */
+            padding-bottom: 20px; 
         }
 
         .swipe-guide-content {
@@ -452,6 +452,7 @@
             width: 100%; 
             height: 150px; 
             position: relative;
+            transition: opacity 0.5s;
         }
 
         .hand-icon {
@@ -477,13 +478,12 @@
 
         @keyframes swipeAnim {
             0% { transform: translate(-130px, 0) scale(1); opacity: 1; }
-            25% { transform: translate(130px, 0) scale(1); opacity: 0.9; } 
-            50% { transform: translate(-130px, 0) scale(1); opacity: 0.9; } 
-            75% { transform: translate(130px, 0) scale(1); opacity: 0.9; } 
-            100% { transform: translate(-130px, 0) scale(1); opacity: 0.9; } 
+            25% { transform: translate(130px, 0) scale(1); opacity: 1; } 
+            50% { transform: translate(-130px, 0) scale(1); opacity: 1; } 
+            75% { transform: translate(130px, 0) scale(1); opacity: 1; } 
+            100% { transform: translate(-130px, 0) scale(1); opacity: 1; } 
         }
-        /* --- スワイプガイド用CSSの修正ここまで --- */
-
+        
         @keyframes slideInFromRight {
             from { transform: translateX(50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -722,48 +722,58 @@
         }
     }
     
-    // handicon.pngを使用したスワイプガイドを表示する関数 (修正)
-    function showSwipeGuide(overlayElement) { // 引数をモーダルオーバーレイに変更
-        // // 既に表示済みの場合は何もしない
-        // if (localStorage.getItem('swipeGuideShown')) {
-        //     return; 
-        // }
+    function showSwipeGuide(overlayElement, text = '左右スワイプで日付移動', storageKey) { 
+        if (storageKey && localStorage.getItem(storageKey)) { 
+            return; 
+        }
 
         const guideOverlay = document.createElement('div');
         guideOverlay.classList.add('swipe-guide-overlay');
+        
+        
+        guideOverlay.style.opacity = '0';
+        guideOverlay.style.transition = 'opacity 0.5s'; 
+
 
         const guideContent = document.createElement('div');
         guideContent.classList.add('swipe-guide-content');
-
+        
         const handIcon = document.createElement('img');
         handIcon.classList.add('hand-icon');
-        handIcon.src = 'handicon.png'; // handicon.pngを同ディレクトリに配置
+        handIcon.src = 'handicon.png';
         handIcon.alt = 'Swipe Hand Icon';
         
         const swipeText = document.createElement('div');
         swipeText.classList.add('swipe-text');
-        swipeText.textContent = '左右スワイプで日付移動';
+        swipeText.textContent = text; 
 
         guideContent.appendChild(swipeText);
         guideContent.appendChild(handIcon);
         guideOverlay.appendChild(guideContent);
 
-        // モーダルコンテンツのスクロールロック/解除は不要になりました
-        // modalContentElement.style.overflowY = 'hidden'; <--- 削除
+        overlayElement.appendChild(guideOverlay); 
 
-        overlayElement.appendChild(guideOverlay); // モーダルオーバーレイ全体に追加
-
-        // 3秒後にガイドを自動で非表示
+        
+        
         setTimeout(() => {
-            guideOverlay.style.opacity = '0';
-            guideOverlay.style.transition = 'opacity 0.5s';
+            guideOverlay.style.opacity = '1'; 
+        }, 1); 
+
+
+        
+        setTimeout(() => {
+            
+            guideOverlay.style.opacity = '0'; 
+            
+            
             setTimeout(() => {
                 guideOverlay.remove();
-                // ロック解除処理も削除
-                // 初回表示完了フラグを設定
-                localStorage.setItem('swipeGuideShown', 'true');
+                
+                if (storageKey) {
+                    localStorage.setItem(storageKey, 'true');
+                }
             }, 500);
-        }, 3000); // 3秒表示
+        }, 3500); 
     }
 
 
@@ -1056,6 +1066,9 @@
 
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
+        
+        
+        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
     }
     
     function showPrevEvent() {
@@ -1113,8 +1126,8 @@
         element.removeEventListener('touchend', element.touchEndHandler);
 
         element.touchStartHandler = (e) => {
-            // スクロール可能な要素（リスト）をスワイプしたときに、縦方向のスクロールと干渉しないよう注意が必要
-            // 今回のリストモーダルは縦スクロールのみを許可しているため、ここでは単純に実装する
+            
+            
             touchstartX = e.changedTouches[0].screenX;
         };
         
@@ -1132,11 +1145,11 @@
                 return; 
             }
 
-            // 右にスワイプ（touchendX > touchstartX）
+            
             if (diff > 0) {
                 onSwipeRight();
             } 
-            // 左にスワイプ（touchendX < touchstartX）
+            
             else {
                 onSwipeLeft();
             }
@@ -1291,14 +1304,11 @@
             }
         });
         
-        // --- 【★スワイプガイド追加部分★】 ---
-        // ガイドをオーバーレイ全体に追加するように修正
-        // if (!localStorage.getItem('swipeGuideShown')) {
-        //     // モーダルがDOMに追加されてからガイドを表示
-        //     setTimeout(() => showSwipeGuide(overlay), 100); // overlay要素を渡す
-        // }
-        setTimeout(() => showSwipeGuide(overlay), 100); // overlay要素を渡す
-        // --- 【★追加部分ここまで★】 ---
+        
+        
+        setTimeout(() => showSwipeGuide(overlay, '左右スワイプで日付移動', 'swipeGuideShown_List'), 100); 
+        
+        
 
 
         document.body.appendChild(overlay);
