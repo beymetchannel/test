@@ -436,11 +436,12 @@
             z-index: 1500; 
             display: flex;
             flex-direction: column; 
-            justify-content: center; /* 中央寄せ */
+            justify-content: flex-end; /* 画面下寄せに */
             align-items: center;
             overflow: hidden; 
-            border-radius: 0; /* 修正: 親は全画面オーバーレイのため角丸不要 */
+            border-radius: 0; 
             transition: opacity 0.5s;
+            padding-bottom: 20px; /* 画面下からのマージン */
         }
 
         .swipe-guide-content {
@@ -455,12 +456,12 @@
 
         .hand-icon {
             width: 120px; 
-            height: 120px;
+            height: 160px;
             position: absolute;
-            top: 50%; /* 修正: 垂直中央 */
+            top: 50%; 
             left: 50%; 
-            margin-left: -60px; /* 中央揃えのため */
-            margin-top: 0px; /* 修正: 垂直中央寄せのため0 */
+            margin-left: -60px; 
+            margin-top: 0px; 
             animation: swipeAnim 4s ease-in-out infinite; 
             filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
         }
@@ -471,7 +472,9 @@
             font-size: 24px; 
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
             position: absolute;
-            top: calc(50% - 100px); /* 修正: アイコンの上に配置 */
+            top: 50%; /* 修正: 親要素 (swipe-guide-content) の垂直中央 */
+            left: 0; /* 追加: 中央に配置するために左端から配置 */
+            transform: translateY(-50%); /* 追加: 要素自体の高さの半分だけ上に戻し、垂直中央寄せを完了 */
             width: 100%;
             text-align: center;
         }
@@ -742,7 +745,7 @@
         
         const swipeText = document.createElement('div');
         swipeText.classList.add('swipe-text');
-        swipeText.textContent = '左右にスワイプして日付を移動';
+        swipeText.textContent = '左右スワイプで日付移動';
 
         guideContent.appendChild(swipeText);
         guideContent.appendChild(handIcon);
