@@ -183,7 +183,7 @@
             background-color: #f4f4f4;
             font-size: 0.8em;
             user-select: none;
-            transition: background-color 0.1s;
+            transition: background-color 0.2s;
             color: #505050;
         }
         .pref-label input[type="checkbox"] { display: none; }
@@ -242,7 +242,7 @@
 
         .fixed-close-btn {
             position: fixed;
-            top: calc(40px + env(safe-area-inset-top)); /* 変更: 20px -> 40px */
+            top: calc(20px + env(safe-area-inset-top)); 
             right: calc(20px + env(safe-area-inset-right));
             width: 40px;
             height: 40px;
@@ -424,6 +424,68 @@
             overflow-x: hidden; 
         }
 
+        /* --- スワイプガイド用CSSの修正 --- */
+        .swipe-guide-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* 半透明のオーバーレイを少し濃く */
+            z-index: 1500; 
+            display: flex;
+            flex-direction: column; 
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; 
+            border-radius: 8px; 
+            transition: opacity 0.5s;
+        }
+
+        .swipe-guide-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%; 
+            height: 150px; /* アイコンサイズに合わせて調整 */
+            position: relative;
+        }
+
+        .hand-icon {
+            width: 120px; /* 3倍に拡大 */
+            height: 120px;
+            /* アイコンの向きは変えず、上向きのまま (rotate(90deg)を削除) */
+            transform: translate(0, 0); 
+            position: absolute;
+            top: 55%; /* アイコンが中央より少し下にくるように調整 */
+            left: 50%; 
+            margin-left: -60px; /* 中央揃えのため */
+            margin-top: -60px;
+            animation: swipeAnim 4s ease-in-out infinite; /* 4秒でゆっくり */
+            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.8)); /* 白い影を付けて視認性アップ */
+        }
+
+        .swipe-text {
+            color: white;
+            font-weight: bold;
+            font-size: 20px; /* テキストも少し大きく */
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+        }
+
+        @keyframes swipeAnim {
+            0% { transform: translate(0px, 0) scale(1); opacity: 1; }
+            25% { transform: translate(-100px, 0) scale(1.1); opacity: 0.9; } /* 左へ大きく移動 */
+            50% { transform: translate(0px, 0) scale(1); opacity: 1; } /* 中央に戻る */
+            75% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } /* 右へ大きく移動 */
+            100% { transform: translate(0px, 0) scale(1); opacity: 1; } /* 中央に戻る */
+        }
+        /* --- スワイプガイド用CSSの修正ここまで --- */
+
         @keyframes slideInFromRight {
             from { transform: translateX(50px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -435,10 +497,10 @@
 
 
         .content-slide-in-next {
-            animation: slideInFromRight 0.3s linear forwards; /* 変更: ease-out -> linear */
+            animation: slideInFromRight 0.3s ease-out forwards;
         }
         .content-slide-in-prev {
-            animation: slideInFromLeft 0.3s linear forwards; /* 変更: ease-out -> linear */
+            animation: slideInFromLeft 0.3s ease-out forwards;
         }
 
         .event-list-modal-content h3 {
@@ -661,6 +723,52 @@
             }
         }
     }
+    
+    // handicon.pngを使用したスワイプガイドを表示する関数 (修正)
+    function showSwipeGuide(modalContentElement) {
+        // 既に表示済みの場合は何もしない
+        if (localStorage.getItem('swipeGuideShown')) {
+            return; 
+        }
+
+        const guideOverlay = document.createElement('div');
+        guideOverlay.classList.add('swipe-guide-overlay');
+
+        const guideContent = document.createElement('div');
+        guideContent.classList.add('swipe-guide-content');
+
+        const handIcon = document.createElement('img');
+        handIcon.classList.add('hand-icon');
+        handIcon.src = 'handicon.png'; // handicon.pngを同ディレクトリに配置
+        handIcon.alt = 'Swipe Hand Icon';
+        
+        const swipeText = document.createElement('div');
+        swipeText.classList.add('swipe-text');
+        swipeText.textContent = '左右にスワイプして日付を移動';
+
+        guideContent.appendChild(swipeText);
+        guideContent.appendChild(handIcon);
+        guideOverlay.appendChild(guideContent);
+
+        // モーダルコンテンツのスクロールを一時的にロック
+        modalContentElement.style.overflowY = 'hidden';
+
+        modalContentElement.appendChild(guideOverlay);
+
+        // 3秒後にガイドを自動で非表示
+        setTimeout(() => {
+            guideOverlay.style.opacity = '0';
+            guideOverlay.style.transition = 'opacity 0.5s';
+            setTimeout(() => {
+                guideOverlay.remove();
+                // ロック解除
+                modalContentElement.style.overflowY = 'auto'; 
+                // 初回表示完了フラグを設定
+                localStorage.setItem('swipeGuideShown', 'true');
+            }, 500);
+        }, 3000); // 3秒表示
+    }
+
 
     function formatTime(timeStr) {
         if (!timeStr) return '';
@@ -1008,6 +1116,8 @@
         element.removeEventListener('touchend', element.touchEndHandler);
 
         element.touchStartHandler = (e) => {
+            // スクロール可能な要素（リスト）をスワイプしたときに、縦方向のスクロールと干渉しないよう注意が必要
+            // 今回のリストモーダルは縦スクロールのみを許可しているため、ここでは単純に実装する
             touchstartX = e.changedTouches[0].screenX;
         };
         
@@ -1025,9 +1135,11 @@
                 return; 
             }
 
+            // 右にスワイプ（touchendX > touchstartX）
             if (diff > 0) {
                 onSwipeRight();
             } 
+            // 左にスワイプ（touchendX < touchstartX）
             else {
                 onSwipeLeft();
             }
@@ -1181,6 +1293,15 @@
                 document.body.style.overflow = ''; 
             }
         });
+        
+        // --- 【★スワイプガイド追加部分★】 ---
+        // ガイドをリストモーダルコンテンツに追加
+        if (!localStorage.getItem('swipeGuideShown')) {
+            // モーダルがDOMに追加されてからガイドを表示
+            setTimeout(() => showSwipeGuide(content), 100); 
+        }
+        // --- 【★追加部分ここまで★】 ---
+
 
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
@@ -1570,6 +1691,12 @@
 
                     dayCell.appendChild(eventLabel);
                 });
+
+                dayCell.onclick = (e) => {
+                    if (e.target === dayNumber) { 
+                        dayClickHandler({ currentTarget: dayNumber });
+                    }
+                };
 
                 gridWrapper.appendChild(dayCell);
             }
