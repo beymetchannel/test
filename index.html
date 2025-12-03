@@ -18,7 +18,8 @@
         body {
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
             margin: 0;
-            padding: 10px;
+            /* PWAのセーフエリア（ホームインジケーターなど）に対応するための修正 */
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
             background-color: #f4f4f4;
             overflow-x: hidden;
         }
@@ -567,7 +568,7 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
     const supabaseUrl = 'https://yyrsscvofuoufkujetgf.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhN65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const JAPAN_PREFECTURES_BY_REGION = {
@@ -810,7 +811,7 @@
         if (capacityPresent || feePresent) {
              capacityFeeHtml = `
                 <p>
-                    <strong>定員:</strong> ${event.capacity|| '-'}${feePresent ?` (${event.fee})` : ''} 
+                    <strong>定員:</strong> ${event.capacity|| '-'}${(feePresent && event.fee) ?` (${event.fee})` : ''} 
                 </p>
              `;
         }
