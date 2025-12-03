@@ -18,7 +18,6 @@
         body {
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
             margin: 0;
-            /* PWAのセーフエリア（ホームインジケーターなど）に対応するための修正 */
             padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
             background-color: #f4f4f4;
             overflow-x: hidden;
@@ -241,7 +240,6 @@
             padding-bottom: 5px;
         }
 
-        /* Day List Modal と Event Details Modal の両方で使われます */
         .fixed-close-btn {
             position: fixed;
             top: calc(20px + env(safe-area-inset-top)); 
@@ -422,7 +420,6 @@
             max-width: 600px;
             max-height: 100%;
             position: relative;
-            /* 修正1: 垂直方向のスクロールを許可 */
             overflow-y: auto; 
             overflow-x: hidden; 
         }
@@ -483,7 +480,7 @@
             cursor: pointer;
             transition: background-color 0.2s;
             gap: 10px;
-            margin-bottom: 5px; /* カード間のスペースを追加 */
+            margin-bottom: 5px;
         }
         .event-card:hover {
             background-color: rgb(245, 245, 245);
@@ -610,6 +607,7 @@
     let swipeableEvents = []; 
     let currentEventIndex = -1;
     let uniqueEventDates = []; 
+    let allCalendarDates = [];
 
     
     const searchButton = document.getElementById('search-button');
@@ -739,6 +737,33 @@
         return [...new Set(sortedDates)];
     }
 
+    function getAllDatesInCalendarRange() {
+        const dates = [];
+        let currentYear = TARGET_START_YEAR;
+        let currentMonth = TARGET_START_MONTH;
+        const maxYear = TARGET_MAX_DATE.getFullYear();
+        const maxMonth = TARGET_MAX_DATE.getMonth() + 1;
+        const maxDay = TARGET_MAX_DATE.getDate();
+
+        while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                if (currentYear === maxYear && currentMonth === maxMonth && day > maxDay) {
+                    break;
+                }
+                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                dates.push(dateString);
+            }
+
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+        }
+        return dates;
+    }
 
     function getTimeValue(timeStr) {
         if (!timeStr) return 99999; 
@@ -802,7 +827,10 @@
         
         const eligibilityRaw = event.eligibility ? event.eligibility.replace('参加資格：', '').trim() : '';
         const eligibilityContent = linkifyText(eligibilityRaw);
+        
         const entryContent = linkifyText(event.entry || '');
+        const entryDisplay = entryContent ? ` (${entryContent})` : '';
+
         const detailsContent = linkifyText(event.details || '');
 
         const capacityPresent = !!event.capacity;
@@ -834,9 +862,10 @@
             '';
 
         const eligibilityEntryPresent = eligibilityRaw || event.entry;
+        
         const eligibilityEntryHtml = eligibilityEntryPresent ? `
             <p>
-                <strong>受付:</strong> ${eligibilityContent || '-'} (${entryContent || '-'})
+                <strong>受付:</strong> ${eligibilityContent || '-'} ${entryDisplay}
             </p>
         ` : '';
         
@@ -1010,9 +1039,6 @@
         const newContentWrapper = document.createElement('div');
         newContentWrapper.classList.add('day-list-content-wrapper');
         newContentWrapper.style.padding = '10px';
-        /* 修正2: 冗長な高さとスクロール設定を削除。親要素(.event-list-modal-content)がスクロールを管理する */
-        // newContentWrapper.style.maxHeight = 'calc(100dvh - 40px)'; 
-        // newContentWrapper.style.overflowY = 'auto'; 
 
 
         const date = new Date(currentDateString);
@@ -1116,13 +1142,13 @@
         content.classList.add('event-list-modal-content');
         
 
-        let currentDayIndex = uniqueEventDates.indexOf(dateString);
+        let currentDayIndex = allCalendarDates.indexOf(dateString);
         let currentDateString = dateString;
 
         function showPrevDay() {
             if (currentDayIndex > 0) {
                 currentDayIndex--;
-                const prevDate = uniqueEventDates[currentDayIndex];
+                const prevDate = allCalendarDates[currentDayIndex];
                 const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
                 eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = prevDate;
@@ -1132,9 +1158,9 @@
         }
 
         function showNextDay() {
-            if (currentDayIndex < uniqueEventDates.length - 1) {
+            if (currentDayIndex < allCalendarDates.length - 1) {
                 currentDayIndex++;
-                const nextDate = uniqueEventDates[currentDayIndex];
+                const nextDate = allCalendarDates[currentDayIndex];
                 const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
                 eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = nextDate;
@@ -1662,6 +1688,7 @@
 
         filteredEvents = localFilteredEvents;
         uniqueEventDates = getUniqueEventDates(filteredEvents); 
+        allCalendarDates = getAllDatesInCalendarRange();
 
 
         const descriptionText = filterDescription.length > 0 
