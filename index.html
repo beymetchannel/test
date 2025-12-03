@@ -242,7 +242,7 @@
 
         .fixed-close-btn {
             position: fixed;
-            top: calc(20px + env(safe-area-inset-top)); 
+            top: calc(40px + env(safe-area-inset-top)); /* 変更: 20px -> 40px */
             right: calc(20px + env(safe-area-inset-right));
             width: 40px;
             height: 40px;
@@ -435,10 +435,10 @@
 
 
         .content-slide-in-next {
-            animation: slideInFromRight 0.3s ease-out forwards;
+            animation: slideInFromRight 0.3s linear forwards; /* 変更: ease-out -> linear */
         }
         .content-slide-in-prev {
-            animation: slideInFromLeft 0.3s ease-out forwards;
+            animation: slideInFromLeft 0.3s linear forwards; /* 変更: ease-out -> linear */
         }
 
         .event-list-modal-content h3 {
@@ -1741,4 +1741,3 @@
 </script>
 </body>
 </html>
-
