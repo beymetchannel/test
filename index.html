@@ -10,6 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BEYカレンダー">
     <title>BEYカレンダー</title>
+    <link rel="preload" href="handicon.png" as="image">
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -424,21 +425,21 @@
             overflow-x: hidden; 
         }
 
-        /* --- スワイプガイド用CSSの修正 --- */
+        /* --- スワイプガイド用CSSの修正 (モーダルオーバーレイ全体に表示) --- */
         .swipe-guide-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5); /* 半透明のオーバーレイを少し濃く */
+            height: 100%; /* 親 (.event-list-modal-overlay) 全体を覆う */
+            background-color: rgba(0, 0, 0, 0.5); 
             z-index: 1500; 
             display: flex;
             flex-direction: column; 
-            justify-content: center;
+            justify-content: center; /* 中央寄せ */
             align-items: center;
             overflow: hidden; 
-            border-radius: 8px; 
+            border-radius: 0; /* 修正: 親は全画面オーバーレイのため角丸不要 */
             transition: opacity 0.5s;
         }
 
@@ -448,38 +449,38 @@
             align-items: center;
             justify-content: center;
             width: 100%; 
-            height: 150px; /* アイコンサイズに合わせて調整 */
+            height: 150px; 
             position: relative;
         }
 
         .hand-icon {
-            width: 120px; /* 3倍に拡大 */
+            width: 120px; 
             height: 120px;
             position: absolute;
-            top: 70%; /* アイコンが中央より少し下にくるように調整 */
+            top: 50%; /* 修正: 垂直中央 */
             left: 50%; 
             margin-left: -60px; /* 中央揃えのため */
-            margin-top: -60px;
-            animation: swipeAnim 4s ease-in-out infinite; /* 4秒でゆっくり */
+            margin-top: 0px; /* 修正: 垂直中央寄せのため0 */
+            animation: swipeAnim 4s ease-in-out infinite; 
             filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
         }
 
         .swipe-text {
             color: white;
             font-weight: bold;
-            font-size: 24px; /* テキストも少し大きく */
+            font-size: 24px; 
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
             position: absolute;
-            top: -20%;
+            top: calc(50% - 100px); /* 修正: アイコンの上に配置 */
             width: 100%;
             text-align: center;
         }
 
         @keyframes swipeAnim {
             0% { transform: translate(-100px, 0) scale(1); opacity: 1; }
-            33% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } /* 右へ大きく移動 */
-            66% { transform: translate(-100px, 0) scale(1.1); opacity: 0.9; } /* 左へ大きく移動 */
-            100% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } /* 右へ大きく移動 */
+            33% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } 
+            66% { transform: translate(-100px, 0) scale(1.1); opacity: 0.9; } 
+            100% { transform: translate(100px, 0) scale(1.1); opacity: 0.9; } 
         }
         /* --- スワイプガイド用CSSの修正ここまで --- */
 
@@ -722,7 +723,7 @@
     }
     
     // handicon.pngを使用したスワイプガイドを表示する関数 (修正)
-    function showSwipeGuide(modalContentElement) {
+    function showSwipeGuide(overlayElement) { // 引数をモーダルオーバーレイに変更
         // // 既に表示済みの場合は何もしない
         // if (localStorage.getItem('swipeGuideShown')) {
         //     return; 
@@ -747,10 +748,10 @@
         guideContent.appendChild(handIcon);
         guideOverlay.appendChild(guideContent);
 
-        // モーダルコンテンツのスクロールを一時的にロック
-        modalContentElement.style.overflowY = 'hidden';
+        // モーダルコンテンツのスクロールロック/解除は不要になりました
+        // modalContentElement.style.overflowY = 'hidden'; <--- 削除
 
-        modalContentElement.appendChild(guideOverlay);
+        overlayElement.appendChild(guideOverlay); // モーダルオーバーレイ全体に追加
 
         // 3秒後にガイドを自動で非表示
         setTimeout(() => {
@@ -758,8 +759,7 @@
             guideOverlay.style.transition = 'opacity 0.5s';
             setTimeout(() => {
                 guideOverlay.remove();
-                // ロック解除
-                modalContentElement.style.overflowY = 'auto'; 
+                // ロック解除処理も削除
                 // 初回表示完了フラグを設定
                 localStorage.setItem('swipeGuideShown', 'true');
             }, 500);
@@ -1292,12 +1292,12 @@
         });
         
         // --- 【★スワイプガイド追加部分★】 ---
-        // ガイドをリストモーダルコンテンツに追加
+        // ガイドをオーバーレイ全体に追加するように修正
         // if (!localStorage.getItem('swipeGuideShown')) {
         //     // モーダルがDOMに追加されてからガイドを表示
-        //     setTimeout(() => showSwipeGuide(content), 100); 
+        //     setTimeout(() => showSwipeGuide(overlay), 100); // overlay要素を渡す
         // }
-        setTimeout(() => showSwipeGuide(content), 100); 
+        setTimeout(() => showSwipeGuide(overlay), 100); // overlay要素を渡す
         // --- 【★追加部分ここまで★】 ---
 
 
