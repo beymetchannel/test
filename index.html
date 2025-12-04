@@ -1088,10 +1088,9 @@
         closeButton.innerHTML = '×';
         closeButton.onclick = closeEventModal;
         eventModal.appendChild(closeButton);
-        
-        disableScroll();
-        eventModal.style.display = 'flex';
-        
+
+        eventModal.style.display = 'box';
+        document.body.style.overflow = 'hidden'; 
         
         
         setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
@@ -1133,7 +1132,7 @@
             createDayEventModal(returnToDayDate, eventsForDay);
             returnToDayDate = null; 
         } else {
-            enableScroll(); 
+            document.body.style.overflow = ''; 
         }
     }
     window.closeEventModal = closeEventModal;
@@ -1143,21 +1142,7 @@
             closeEventModal();
         }
     });
-    /**
-     * スクロールを禁止する関数 (htmlとbodyの両方を制御)
-     */
-    function disableScroll() {
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden'; 
-    }
 
-    /**
-     * スクロールを許可する関数 (htmlとbodyの両方を制御)
-     */
-    function enableScroll() {
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-    }
     function setupSwipe(element, onSwipeRight, onSwipeLeft) {
         let touchstartX = 0;
         let touchendX = 0;
