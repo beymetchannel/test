@@ -124,8 +124,21 @@
             color: #505050;
         }
 
-        .day-cell { min-height: 40px; padding: 5px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
+        .day-cell { 
+            min-height: 40px; 
+            padding: 5px; 
+            border-right: 1px solid #cccccc; 
+            border-bottom: 1px solid #cccccc; 
+            position: relative; 
+            overflow: hidden;
+            background-color: #ffffff; /* デフォルトのセルの背景色 */
+        }
         
+        /* 1日より前の空のセル */
+        .day-cell.empty-day-cell {
+            background-color: #f9f9f9; 
+        }
+
         .day-cell.today-cell { 
             background-color: #EDFFED !important;
         }
@@ -169,6 +182,7 @@
             text-overflow: ellipsis;
             cursor: pointer;
         }
+        /* イベントラベルの元の色 */
         .label-yellow { background-color: #FFC75F; color: #505050; }
         .label-orange { background-color: #FF9772; color: #505050; }
         .label-lightblue { background-color: #6de7d7; color: #505050; }
@@ -592,7 +606,7 @@
             text-overflow: ellipsis;
         }
         
-        /* --- ここからダークモード関連の追加 --- */
+        /* --- ここからダークモード関連の追加/修正 --- */
         .theme-toggle-btn {
             position: fixed;
             top: calc(10px + env(safe-area-inset-top)); 
@@ -615,7 +629,8 @@
             background-color: #121212; /* 全体背景 */
             color: #e0e0e0; /* 基本テキスト色 */
         }
-
+        
+        /* 1. search-container & Headings text/color */
         body.dark-mode h1,
         body.dark-mode .search-container p,
         body.dark-mode .search-container label,
@@ -636,7 +651,8 @@
         body.dark-mode .search-container,
         body.dark-mode .calendar-container,
         body.dark-mode #modal-content,
-        body.dark-mode .event-list-modal-content {
+        body.dark-mode .event-list-modal-content,
+        body.dark-mode #prefecture-checkbox-container {
             background-color: #1e1e1e; /* コンテナ背景 */
             border-color: #303030;
             box-shadow: none; 
@@ -650,13 +666,19 @@
         body.dark-mode .day-cell,
         body.dark-mode .day-header {
             border-color: #303030;
+            background-color: #1e1e1e; /* デフォルトのセルの背景色 */
         }
-
+        
+        /* 2. カレンダーの1日よりも前のセル */
+        .dark-mode .day-cell.empty-day-cell { /* JS修正後の空のセル */
+            background-color: #101010 !important; 
+        }
+        
         body.dark-mode .day-cell:nth-child(7n),
         body.dark-mode .day-cell:nth-child(7n+1) { 
             background-color: #252525; /* 週末セル背景 */
         }
-
+        
         body.dark-mode .day-cell.today-cell { /* 今日のセル背景 */
             background-color: #0a3a0a !important; 
         }
@@ -664,7 +686,16 @@
         body.dark-mode .day-header {
             background-color: #333333; /* 曜日ヘッダー */
         }
+        
+        /* 週末の日付の色を調整 */
+        .dark-mode .calendar-grid .day-cell:nth-child(7n) .day-number {
+            color: #8989ff; /* 青色を暗めに */
+        }
+        .dark-mode .calendar-grid .day-cell:nth-child(7n+1) .day-number {
+            color: #ff89b3; /* 赤色を暗めに */
+        }
 
+        /* 都道府県ラベル */
         body.dark-mode .pref-label {
             background-color: #333333;
             border-color: #444444;
@@ -672,7 +703,7 @@
         }
         body.dark-mode .pref-label.checked {
             background-color: #5a7d3a; /* #B3FF52 のダーク版 */
-            color: #ffffff;
+            color: #1e1e1e; /* 選択時は黒に近い色 */
         }
         body.dark-mode .region-header-container {
             border-bottom-color: #303030;
@@ -681,6 +712,7 @@
             border-left-color: #5a7d3a;
         }
 
+        /* 検索入力/ボタン */
         body.dark-mode .keyword-search-group input[type="text"] {
             background-color: #333333;
             color: #e0e0e0;
@@ -691,6 +723,7 @@
             color: #e0e0e0;
         }
 
+        /* イベントカード */
         body.dark-mode .event-card {
             background-color: #252525;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -708,6 +741,7 @@
             color: #a0a0a0;
         }
 
+        /* ラベル凡例 */
         body.dark-mode .legend-item {
             background-color: #333333;
             border-color: #444444;
@@ -716,16 +750,33 @@
         body.dark-mode .legend-item.active {
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
-
+        
+        /* 3. 詳細モーダル内のリンクのfont-color */
         body.dark-mode a {
-            color: #80caff; /* リンク色 */
+            color: #99ccff; /* 明るいリンク色 */
         }
+        
+        body.dark-mode #modal-content p {
+            border-bottom-color: #333333; /* モーダル内区切り線 */
+        }
+        
+        /* === イベントラベルカラーの修正 (リクエスト箇所) === */
+        /* 背景色50%透明、文字色は元の色 */
+        .dark-mode .event-label.label-yellow { background-color: rgba(255, 199, 95, 0.2); color: #FFC75F; }
+        .dark-mode .event-label.label-orange { background-color: rgba(255, 151, 114, 0.2); color: #FF9772; }
+        .dark-mode .event-label.label-lightblue { background-color: rgba(109, 231, 215, 0.2); color: #6de7d7; }
+        .dark-mode .event-label.label-blue { background-color: rgba(109, 231, 184, 0.2); color: #6de7b8; }
+        .dark-mode .event-label.label-gray { background-color: rgba(240, 97, 99, 0.2); color: #f06163; }
+        .dark-mode .event-label.label-black { background-color: rgba(132, 94, 194, 0.2); color: #845EC2; }
+        .dark-mode .event-label.label-green { background-color: rgba(250, 248, 113, 0.2); color: #FAF871; }
+        .dark-mode .event-label.label-meetup { background-color: rgba(160, 250, 141, 0.2); color: #A0FA8D; }
+        /* ============================================== */
 
         body.dark-mode .fixed-close-btn {
             background-color: rgba(255, 255, 255, 0.1);
             color: #ffffff;
         }
-        /* --- ここまでダークモード関連の追加 --- */
+        /* --- ここまでダークモード関連の追加/修正 --- */
     </style>
 </head>
 <body>
@@ -822,7 +873,7 @@
     const eventModal = document.getElementById('event-modal');
     const modalContent = document.getElementById('modal-content');
     const legendContainer = document.getElementById('label-legend-container');
-    const themeToggleButton = document.getElementById('theme-toggle-btn'); // <-- 追加
+    const themeToggleButton = document.getElementById('theme-toggle-btn'); 
 
     function saveSearchState() {
         const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
@@ -866,7 +917,7 @@
         }
     }
     
-    // --- 追加: テーマ切替ロジック ---
+    // --- テーマ切替ロジック ---
     function toggleTheme() {
         const isDarkMode = document.body.classList.toggle('dark-mode');
         localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
@@ -1575,7 +1626,7 @@
     
     async function loadDataAndInitialize() {
         loadSearchState();
-        loadTheme(); // <-- 追加: テーマを読み込む
+        loadTheme(); 
 
         try {
             const jsonPromise = fetch('./events.json')
@@ -1597,7 +1648,7 @@
             const combinedEvents = [...jsonEvents, ...supabaseEvents];
             
             ALL_BEYBLADE_EVENTS = combinedEvents
-                .map(event => cleanEventStrings(event)) // <-- 全角スペース置換処理を適用
+                .map(event => cleanEventStrings(event)) 
                 .map(event => {
                     const parsedDate = parseDate(event.date);
                     if (!parsedDate) return null;
@@ -1864,8 +1915,7 @@
 
             for (let i = 0; i < startDay; i++) {
                 const emptyCell = document.createElement('div');
-                emptyCell.classList.add('day-cell');
-                emptyCell.style.backgroundColor = 'var(--empty-cell-bg, #f9f9f9)'; // ダークモード対応
+                emptyCell.classList.add('day-cell', 'empty-day-cell'); // クラスを追加
                 gridWrapper.appendChild(emptyCell);
             }
 
@@ -2087,7 +2137,7 @@
         }
     });
 
-    themeToggleButton.addEventListener('click', toggleTheme); // <-- 追加
+    themeToggleButton.addEventListener('click', toggleTheme); 
 
     loadDataAndInitialize();
 
