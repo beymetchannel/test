@@ -686,6 +686,22 @@
     const legendContainer = document.getElementById('label-legend-container');
 
 
+    /**
+     * スクロールを禁止する関数 (htmlとbodyの両方を制御)
+     */
+    function disableScroll() {
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden'; 
+    }
+
+    /**
+     * スクロールを許可する関数 (htmlとbodyの両方を制御)
+     */
+    function enableScroll() {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+    }
+
     function saveSearchState() {
         const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
             .map(wrapper => {
@@ -853,7 +869,7 @@
         if (jpMatch) {
             return {
                 year: parseInt(jpMatch[1], 10),
-                month: parseInt(jpMatch[2], 10), 
+                month: parseInt(jpMatch[2], 10),
                 day: parseInt(jpMatch[3], 10)
             };
         }
@@ -866,11 +882,10 @@
                 day: parseInt(isoMatch[3], 10)
             };
         }
-
         console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
         return null;
     }
-    
+
     function getUniqueEventDates(events) {
         const dateStrings = events.map(e => e.dateString).filter(d => d);
         const sortedDates = dateStrings.sort((a, b) => new Date(a) - new Date(b));
@@ -881,17 +896,19 @@
         const dates = [];
         let currentYear = TARGET_START_YEAR;
         let currentMonth = TARGET_START_MONTH;
+        
         const maxYear = TARGET_MAX_DATE.getFullYear();
         const maxMonth = TARGET_MAX_DATE.getMonth() + 1;
         const maxDay = TARGET_MAX_DATE.getDate();
 
         while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
             const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
-            
             for (let day = 1; day <= daysInMonth; day++) {
+                
                 if (currentYear === maxYear && currentMonth === maxMonth && day > maxDay) {
                     break;
                 }
+
                 const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 dates.push(dateString);
             }
@@ -906,10 +923,8 @@
     }
 
     function getTimeValue(timeStr) {
-        if (!timeStr) return 99999; 
-        
+        if (!timeStr) return 99999;
         const match = timeStr.match(/(\d{1,2})[:：](\d{2})/);
-        
         if (match) {
             const hours = parseInt(match[1], 10);
             const minutes = parseInt(match[2], 10);
@@ -919,26 +934,26 @@
     }
 
     function getColorClass(eventType) {
-        if (!eventType) return { class: 'label-green', label: '' }; 
-        
+        if (!eventType) return { class: 'label-green', label: '' };
+
         if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
             return { class: 'label-yellow', label: '' };
         } else if (eventType.includes("G3大会/チーム戦（G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
-            return { class: 'label-label', label: '' };
+            return { class: 'label-yellow', label: '' }; 
         } else if (eventType.includes("G3大会（オープン") || eventType.includes("オープンクラス")) {
             return { class: 'label-orange', label: '' };
         } else if (eventType.includes("G3大会/チーム戦（オープン") || eventType.includes("オープンクラス")) {
             return { class: 'label-orange', label: '' };
         } else if (eventType.includes("S1イベント") || eventType.includes("アンバサダーイベント")) {
             return { class: 'label-lightblue', label: '' };
-        } else if (eventType.includes("交流会")) { 
+        } else if (eventType.includes("交流会")) {
             return { class: 'label-meetup', label: '' };
         } else if (eventType.includes("G2大会")) {
-            return { class: 'label-gray', label: '' };
+            return { class: 'label-gray', label: '' }; 
         } else if (eventType.includes("G1大会")) {
-            return { class: 'label-black', label: '' };
+            return { class: 'label-black', label: '' }; 
         } else {
-            return { class: 'label-green', label: '' }; 
+            return { class: 'label-green', label: '' };
         }
     }
 
@@ -949,25 +964,25 @@
         if(colorClass === 'label-orange') return 'type-G3O';
         if(colorClass === 'label-yellow') return 'type-G3R';
         if(colorClass === 'label-lightblue') return 'type-S1';
-        if(colorClass === 'label-meetup') return 'type-Meetup'; 
+        if(colorClass === 'label-meetup') return 'type-Meetup';
         if(colorClass === 'label-blue') return 'type-Amb';
         return 'type-Other';
     }
-    
+
+
     function cleanEventTypeText(eventType) {
         if (!eventType) return '';
         return eventType.replace('B4ストアカップ', '').trim();
     }
-
+    
     function updateEventDetailsModal(event, eventList, direction = null) {
-        
         const eventTypeText = cleanEventTypeText(event.type);
         const badgeClass = getBadgeClass(event.type);
-        const timeVal = event.time ? `${event.time} (${event.date})` : `(${event.date})`;
         
+        const timeVal = event.time ? `${formatTime(event.time)} (${formatDate(event.date)})` : `(${formatDate(event.date)})`;
+
         const eligibilityRaw = event.eligibility ? event.eligibility.replace('参加資格：', '').trim() : '';
         const eligibilityContent = linkifyText(eligibilityRaw);
-        
         const entryContent = linkifyText(event.entry || '');
         const entryDisplay = entryContent ? ` (${entryContent})` : '';
 
@@ -975,34 +990,32 @@
 
         const capacityPresent = !!event.capacity;
         const feePresent = !!event.fee && event.fee !== '-';
+        
         let capacityFeeHtml = '';
         if (capacityPresent || feePresent) {
-             capacityFeeHtml = `
+            capacityFeeHtml = `
                 <p>
-                    <strong>定員:</strong> ${event.capacity|| '-'}${(feePresent && event.fee) ?` (${event.fee})` : ''} 
+                    <strong>定員:</strong> ${event.capacity|| '-'}
+                    ${(feePresent && event.fee) ?` (${event.fee})` : ''}
                 </p>
-             `;
+            `;
         }
 
         const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
-
+        
         const address = event.address || '';
-        const mapLink = address ? `href="http://maps.google.com/?q=${encodeURIComponent(address)}"` : ''; 
+        const mapLink = address ? `href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}"` : '';
         const addressText = address ? `<a ${mapLink} target="_blank" rel="noopener noreferrer">${address}</a>` : '';
-        
         const addressHtml = `<p><strong>住所:</strong> ${addressText}</p>`;
-        
+
         const tel = event.tel || '';
         const telDisplay = tel.replace(/\n/g, '<br>');
-        const telLink = tel.replace(/[^\d+]/g, ''); 
+        const telLink = tel.replace(/[^\d+]/g, '');
         const eventName = event.name.replace('B4G2_','');
-        
-        const telHtml = tel ? 
-            `<p><strong>電話:</strong> <a href="tel:${telLink}">${telDisplay}</a></p>` : 
-            '';
+
+        const telHtml = tel ? `<p><strong>電話:</strong> <a href="tel:${telLink}">${telDisplay}</a></p>` : '';
 
         const eligibilityEntryPresent = eligibilityRaw || event.entry;
-        
         const eligibilityEntryHtml = eligibilityEntryPresent ? `
             <p>
                 <strong>受付:</strong> ${eligibilityContent || '-'} ${entryDisplay}
@@ -1012,9 +1025,8 @@
         const owner = event.owner || '';
         const ownerFlg = event.ownerFlg;
         let ownerHtml = '';
-
         if (owner && ownerFlg) {
-            const xUrl = `https://x.com/${owner}`;
+            const xUrl = `https://x.com/${owner.replace(/^@/, '')}`;
             ownerHtml = `
                 <p>
                     <strong>運営:</strong> <a href="${xUrl}" target="_blank" rel="noopener noreferrer">${owner}</a>
@@ -1023,23 +1035,20 @@
         }
 
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
-        
+
         const navIndicator = eventList.length > 1 ? ` (${currentEventIndex + 1}/${eventList.length})` : '';
+
 
         const newContentWrapper = document.createElement('div');
         newContentWrapper.style.padding = '20px';
         newContentWrapper.style.maxHeight = '90vh';
         newContentWrapper.style.overflowY = 'auto';
-
         newContentWrapper.innerHTML = `
-            
             <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
-            <h3>${eventName}</h3>
-            
+            <h3>${eventName}${navIndicator}</h3>
             <p>
                 <strong>日時:</strong> ${timeVal}
             </p>
-            
             ${capacityFeeHtml}
             ${locationHtml}
             ${addressHtml}
@@ -1048,7 +1057,7 @@
             ${detailsHtml}
             ${ownerHtml}
         `;
-        
+
         if (direction === 'next') {
             newContentWrapper.classList.add('content-slide-in-next');
         } else if (direction === 'prev') {
@@ -1071,37 +1080,35 @@
             }
             return getTimeValue(a.time) - getTimeValue(b.time);
         });
-        
+
         const index = eventList.findIndex(e => 
-            e.dateString === event.dateString && 
-            e.time === event.time && 
-            e.name === event.name
+            e.dateString === event.dateString && e.time === event.time && e.name === event.name 
         );
         
         swipeableEvents = eventList;
         currentEventIndex = index;
 
         updateEventDetailsModal(event, eventList);
-        
+
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
         closeButton.onclick = closeEventModal;
         eventModal.appendChild(closeButton);
 
-        document.body.style.overflow = 'hidden'; 
         eventModal.style.display = 'flex';
-        
-        
-        
-        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
+        // --- モーダル表示中はカレンダーのスクロールを禁止（html, body両方） ---
+        disableScroll(); 
+        // ------------------------------------------------
+
+        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100);
     }
-    
+
     function showPrevEvent() {
         if (currentEventIndex > 0) {
             currentEventIndex--;
             const prevEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
+            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev');
         }
     }
 
@@ -1109,10 +1116,10 @@
         if (currentEventIndex < swipeableEvents.length - 1) {
             currentEventIndex++;
             const nextEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
+            updateEventDetailsModal(nextEvent, swipeableEvents, 'next');
         }
     }
-    
+
     function closeEventModal() {
         eventModal.style.display = 'none';
         modalContent.style.padding = '20px';
@@ -1123,6 +1130,7 @@
         }
 
         if (returnToDayDate) {
+            // 詳細からリストモーダルに戻る場合はスクロールを復元しない
             isReturningFromDetail = true;
             const eventsForDay = filteredEvents.filter(event => 
                 event.dateString === returnToDayDate
@@ -1133,7 +1141,8 @@
             createDayEventModal(returnToDayDate, eventsForDay);
             returnToDayDate = null; 
         } else {
-            document.body.style.overflow = '';
+            // リストモーダルに戻らない場合はスクロールを復元
+            enableScroll(); 
         }
     }
     window.closeEventModal = closeEventModal;
@@ -1149,136 +1158,93 @@
         let touchendX = 0;
         const SWIPE_THRESHOLD = 50; 
 
+        // 既存のリスナーを削除 (二重登録防止)
         element.removeEventListener('touchstart', element.touchStartHandler);
         element.removeEventListener('touchend', element.touchEndHandler);
 
         element.touchStartHandler = (e) => {
-            
-            
             touchstartX = e.changedTouches[0].screenX;
         };
-        
+
         element.touchEndHandler = (e) => {
             touchendX = e.changedTouches[0].screenX;
             handleGesture();
         };
 
         element.addEventListener('touchstart', element.touchStartHandler, { passive: true });
-        element.addEventListener('touchend', element.touchEndHandler);
+        element.addEventListener('touchend', element.touchEndHandler, { passive: true });
 
         function handleGesture() {
             const diff = touchendX - touchstartX;
-            if (Math.abs(diff) < SWIPE_THRESHOLD) {
-                return; 
-            }
+            if (Math.abs(diff) < SWIPE_THRESHOLD) return; 
 
-            
             if (diff > 0) {
+                // 右スワイプ (前のイベント)
                 onSwipeRight();
-            } 
-            
-            else {
+            } else {
+                // 左スワイプ (次のイベント)
                 onSwipeLeft();
             }
         }
     }
 
-    function updateDayModalContent(contentElement, currentDateString, currentDayEvents, direction = null) {
+
+    function createEventCard(event) {
+        const card = document.createElement('div');
+        card.classList.add('event-card');
+        card.onclick = () => {
+            returnToDayDate = event.dateString; 
+            showEventDetails(event);
+            document.querySelector('.event-list-modal-overlay')?.remove();
+        };
         
-        const newContentWrapper = document.createElement('div');
-        newContentWrapper.classList.add('day-list-content-wrapper');
-        newContentWrapper.style.padding = '10px';
+        const timeCol = document.createElement('div');
+        timeCol.classList.add('event-time-col');
+        const timeText = document.createElement('div');
+        timeText.classList.add('event-time-text');
+        timeText.textContent = event.time ? formatTime(event.time) : ''; 
+        timeCol.appendChild(timeText);
 
+        const detailsCol = document.createElement('div');
+        detailsCol.classList.add('event-details-col');
 
-        const date = new Date(currentDateString);
-        const dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
+        const typeBadge = document.createElement('div');
+        typeBadge.classList.add('event-type-badge', getBadgeClass(event.type));
+        typeBadge.textContent = cleanEventTypeText(event.type);
 
-        const header = document.createElement('h3');
-        header.textContent = dateFormatted + (currentDayEvents.length > 0 ? ` ${currentDayEvents.length}件のイベント` : ' のイベントはありません');
-        newContentWrapper.appendChild(header);
+        const eventName = document.createElement('div');
+        eventName.classList.add('event-name');
+        eventName.textContent = event.name.replace('B4G2_','');
 
-        const listContainer = document.createElement('div');
+        const eventAddress = document.createElement('div');
+        eventAddress.classList.add('event-address');
+        eventAddress.textContent = event.location || event.address || '';
+        
+        detailsCol.appendChild(typeBadge);
+        detailsCol.appendChild(eventName);
+        detailsCol.appendChild(eventAddress);
 
-        if (currentDayEvents.length > 0) {
-            currentDayEvents.forEach(event => {
-                const card = document.createElement('div');
-                card.classList.add('event-card');
-                
-                card.onclick = () => {
-                    const listModalContent = card.closest('.event-list-modal-content');
-                    if (listModalContent) {
-                        savedScrollPosition = listModalContent.scrollTop;
-                    }
-                    returnToDayDate = currentDateString; 
-                    showEventDetails(event, currentDayEvents); 
-                    contentElement.closest('.event-list-modal-overlay').remove(); 
-                };
+        card.appendChild(timeCol);
+        card.appendChild(detailsCol);
 
-                const timeCol = document.createElement('div');
-                timeCol.classList.add('event-time-col');
-                
-                let timeText = event.time || '未定';
-                const timeMatch = timeText.match(/\d{1,2}[:：]\d{2}/);
-                if (timeMatch) {
-                    timeText = timeMatch[0].replace('：', ':'); 
-                } else if (timeText.includes('：')) {
-                    timeText = timeText.split('：')[0];
-                }
-                
-                const timeTextNode = document.createElement('span');
-                timeTextNode.classList.add('event-time-text');
-                timeTextNode.textContent = timeText;
-                timeCol.appendChild(timeTextNode);
-                card.appendChild(timeCol);
-
-                const detailsCol = document.createElement('div');
-                detailsCol.classList.add('event-details-col');
-                
-                const eventTypeText = cleanEventTypeText(event.type);
-
-                const typeBadge = document.createElement('div');
-                typeBadge.textContent = eventTypeText;
-                typeBadge.classList.add('event-type-badge');
-                
-                const badgeClass = getBadgeClass(event.type);
-                typeBadge.classList.add(badgeClass);
-                
-                detailsCol.appendChild(typeBadge);
-
-                const name = document.createElement('div');
-                name.textContent = event.name.replace('B4G2_','');
-                name.classList.add('event-name');
-                detailsCol.appendChild(name);
-
-                const address = document.createElement('div');
-                address.textContent = event.address || '';
-                address.classList.add('event-address');
-                detailsCol.appendChild(address);
-
-                card.appendChild(detailsCol);
-                listContainer.appendChild(card);
-            });
-            
-            newContentWrapper.appendChild(listContainer);
-        }
-
-        if (direction === 'next') {
-            newContentWrapper.classList.add('content-slide-in-next');
-        } else if (direction === 'prev') {
-            newContentWrapper.classList.add('content-slide-in-prev');
-        }
-
-        contentElement.innerHTML = '';
-        contentElement.style.padding = '0'; 
-        contentElement.appendChild(newContentWrapper);
+        return card;
     }
 
 
     function createDayEventModal(dateString, dayEvents) {
+        // 既存のモーダルがあれば削除
         document.querySelector('.event-list-modal-overlay')?.remove();
+
+        // イベントがない場合は何もしない
+        if (dayEvents.length === 0) {
+            return;
+        }
 
         const overlay = document.createElement('div');
         overlay.classList.add('event-list-modal-overlay');
+
+        const content = document.createElement('div');
+        content.classList.add('event-list-modal-content');
 
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
@@ -1286,483 +1252,305 @@
         
         closeButton.onclick = () => {
             overlay.remove();
-            document.body.style.overflow = ''; 
+            // --- モーダルが閉じたらスクロールを復元 ---
+            enableScroll(); 
+            // ----------------------------------------
         };
         
         overlay.appendChild(closeButton);
 
-        const content = document.createElement('div');
-        content.classList.add('event-list-modal-content');
+        const title = document.createElement('h3');
+        title.textContent = `${formatDate(dateString)} (${JAPANESE_WEEKDAYS[new Date(dateString).getDay()]}) のイベント (${dayEvents.length}件)`;
+        content.appendChild(title);
+
+        const eventListContainer = document.createElement('div');
         
+        dayEvents.forEach(event => {
+            eventListContainer.appendChild(createEventCard(event));
+        });
 
-        let currentDayIndex = allCalendarDates.indexOf(dateString);
-        let currentDateString = dateString;
-
-        function showPrevDay() {
-            if (currentDayIndex > 0) {
-                currentDayIndex--;
-                const prevDate = allCalendarDates[currentDayIndex];
-                const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
-                eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
-                currentDateString = prevDate;
-
-                updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev'); 
-            }
-        }
-
-        function showNextDay() {
-            if (currentDayIndex < allCalendarDates.length - 1) {
-                currentDayIndex++;
-                const nextDate = allCalendarDates[currentDayIndex];
-                const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
-                eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
-                currentDateString = nextDate;
-
-                updateDayModalContent(content, nextDate, eventsForNextDay, 'next'); 
-            }
-        }
-
-        updateDayModalContent(content, dateString, dayEvents);
-        
-        setupSwipe(content, showPrevDay, showNextDay); 
-
+        content.appendChild(eventListContainer);
         overlay.appendChild(content);
 
+        // オーバーレイクリックで閉じる処理
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 overlay.remove();
-                document.body.style.overflow = ''; 
+                // --- モーダルが閉じたらスクロールを復元 ---
+                enableScroll(); 
+                // ----------------------------------------
             }
         });
         
-        
-        
-        setTimeout(() => showSwipeGuide(overlay, '左右スワイプで日付移動', 'swipeGuideShown_List'), 100); 
-        
-        
-
-
         document.body.appendChild(overlay);
-        document.body.style.overflow = 'hidden';
+        // --- モーダル表示中はカレンダーのスクロールを禁止（html, body両方） ---
+        disableScroll();
+        // ------------------------------------------------
 
-        const scrollPositionToApply = isReturningFromDetail ? savedScrollPosition : 0;
-        isReturningFromDetail = false;
-
-        setTimeout(() => {
-            content.scrollTop = scrollPositionToApply;
-        }, 0);
+        setTimeout(() => showSwipeGuide(overlay, 'イベントカードをタップで詳細表示', 'swipeGuideShown_List'), 100);
     }
 
 
-    async function fetchSupabaseEvents() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() - 1);
-        
-        try {
-            const { data, error } = await supabase
-                .from('EventDB')
-                .select('*')
-                .eq('checkFlg', true);
-
-            if (error) {
-                console.error('Supabase fetch error:', error);
-                return [];
-            }
-            
-            const filteredData = data.filter(evt => {
-                const eventDateParsed = parseDate(evt.date);
-                if (!eventDateParsed) return false;
-
-                const eventDate = new Date(eventDateParsed.year, eventDateParsed.month - 1, eventDateParsed.day);
-                eventDate.setHours(0, 0, 0, 0); 
-                
-                return eventDate.getTime() >= targetDate.getTime();
-            });
-            
-            return filteredData.map(evt => ({
-                name: evt.name,
-                date: formatDate(evt.date), 
-                time: formatTime(evt.time),
-                location: evt.location,
-                address: evt.address,
-                type: evt.type || '交流会', 
-                fee: evt.fee,
-                capacity: evt.capacity,
-                eligibility: evt.eligibility,
-                entry: evt.entry,
-                detailTitle: evt.detailTitle,
-                details: evt.details,
-                tel: evt.tel,
-                owner: evt.owner,
-                ownerFlg: evt.ownerFlg
-            }));
-        } catch (err) {
-            console.error('Supabase connection failed:', err);
-            return [];
-        }
-    }
-    
-    async function loadDataAndInitialize() {
-        loadSearchState();
-
-        try {
-            const jsonPromise = fetch('./events.json')
-                .then(res => {
-                    if(!res.ok) throw new Error('JSON fetch failed');
-                    return res.json();
-                })
-                .catch(err => {
-                    console.warn('events.json読み込みエラー:', err);
-                    return [];
-                });
-
-            const [jsonEvents, supabaseEvents] = await Promise.all([
-                jsonPromise,
-                fetchSupabaseEvents()
-            ]);
-            
-
-            const combinedEvents = [...jsonEvents, ...supabaseEvents];
-            
-            ALL_BEYBLADE_EVENTS = combinedEvents
-                .map(event => cleanEventStrings(event))
-                .map(event => {
-                    const parsedDate = parseDate(event.date);
-                    if (!parsedDate) return null;
-                    
-                    const dateString = `${parsedDate.year}-${String(parsedDate.month).padStart(2, '0')}-${String(parsedDate.day).padStart(2, '0')}`;
-                    
-                    return {
-                        ...event,
-                        parsedDate: parsedDate,
-                        dateString: dateString 
-                    };
-                })
-                .filter(event => event); 
-            
-            ALL_BEYBLADE_EVENTS.sort((a, b) => {
-                if (a.dateString !== b.dateString) {
-                    return new Date(a.dateString) - new Date(b.dateString);
-                }
-                return getTimeValue(a.time) - getTimeValue(b.time);
-            });
-
-
-            if (ALL_BEYBLADE_EVENTS.length > 0) {
-                const dates = ALL_BEYBLADE_EVENTS.map(event => new Date(event.parsedDate.year, event.parsedDate.month - 1, event.parsedDate.day));
-                
-                const minDate = new Date(Math.min(...dates));
-                TARGET_MAX_DATE = new Date(Math.max(...dates));
-
-                TARGET_START_YEAR = minDate.getFullYear();
-                TARGET_START_MONTH = minDate.getMonth() + 1;
-            }
-            
-            filteredEvents = ALL_BEYBLADE_EVENTS;
-
-            populatePrefectureSelect();
-            populateLegendButtons(); 
-            
-            cityInput.value = citySearchTextFromStorage;
-            restorePrefectureSelection(selectedPrefecturesFromStorage);
-            
-            restoreRegionExpansion(expandedRegionsFromStorage);
-
-            handleSearch(true); 
-
-        } catch (error) {
-            console.error(error);
-            filterStatus.textContent = `データ読み込みエラー: ${error.message}`;
-            generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
-        }
-    }
-
-    function populateLegendButtons() {
-        legendContainer.innerHTML = '';
-        
-        EVENT_TYPES_LEGEND.forEach(item => {
-            const legendItem = document.createElement('div');
-            legendItem.classList.add('legend-item');
-            legendItem.classList.add(item.styleClass); 
-            
-            if (activeEventTypes.includes(item.key)) {
-                legendItem.classList.add('active');
-            }
-
-            legendItem.appendChild(document.createTextNode(item.label));
-            
-            legendItem.addEventListener('click', () => {
-                legendItem.classList.toggle('active');
-                toggleEventType(item.key);
-                handleSearch(); 
-            });
-
-            legendContainer.appendChild(legendItem);
+    function setupRegionToggle() {
+        const regionHeaders = prefectureContainer.querySelectorAll('.region-header-container');
+        regionHeaders.forEach(headerContainer => {
+            headerContainer.removeEventListener('click', toggleRegionCheckbox);
+            headerContainer.addEventListener('click', toggleRegionCheckbox);
         });
     }
 
-    function toggleEventType(key) {
-        const index = activeEventTypes.indexOf(key);
-        if (index > -1) {
-            activeEventTypes.splice(index, 1);
+    function toggleRegionCheckbox(e) {
+        if (e.target.closest('.region-select-label')) return; 
+
+        const regionGroup = e.currentTarget.closest('.region-group');
+        const wrapper = regionGroup.querySelector('.checkbox-wrapper');
+        const regionHeader = regionGroup.querySelector('.region-header');
+
+        const isOpen = wrapper.classList.contains('open');
+
+        // 開閉
+        if (isOpen) {
+            wrapper.classList.remove('open');
         } else {
-            activeEventTypes.push(key);
+            wrapper.classList.add('open');
         }
-        saveSearchState();
+        
+        saveSearchState(); 
     }
 
-    function populatePrefectureSelect() {
-        prefectureContainer.innerHTML = ''; 
+    function setupRegionSelectAll() {
+        const regionSelectLabels = prefectureContainer.querySelectorAll('.region-select-label');
+        regionSelectLabels.forEach(label => {
+            const checkbox = label.querySelector('.region-select-checkbox');
+            label.removeEventListener('click', regionSelectAllHandler);
+            label.addEventListener('click', regionSelectAllHandler);
+        });
+    }
+
+    function regionSelectAllHandler(e) {
+        e.stopPropagation(); 
+        const regionGroup = e.currentTarget.closest('.region-group');
+        const regionCheckbox = e.currentTarget.querySelector('.region-select-checkbox');
+        
+        const isChecking = !regionCheckbox.checked; 
+        regionCheckbox.checked = isChecking;
+        
+        const prefCheckboxes = regionGroup.querySelectorAll('input[type="checkbox"]:not(.region-select-checkbox)');
+        prefCheckboxes.forEach(cb => {
+            cb.checked = isChecking;
+            const label = cb.closest('.pref-label');
+            if (isChecking) {
+                label.classList.add('checked');
+            } else {
+                label.classList.remove('checked');
+            }
+        });
+        
+        handleSearch(); 
+    }
+
+
+    function generatePrefectureCheckboxes() {
+        prefectureContainer.innerHTML = '';
+        let checkedCount = 0;
 
         for (const region in JAPAN_PREFECTURES_BY_REGION) {
-            const prefectures = JAPAN_PREFECTURES_BY_REGION[region];
-            
             const regionGroup = document.createElement('div');
             regionGroup.classList.add('region-group');
 
             const headerContainer = document.createElement('div');
             headerContainer.classList.add('region-header-container');
             
-            const headerTitle = document.createElement('div');
-            headerTitle.classList.add('region-header');
-            headerTitle.textContent = region;
+            const regionHeader = document.createElement('h4');
+            regionHeader.classList.add('region-header');
+            regionHeader.textContent = region;
             
-            const regionCheckbox = document.createElement('input');
-            regionCheckbox.type = 'checkbox';
-            regionCheckbox.classList.add('region-select-checkbox');
-            regionCheckbox.id = `region-select-${region}`;
+            const selectAllLabel = document.createElement('label');
+            selectAllLabel.classList.add('region-select-label');
+            selectAllLabel.innerHTML = `
+                <input type="checkbox" class="region-select-checkbox">
+                全選択
+            `;
             
-            const regionCheckboxLabel = document.createElement('label');
-            regionCheckboxLabel.classList.add('region-select-label');
-            regionCheckboxLabel.setAttribute('for', regionCheckbox.id);
-            regionCheckboxLabel.appendChild(regionCheckbox);
-            
-            regionCheckboxLabel.appendChild(document.createTextNode('全選択')); 
-
-            headerContainer.appendChild(headerTitle);
-            headerContainer.appendChild(regionCheckboxLabel);
-            regionGroup.appendChild(headerContainer); 
+            headerContainer.appendChild(regionHeader);
+            headerContainer.appendChild(selectAllLabel);
+            regionGroup.appendChild(headerContainer);
 
             const checkboxWrapper = document.createElement('div');
             checkboxWrapper.classList.add('checkbox-wrapper');
-            checkboxWrapper.dataset.regionName = region; 
-            
-            prefectures.forEach(pref => {
+            if (expandedRegionsFromStorage.includes(region)) {
+                checkboxWrapper.classList.add('open');
+            }
+
+            let allCheckedInRegion = true;
+            JAPAN_PREFECTURES_BY_REGION[region].forEach(pref => {
+                const isChecked = selectedPrefecturesFromStorage.includes(pref);
                 const label = document.createElement('label');
                 label.classList.add('pref-label');
-                label.setAttribute('data-region', region); 
-                
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = pref;
-                checkbox.name = 'prefecture';
-                
-                label.appendChild(checkbox);
-
-                label.appendChild(document.createTextNode(pref));
-                
-                checkbox.addEventListener('change', () => {
-                    label.classList.toggle('checked', checkbox.checked); 
-                    updateRegionCheckboxState(region);
+                if (isChecked) {
+                    label.classList.add('checked');
+                    checkedCount++;
+                } else {
+                    allCheckedInRegion = false;
+                }
+                label.innerHTML = `
+                    <input type="checkbox" value="${pref}" ${isChecked ? 'checked' : ''}>
+                    ${pref}
+                `;
+                label.querySelector('input').addEventListener('change', (e) => {
+                    label.classList.toggle('checked', e.target.checked);
+                    // 個別チェックボックスの変更は直接検索を実行
                     handleSearch(); 
                 });
-
                 checkboxWrapper.appendChild(label);
             });
+            
+            if (allCheckedInRegion) {
+                selectAllLabel.querySelector('.region-select-checkbox').checked = true;
+            }
 
             regionGroup.appendChild(checkboxWrapper);
             prefectureContainer.appendChild(regionGroup);
-
-            headerTitle.addEventListener('click', () => {
-                checkboxWrapper.classList.toggle('open');
-                saveSearchState(); 
-            });
-            
-             regionCheckbox.addEventListener('change', () => {
-                const select = regionCheckbox.checked;
-                toggleRegionSelection(region, select);
-                handleSearch(); 
-            });
-            
-             regionCheckboxLabel.addEventListener('click', (e) => {
-                e.stopPropagation(); 
-            });
         }
-    }
 
-    function restorePrefectureSelection(selectedPrefectures) {
-        if (selectedPrefectures.length === 0) return;
-
-        const allPrefCheckboxes = prefectureContainer.querySelectorAll('input[type="checkbox"][name="prefecture"]');
-        const regionsToUpdate = new Set();
-
-        allPrefCheckboxes.forEach(checkbox => {
-            if (selectedPrefectures.includes(checkbox.value)) {
-                checkbox.checked = true;
-                const label = checkbox.closest('.pref-label');
-                if (label) {
-                    label.classList.add('checked');
-                    regionsToUpdate.add(label.getAttribute('data-region'));
-                }
-            }
-        });
+        setupRegionToggle(); 
+        setupRegionSelectAll(); 
         
-        regionsToUpdate.forEach(region => {
-            updateRegionCheckboxState(region);
-            const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${region}"]`);
-            if (checkboxWrapper) {
-                checkboxWrapper.classList.add('open');
-            }
-        });
-    }
+        // 状態メッセージを更新
+        const checkAllLabel = document.createElement('p');
+        checkAllLabel.style.textAlign = 'center';
+        checkAllLabel.style.fontSize = '12px';
+        checkAllLabel.style.margin = '5px 0 0 0';
+        checkAllLabel.style.paddingTop = '5px';
+        checkAllLabel.style.borderTop = '1px dashed #cccccc';
 
-    function restoreRegionExpansion(expandedRegions) {
-        expandedRegions.forEach(regionName => {
-            const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${regionName}"]`);
-            if (checkboxWrapper) {
-                checkboxWrapper.classList.add('open');
-            }
-        });
-    }
-
-
-    function updateRegionCheckboxState(region) {
-        const total = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]`).length;
-        const checked = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]:checked`).length;
-        
-        const regionCheckbox = document.getElementById(`region-select-${region}`);
-
-        if (!regionCheckbox) return;
-
-        if (checked === 0) {
-            regionCheckbox.checked = false;
-            regionCheckbox.indeterminate = false; 
-        } else if (checked === total) {
-            regionCheckbox.checked = true;
-            regionCheckbox.indeterminate = false;
+        if (checkedCount === 0) {
+            checkAllLabel.textContent = '📍 全地域が対象です (絞り込みなし)';
         } else {
-            regionCheckbox.checked = false;
-            regionCheckbox.indeterminate = true;
+            checkAllLabel.textContent = `📍 ${checkedCount}地域のイベントに絞り込み中`;
         }
-    }
-
-    function toggleRegionSelection(region, select) {
-        prefectureContainer.querySelectorAll(`[data-region="${region}"]`).forEach(label => {
-            const checkbox = label.querySelector('input[type="checkbox"]');
-            if (checkbox) {
-                checkbox.checked = select;
-                label.classList.toggle('checked', select);
-            }
-        });
+        prefectureContainer.appendChild(checkAllLabel);
     }
 
     function generateCalendar(events, startYear, startMonth, maxDate) {
         calendarWrapper.innerHTML = ''; 
-        
-        const today = new Date(); 
-        today.setHours(0, 0, 0, 0); 
-
-        const maxYear = maxDate.getFullYear();
-        const maxMonth = maxDate.getMonth() + 1;
-
         let currentYear = startYear;
         let currentMonth = startMonth;
 
-        while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
-            
-            const date = new Date(currentYear, currentMonth - 1, 1);
-            
-            const gridWrapperContainer = document.createElement('div');
-            gridWrapperContainer.classList.add('calendar-grid-wrapper');
+        const today = new Date();
+        const todayDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-            const gridWrapper = document.createElement('div');
-            gridWrapper.classList.add('calendar-grid');
-            gridWrapper.innerHTML = `
-                <div class="day-header">日</div>
-                <div class="day-header">月</div>
-                <div class="day-header">火</div>
-                <div class="day-header">水</div>
-                <div class="day-header">木</div>
-                <div class="day-header">金</div>
-                <div class="day-header">土</div>
-            `;
+        while (currentYear < maxDate.getFullYear() || (currentYear === maxDate.getFullYear() && currentMonth <= maxDate.getMonth() + 1)) {
             
-            const startDay = date.getDay(); 
-            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate(); 
+            if (currentYear === maxDate.getFullYear() && currentMonth > maxDate.getMonth() + 1) break;
 
-            for (let i = 0; i < startDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.classList.add('day-cell');
-                emptyCell.style.backgroundColor = '#f9f9f9'; 
-                gridWrapper.appendChild(emptyCell);
+            const monthWrapper = document.createElement('div');
+            monthWrapper.classList.add('calendar-grid-wrapper');
+            
+            const monthHeader = document.createElement('h2');
+            monthHeader.style.textAlign = 'center';
+            monthHeader.style.color = '#505050';
+            monthHeader.style.fontSize = '1.2em';
+            monthHeader.style.margin = '10px 0 5px 0';
+            monthHeader.textContent = `${currentYear}年 ${currentMonth}月`;
+            monthWrapper.appendChild(monthHeader);
+
+            const grid = document.createElement('div');
+            grid.classList.add('calendar-grid');
+
+            // 曜日ヘッダー
+            JAPANESE_WEEKDAYS.forEach(day => {
+                const header = document.createElement('div');
+                header.classList.add('day-header');
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+
+            const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1);
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            const startDayOfWeek = firstDayOfMonth.getDay(); 
+
+            // 前月の空白セル
+            for (let i = 0; i < startDayOfWeek; i++) {
+                grid.appendChild(document.createElement('div'));
             }
 
+            // 日付セル
             for (let day = 1; day <= daysInMonth; day++) {
-                const dayCell = document.createElement('div');
-                dayCell.classList.add('day-cell');
                 
-                const currentDate = new Date(currentYear, currentMonth - 1, day);
-                currentDate.setHours(0, 0, 0, 0);
+                if (currentYear === maxDate.getFullYear() && currentMonth === maxDate.getMonth() + 1 && day > maxDate.getDate()) break;
+
+                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 
-                if (currentDate.getTime() === today.getTime()) {
-                    dayCell.classList.add('today-cell'); 
+                const cell = document.createElement('div');
+                cell.classList.add('day-cell');
+                
+                if (dateString === todayDateString) {
+                    cell.classList.add('today-cell');
                 }
 
                 const dayNumber = document.createElement('span');
                 dayNumber.classList.add('day-number');
-                
-                dayNumber.textContent = `${currentMonth}/${day}`;
-                
-                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                dayNumber.textContent = day;
                 dayNumber.dataset.date = dateString;
+                cell.appendChild(dayNumber);
 
-                const dailyEvents = events.filter(event => {
-                    const pd = event.parsedDate;
-                    return pd && pd.year === currentYear && pd.month === currentMonth && pd.day === day;
-                });
+                const eventsOnDay = events.filter(e => e.dateString === dateString);
                 
-                if (dailyEvents.length > 0) {
+                if (eventsOnDay.length > 0) {
                     dayNumber.classList.add('has-events');
+                    
+                    eventsOnDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+
+                    // 最大4件のイベントラベルを表示
+                    eventsOnDay.slice(0, 4).forEach(event => {
+                        const label = document.createElement('span');
+                        const { class: colorClass } = getColorClass(event.type);
+                        label.classList.add('event-label', colorClass);
+                        label.textContent = event.name.replace('B4G2_',''); 
+                        label.title = event.name.replace('B4G2_','') + (event.time ? ` (${formatTime(event.time)})` : '');
+
+                        label.onclick = (e) => {
+                            e.stopPropagation(); 
+                            returnToDayDate = dateString; 
+                            showEventDetails(event);
+                        };
+                        cell.appendChild(label);
+                    });
+
+                    // 5件目以上のイベントがあれば「他X件」を表示
+                    if (eventsOnDay.length > 4) {
+                        const moreLabel = document.createElement('span');
+                        moreLabel.classList.add('event-label');
+                        moreLabel.style.backgroundColor = '#cccccc';
+                        moreLabel.style.color = '#505050';
+                        moreLabel.textContent = `他${eventsOnDay.length - 4}件`;
+                        moreLabel.title = eventsOnDay.slice(4).map(e => e.name.replace('B4G2_','') + (e.time ? ` (${formatTime(e.time)})` : '')).join('\n');
+                        
+                        // 「他X件」クリック時もリストモーダルを開く
+                        moreLabel.onclick = (e) => {
+                            e.stopPropagation(); 
+                            dayClickHandler({ currentTarget: dayNumber });
+                        };
+                        cell.appendChild(moreLabel);
+                    }
                 }
 
-                dayCell.appendChild(dayNumber);
-                
-                dailyEvents.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
-
-                dailyEvents.forEach(event => {
-                    const { class: colorClass, label } = getColorClass(event.type);
-                    const eventLabel = document.createElement('span');
-                    eventLabel.classList.add('event-label', colorClass);
-                    
-                    const timeParts = (event.time || '').split('：');
-                    const displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
-
-                    eventLabel.textContent = `${displayTime} ${label}`;
-                    
-                    eventLabel.onclick = (e) => {
-                        e.stopPropagation(); 
-                        returnToDayDate = null; 
-                        showEventDetails(event);
-                    };
-
-                    dayCell.appendChild(eventLabel);
-                });
-
-                dayCell.onclick = (e) => {
-                    if (e.target === dayNumber) { 
-                        dayClickHandler({ currentTarget: dayNumber });
-                    }
-                };
-
-                gridWrapper.appendChild(dayCell);
+                grid.appendChild(cell);
             }
 
-            gridWrapperContainer.appendChild(gridWrapper);
-            calendarWrapper.appendChild(gridWrapperContainer);
+            // 翌月の空白セル
+            const endDayOfWeek = (startDayOfWeek + daysInMonth) % 7;
+            const remainingCells = (endDayOfWeek === 0) ? 0 : (7 - endDayOfWeek);
+            
+            for (let i = 0; i < remainingCells; i++) {
+                grid.appendChild(document.createElement('div'));
+            }
+            
+            monthWrapper.appendChild(grid);
+            calendarWrapper.appendChild(monthWrapper);
 
+            // 次の月へ
             currentMonth++;
             if (currentMonth > 12) {
                 currentMonth = 1;
@@ -1771,112 +1559,172 @@
         }
     }
 
-    function handleSearch(updateStatus = true) {
-        if (cityInput) {
-            cityInput.blur(); 
-        }
-
-        const viewport = document.querySelector('meta[name="viewport"]');
-        if (viewport) {
-            const originalContent = viewport.getAttribute('content');
-            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
-            setTimeout(() => {
-                viewport.setAttribute('content', originalContent || 'width=device-width, initial-scale=1.0');
-            }, 300);
-        }
-        
-        saveSearchState();
-
-        if (activeEventTypes.length === 0) {
-            filteredEvents = [];
-            filterStatus.textContent = "表示するイベントを選択してください。";
-            generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
-            return;
-        }
-
-        if (ALL_BEYBLADE_EVENTS.length === 0) {
-            filterStatus.textContent = "イベントデータがありません。";
-            generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
-            return;
-        }
-        
-        const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
-            .filter(cb => !cb.classList.contains('region-select-checkbox')) 
-            .map(checkbox => checkbox.value);
-        
-        const citySearchText = cityInput.value.trim().toLowerCase();
-        
-        let localFilteredEvents = ALL_BEYBLADE_EVENTS;
-        
-        let filterDescription = [];
-
-        if (selectedPrefectures.length > 0) {
-            localFilteredEvents = localFilteredEvents.filter(event => {
-                const eventAddress = event.address || '';
-                return selectedPrefectures.some(pref => eventAddress.startsWith(pref)); 
-            });
-            filterDescription.push(`都道府県: ${selectedPrefectures.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('、')}`);
-        }
-
-        if (citySearchText !== "") {
-            localFilteredEvents = localFilteredEvents.filter(event => {
-                const searchTarget = [
-                    event.address || '', 
-                    event.location || '',
-                    event.name || '',
-                    event.details || ''
-                ].join(' ').toLowerCase();
-
-                return searchTarget.includes(citySearchText);
-            });
-            filterDescription.push(`キーワード: "${citySearchText}"`);
-        }
-        
-        if (activeEventTypes.length > 0) {
-            const allowedKeywords = activeEventTypes.flatMap(key => 
-                EVENT_TYPES_LEGEND.find(item => item.key === key)?.searchKeywords || []
-            );
+    function generateLegend() {
+        legendContainer.innerHTML = '';
+        EVENT_TYPES_LEGEND.forEach(item => {
+            const legendItem = document.createElement('div');
+            legendItem.classList.add('legend-item', item.styleClass);
+            legendItem.textContent = item.label;
+            legendItem.dataset.key = item.key;
             
-            const includeOther = activeEventTypes.includes('Other');
-            const otherTypesKeywords = EVENT_TYPES_LEGEND.filter(item => item.key !== 'Other').flatMap(item => item.searchKeywords);
+            if (activeEventTypes.includes(item.key)) {
+                legendItem.classList.add('active');
+            }
+
+            legendItem.addEventListener('click', toggleEventTypeFilter);
+            legendContainer.appendChild(legendItem);
+        });
+    }
+
+    function toggleEventTypeFilter(e) {
+        const key = e.currentTarget.dataset.key;
+        const index = activeEventTypes.indexOf(key);
+
+        if (index > -1) {
+            if (activeEventTypes.length > 1) { 
+                activeEventTypes.splice(index, 1);
+                e.currentTarget.classList.remove('active');
+            } else {
+                return; 
+            }
+        } else {
+            activeEventTypes.push(key);
+            e.currentTarget.classList.add('active');
+        }
+        
+        saveSearchState(); 
+        handleSearch();
+    }
+
+    async function fetchEvents() {
+        try {
+            const { data, error } = await supabase
+                .from('events_current_season')
+                .select('*'); 
+
+            if (error) {
+                console.error('Supabase fetch error:', error);
+                return [];
+            }
             
-            localFilteredEvents = localFilteredEvents.filter(event => {
-                const eventType = event.type || ''; 
-                
-                const isMatch = allowedKeywords.some(keyword => eventType.includes(keyword));
-                
-                if (includeOther) {
-                    const isOther = !otherTypesKeywords.some(keyword => eventType.includes(keyword));
-                    return isMatch || isOther;
+            const cleanedEvents = data.map(event => {
+                const cleaned = cleanEventStrings(event);
+                const dateParts = parseDate(cleaned.date);
+                if (dateParts) {
+                    cleaned.dateString = `${dateParts.year}-${String(dateParts.month).padStart(2, '0')}-${String(dateParts.day).padStart(2, '0')}`;
+                } else {
+                    cleaned.dateString = null;
                 }
-                
-                return isMatch;
+                return cleaned;
+            }).filter(event => event.dateString); 
+
+            // 日付でソート
+            cleanedEvents.sort((a, b) => {
+                return new Date(a.dateString) - new Date(b.dateString);
+            });
+
+            return cleanedEvents;
+
+        } catch (e) {
+            console.error('An unexpected error occurred during event fetching:', e);
+            return [];
+        }
+    }
+
+    function filterEvents(events) {
+        let keyword = cityInput.value.trim().toLowerCase();
+        let selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                                    .filter(cb => !cb.classList.contains('region-select-checkbox'))
+                                    .map(cb => cb.value);
+
+        if (selectedPrefectures.length === 0) {
+            // 全ての都道府県を取得（絞り込みなしの状態）
+            selectedPrefectures = Object.values(JAPAN_PREFECTURES_BY_REGION).flat();
+        }
+
+
+        const filtered = events.filter(event => {
+            // 1. 都道府県フィルター
+            const prefMatch = selectedPrefectures.includes(event.prefecture);
+
+            if (!prefMatch) {
+                return false;
+            }
+
+            // 2. キーワードフィルター
+            const keywordMatch = !keyword || 
+                                 (event.name && event.name.toLowerCase().includes(keyword)) ||
+                                 (event.location && event.location.toLowerCase().includes(keyword)) ||
+                                 (event.address && event.address.toLowerCase().includes(keyword));
+
+            if (!keywordMatch) {
+                return false;
+            }
+
+            // 3. イベントタイプフィルター
+            if (activeEventTypes.length === EVENT_TYPES_LEGEND.length) {
+                return true; 
+            }
+            
+            const eventTypeMatch = activeEventTypes.some(activeKey => {
+                const legendItem = EVENT_TYPES_LEGEND.find(item => item.key === activeKey);
+                if (!legendItem) return false;
+
+                const searchKeywords = [legendItem.label, ...legendItem.searchKeywords];
+
+                return searchKeywords.some(keyword => 
+                    (event.type && event.type.includes(keyword)) ||
+                    (event.name && event.name.includes(keyword)) 
+                );
             });
             
-            if (activeEventTypes.length < EVENT_TYPES_LEGEND.length) {
-                filterDescription.push(`${activeEventTypes.map(key => EVENT_TYPES_LEGEND.find(item => item.key === key)?.label || '').join('、')}`);
-            }
-        }
-        
-
-        localFilteredEvents.sort((a, b) => {
-            if (a.dateString !== b.dateString) {
-                return new Date(a.dateString) - new Date(b.dateString);
-            }
-            return getTimeValue(a.time) - getTimeValue(b.time);
+            return eventTypeMatch;
         });
 
-        filteredEvents = localFilteredEvents;
-        uniqueEventDates = getUniqueEventDates(filteredEvents); 
-        allCalendarDates = getAllDatesInCalendarRange();
-
-
-        const descriptionText = filterDescription.length > 0 
-            ? `${filterDescription.join(' / ')} に一致する ${filteredEvents.length} 件のイベントを表示中`
-            : `全イベントを表示中 (${ALL_BEYBLADE_EVENTS.length}件)`; 
-        filterStatus.textContent = descriptionText;
-
+        // 過去のイベントを除外
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); 
         
+        return filtered.filter(event => {
+            const eventDate = new Date(event.dateString);
+            // eventDateはYY-MM-DD形式なので、時刻情報がなく、当日であればOK
+            return eventDate >= now;
+        });
+    }
+
+    function updateFilterStatus(selectedPrefectures, keyword, eventTypeDescription) {
+        const prefText = (selectedPrefectures.length > 0 && selectedPrefectures.length < Object.values(JAPAN_PREFECTURES_BY_REGION).flat().length) ?
+                         `地域: ${selectedPrefectures.slice(0, 3).join(', ')}${selectedPrefectures.length > 3 ? `他${selectedPrefectures.length - 3}地域` : ''}` :
+                         '地域: 全地域';
+        
+        const keywordText = keyword ? `キーワード: ${keyword}` : '';
+        const typeText = activeEventTypes.length === EVENT_TYPES_LEGEND.length ? '全種別' : eventTypeDescription.join(' / ');
+        
+        const descriptionParts = [prefText, keywordText, typeText].filter(p => p);
+        
+        const descriptionText = (filteredEvents.length > 0) ?
+            `${descriptionParts.join(' | ')} に一致する ${filteredEvents.length} 件のイベントを表示中`
+            : (ALL_BEYBLADE_EVENTS.length > 0) ? 
+              `${descriptionParts.join(' | ')} に一致するイベントはありません (${ALL_BEYBLADE_EVENTS.length}件中)`
+              : `データ読み込み中...`;
+
+        filterStatus.textContent = descriptionText;
+    }
+
+
+    function handleSearch() {
+        saveSearchState(); 
+        
+        filteredEvents = filterEvents(ALL_BEYBLADE_EVENTS);
+
+        const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                                    .filter(cb => !cb.classList.contains('region-select-checkbox'))
+                                    .map(cb => cb.value);
+        const keyword = cityInput.value.trim();
+        const eventTypeDescription = activeEventTypes.map(key => EVENT_TYPES_LEGEND.find(item => item.key === key)?.label || key);
+        
+        updateFilterStatus(selectedPrefectures, keyword, eventTypeDescription);
+
         generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
         
         addDayNumberClickHandlers();
@@ -1918,8 +1766,45 @@
         }
     });
 
-    loadDataAndInitialize();
+    // 初期化関数
+    async function init() {
+        loadSearchState(); 
+        cityInput.value = citySearchTextFromStorage; 
+        
+        generatePrefectureCheckboxes();
+        generateLegend();
 
+        ALL_BEYBLADE_EVENTS = await fetchEvents();
+
+        // 対象期間の決定 (最大イベント日から3ヶ月後まで表示)
+        if (ALL_BEYBLADE_EVENTS.length > 0) {
+            const lastEventDate = new Date(ALL_BEYBLADE_EVENTS[ALL_BEYBLADE_EVENTS.length - 1].dateString);
+            
+            // 最終イベント日の翌月をTARGET_MAX_DATEにする (最終イベント日が含まれる月まで表示)
+            TARGET_MAX_DATE = new Date(lastEventDate.getFullYear(), lastEventDate.getMonth() + 1, 0);
+
+            // イベントの開始が現在月より後の場合はカレンダーの開始月を調整
+            const firstEventDate = new Date(ALL_BEYBLADE_EVENTS[0].dateString);
+            const today = new Date();
+
+            if (firstEventDate.getFullYear() > today.getFullYear() || 
+                (firstEventDate.getFullYear() === today.getFullYear() && firstEventDate.getMonth() > today.getMonth())) {
+                TARGET_START_YEAR = firstEventDate.getFullYear();
+                TARGET_START_MONTH = firstEventDate.getMonth() + 1;
+            }
+
+        } else {
+            // イベントがない場合、今月末まで表示
+            const today = new Date();
+            TARGET_MAX_DATE = new Date(today.getFullYear(), today.getMonth() + 1, 0); 
+        }
+
+        handleSearch();
+    }
+
+    // ウィンドウがロードされたら初期化開始
+    window.addEventListener('load', init);
 </script>
 </body>
 </html>
+
