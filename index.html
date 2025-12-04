@@ -1,4 +1,4 @@
-スワイプガイド<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
@@ -125,6 +125,10 @@
         }
 
         .day-cell { min-height: 40px; padding: 5px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
+        
+        .day-cell.today-cell { 
+            background-color: #EDFFED !important;
+        }
 
         .day-number {
             font-size: 10px;
@@ -380,7 +384,7 @@
             color: #303030;
         }
         .legend-item.active.style-Meetup {
-            background-color: #acff5f;
+            background-color: #A0FA8D;
             color: #303030;
         }
         .legend-item.active.style-Other {
@@ -440,7 +444,7 @@
             align-items: center;
             overflow: hidden; 
             border-radius: 0; 
-            transition: opacity 0.5s;
+            transition: all 0.5s;
             padding-bottom: 20px; 
         }
 
@@ -587,9 +591,147 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+        
+        /* --- ここからダークモード関連の追加 --- */
+        .theme-toggle-btn {
+            position: fixed;
+            top: calc(10px + env(safe-area-inset-top)); 
+            right: calc(10px + env(safe-area-inset-right));
+            background-color: #ffffff;
+            color: #505050;
+            border: 1px solid #cccccc;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 20px;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 999; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        body.dark-mode {
+            background-color: #121212; /* 全体背景 */
+            color: #e0e0e0; /* 基本テキスト色 */
+        }
+
+        body.dark-mode h1,
+        body.dark-mode .search-container p,
+        body.dark-mode .search-container label,
+        body.dark-mode .day-header,
+        body.dark-mode .day-number,
+        body.dark-mode #filter-status,
+        body.dark-mode .region-header,
+        body.dark-mode .region-select-label,
+        body.dark-mode #modal-content h3,
+        body.dark-mode #modal-content strong,
+        body.dark-mode #modal-content p,
+        body.dark-mode .event-list-modal-content h3,
+        body.dark-mode .event-name,
+        body.dark-mode .event-time-text {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .search-container,
+        body.dark-mode .calendar-container,
+        body.dark-mode #modal-content,
+        body.dark-mode .event-list-modal-content {
+            background-color: #1e1e1e; /* コンテナ背景 */
+            border-color: #303030;
+            box-shadow: none; 
+        }
+
+        body.dark-mode .calendar-grid,
+        body.dark-mode .calendar-grid-wrapper {
+            border-color: #303030;
+        }
+
+        body.dark-mode .day-cell,
+        body.dark-mode .day-header {
+            border-color: #303030;
+        }
+
+        body.dark-mode .day-cell:nth-child(7n),
+        body.dark-mode .day-cell:nth-child(7n+1) { 
+            background-color: #252525; /* 週末セル背景 */
+        }
+
+        body.dark-mode .day-cell.today-cell { /* 今日のセル背景 */
+            background-color: #0a3a0a !important; 
+        }
+
+        body.dark-mode .day-header {
+            background-color: #333333; /* 曜日ヘッダー */
+        }
+
+        body.dark-mode .pref-label {
+            background-color: #333333;
+            border-color: #444444;
+            color: #e0e0e0;
+        }
+        body.dark-mode .pref-label.checked {
+            background-color: #5a7d3a; /* #B3FF52 のダーク版 */
+            color: #ffffff;
+        }
+        body.dark-mode .region-header-container {
+            border-bottom-color: #303030;
+        }
+        body.dark-mode .region-header {
+            border-left-color: #5a7d3a;
+        }
+
+        body.dark-mode .keyword-search-group input[type="text"] {
+            background-color: #333333;
+            color: #e0e0e0;
+            border-color: #444444;
+        }
+        body.dark-mode .search-button-icon {
+            background-color: #444444;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .event-card {
+            background-color: #252525;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+        body.dark-mode .event-card:hover {
+            background-color: #333333;
+        }
+        body.dark-mode .event-address {
+            color: #aaaaaa;
+        }
+        body.dark-mode .event-time-col {
+            border-right-color: #303030;
+        }
+        body.dark-mode .event-time-text {
+            color: #a0a0a0;
+        }
+
+        body.dark-mode .legend-item {
+            background-color: #333333;
+            border-color: #444444;
+            color: #a0a0a0;
+        }
+        body.dark-mode .legend-item.active {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode a {
+            color: #80caff; /* リンク色 */
+        }
+
+        body.dark-mode .fixed-close-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+        /* --- ここまでダークモード関連の追加 --- */
     </style>
 </head>
 <body>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="テーマ切替">
+        🌙
+    </button>
     <div class="search-container">
         <div style="flex-basis: 100%;">
             <div id="prefecture-checkbox-container" style="border: 1px solid #cccccc; padding: 5px; border-radius: 4px; background-color: #ffffff;">
@@ -669,6 +811,8 @@
     let uniqueEventDates = []; 
     let allCalendarDates = [];
 
+    let savedScrollPosition = 0;
+    let isReturningFromDetail = false;
     
     const searchButton = document.getElementById('search-button');
     const prefectureContainer = document.getElementById('prefecture-checkbox-container');
@@ -678,7 +822,7 @@
     const eventModal = document.getElementById('event-modal');
     const modalContent = document.getElementById('modal-content');
     const legendContainer = document.getElementById('label-legend-container');
-
+    const themeToggleButton = document.getElementById('theme-toggle-btn'); // <-- 追加
 
     function saveSearchState() {
         const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
@@ -722,6 +866,30 @@
         }
     }
     
+    // --- 追加: テーマ切替ロジック ---
+    function toggleTheme() {
+        const isDarkMode = document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        themeToggleButton.textContent = isDarkMode ? '☀️' : '🌙';
+        themeToggleButton.setAttribute('aria-label', isDarkMode ? 'ライトモードに切替' : 'ダークモードに切替');
+    }
+
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('theme') || 
+                           (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            themeToggleButton.textContent = '☀️';
+            themeToggleButton.setAttribute('aria-label', 'ライトモードに切替');
+        } else {
+            document.body.classList.remove('dark-mode');
+            themeToggleButton.textContent = '🌙';
+            themeToggleButton.setAttribute('aria-label', 'ダークモードに切替');
+        }
+    }
+    // ----------------------------
+
     function showSwipeGuide(overlayElement, text = '左右スワイプで日付移動', storageKey) { 
         if (storageKey && localStorage.getItem(storageKey)) { 
             return; 
@@ -732,7 +900,7 @@
         
         
         guideOverlay.style.opacity = '0';
-        guideOverlay.style.transition = 'opacity 0.5s'; 
+        guideOverlay.style.transition = 'all 0.5s'; 
 
 
         const guideContent = document.createElement('div');
@@ -753,7 +921,7 @@
 
         overlayElement.appendChild(guideOverlay); 
 
-        
+        guideOverlay.offsetHeight;
         
         setTimeout(() => {
             guideOverlay.style.opacity = '1'; 
@@ -819,6 +987,29 @@
             return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>${trailing}`;
         });
     }
+
+    // --- 新規追加: 全角スペース置換処理 ---
+    function replaceFullWidthSpaces(text) {
+        if (typeof text !== 'string') return text;
+        return text.replace(/　/g, ' ');
+    }
+
+    // --- 新規追加: イベントオブジェクトの文字列フィールドをクリーンアップする処理 ---
+    function cleanEventStrings(event) {
+        const cleaned = {};
+        for (const key in event) {
+            if (Object.prototype.hasOwnProperty.call(event, key)) {
+                let value = event[key];
+                if (typeof value === 'string') {
+                    // 全角スペースを半角スペースに置換
+                    value = replaceFullWidthSpaces(value); 
+                }
+                cleaned[key] = value;
+            }
+        }
+        return cleaned;
+    }
+    // ------------------------------------------
 
 
     function parseDate(dateStr) {
@@ -1097,6 +1288,7 @@
         }
 
         if (returnToDayDate) {
+            isReturningFromDetail = true;
             const eventsForDay = filteredEvents.filter(event => 
                 event.dateString === returnToDayDate
             );
@@ -1178,6 +1370,10 @@
                 card.classList.add('event-card');
                 
                 card.onclick = () => {
+                    const listModalContent = card.closest('.event-list-modal-content');
+                    if (listModalContent) {
+                        savedScrollPosition = listModalContent.scrollTop;
+                    }
                     returnToDayDate = currentDateString; 
                     showEventDetails(event, currentDayEvents); 
                     contentElement.closest('.event-list-modal-overlay').remove(); 
@@ -1313,6 +1509,16 @@
 
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
+
+        // --- 修正: DOM追加後にスクロール位置を適用 ---
+        const scrollPositionToApply = isReturningFromDetail ? savedScrollPosition : 0;
+        isReturningFromDetail = false;
+
+        // DOMに要素が追加され、レイアウトが計算された後にスクロール位置を設定する
+        setTimeout(() => {
+            content.scrollTop = scrollPositionToApply;
+        }, 0);
+        // ------------------------------------------
     }
 
 
@@ -1369,6 +1575,7 @@
     
     async function loadDataAndInitialize() {
         loadSearchState();
+        loadTheme(); // <-- 追加: テーマを読み込む
 
         try {
             const jsonPromise = fetch('./events.json')
@@ -1386,9 +1593,11 @@
                 fetchSupabaseEvents()
             ]);
             
+            // 結合されたイベントデータをクリーンアップしてから処理
             const combinedEvents = [...jsonEvents, ...supabaseEvents];
             
             ALL_BEYBLADE_EVENTS = combinedEvents
+                .map(event => cleanEventStrings(event)) // <-- 全角スペース置換処理を適用
                 .map(event => {
                     const parsedDate = parseDate(event.date);
                     if (!parsedDate) return null;
@@ -1521,6 +1730,7 @@
                 checkbox.name = 'prefecture';
                 
                 label.appendChild(checkbox);
+
                 label.appendChild(document.createTextNode(pref));
                 
                 checkbox.addEventListener('change', () => {
@@ -1621,6 +1831,9 @@
     function generateCalendar(events, startYear, startMonth, maxDate) {
         calendarWrapper.innerHTML = ''; 
         
+        const today = new Date(); 
+        today.setHours(0, 0, 0, 0); 
+
         const maxYear = maxDate.getFullYear();
         const maxMonth = maxDate.getMonth() + 1;
 
@@ -1652,7 +1865,7 @@
             for (let i = 0; i < startDay; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.classList.add('day-cell');
-                emptyCell.style.backgroundColor = '#f9f9f9'; 
+                emptyCell.style.backgroundColor = 'var(--empty-cell-bg, #f9f9f9)'; // ダークモード対応
                 gridWrapper.appendChild(emptyCell);
             }
 
@@ -1660,6 +1873,13 @@
                 const dayCell = document.createElement('div');
                 dayCell.classList.add('day-cell');
                 
+                const currentDate = new Date(currentYear, currentMonth - 1, day);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                if (currentDate.getTime() === today.getTime()) {
+                    dayCell.classList.add('today-cell'); 
+                }
+
                 const dayNumber = document.createElement('span');
                 dayNumber.classList.add('day-number');
                 
@@ -1751,7 +1971,7 @@
         
         const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
             .filter(cb => !cb.classList.contains('region-select-checkbox')) 
-            .map(checkbox => checkbox.value.toLowerCase());
+            .map(checkbox => checkbox.value);
         
         const citySearchText = cityInput.value.trim().toLowerCase();
         
@@ -1761,14 +1981,8 @@
 
         if (selectedPrefectures.length > 0) {
             localFilteredEvents = localFilteredEvents.filter(event => {
-                const searchTarget = [
-                    event.address || '', 
-                    event.location || '',
-                    event.name || '',
-                    event.details || ''
-                ].join(' ').toLowerCase();
-                
-                return selectedPrefectures.some(pref => searchTarget.includes(pref.replace('県', '').replace('府', '').replace('都', '').replace('道', ''))); 
+                const eventAddress = event.address || '';
+                return selectedPrefectures.some(pref => eventAddress.startsWith(pref)); 
             });
             filterDescription.push(`都道府県: ${selectedPrefectures.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('、')}`);
         }
@@ -1855,6 +2069,8 @@
             return;
         }
 
+        isReturningFromDetail = false;
+
         const eventsForDay = filteredEvents.filter(event => 
             event.dateString === dateString
         );
@@ -1870,6 +2086,8 @@
             handleSearch();
         }
     });
+
+    themeToggleButton.addEventListener('click', toggleTheme); // <-- 追加
 
     loadDataAndInitialize();
 
