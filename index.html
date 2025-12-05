@@ -560,7 +560,6 @@
             cursor: pointer;
             transition: background-color 0.2s;
             gap: 10px;
-            margin-bottom: 5px;
         }
         .event-card:hover {
             background-color: rgb(245, 245, 245);
@@ -637,7 +636,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.5.1</label>
+        <label id="version-label">version: β.5.2</label>
     </div>
         
     <div class="search-container">
@@ -1080,7 +1079,7 @@
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
         
         const navIndicator = eventList.length > 1 ? 
-            `<div style="font-size: 14px; text-align: center; color: #505050; border-top: 1px solid #cccccc; padding-top: 10px; margin-top: 10px;">${currentEventIndex + 1} / ${eventList.length} イベント</div>` 
+            `<div style="font-size: 14px; text-align: center; color: #808080; margin-bottom: 0px;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>` 
             : '';
 
         const newContentWrapper = document.createElement('div');
