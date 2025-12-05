@@ -23,16 +23,36 @@
             background-color: #f4f4f4;
             overflow-x: hidden;
         }
-        h1 {
-            text-align: center;
-            color: #505050;
-            margin: 10px 0;
+        
+        #title-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 15px;
+            display: block;
+            gap: 0px;
         }
 
+
+        #title-image {
+            display: block;
+            width: 100%;
+            max-width: 300px; 
+            height: auto;
+            margin: 0;
+        }
+        #version-label{
+            display: block;
+            font-size: 10px;
+            color: #808080;
+            white-space: nowrap;
+            margin-bottom: 5px;
+        }
+        
         .search-container {
             width: 100%;
             max-width: 1000px;
-            margin: 10px auto;
+            margin: 0px auto;
             padding: 15px;
             background-color: #ffffff;
             display: flex;
@@ -436,7 +456,7 @@
             left: 0;
             width: 100%;
             height: 100%; 
-            background-color: rgba(0, 0, 0, 0.2); 
+            background-color: rgba(0, 0, 0, 0.5); 
             z-index: 1500; 
             display: flex;
             flex-direction: column; 
@@ -594,6 +614,11 @@
     </style>
 </head>
 <body>
+    <div id="title-wrapper">
+        <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
+        <label id="version-label">version: 0.0.1</label>
+    </div>
+        
     <div class="search-container">
         <div style="flex-basis: 100%;">
             <div id="prefecture-checkbox-container" style="border: 1px solid #cccccc; padding: 5px; border-radius: 4px; background-color: #ffffff;">
