@@ -612,11 +612,12 @@
         #back-to-top {
             position: fixed;
             bottom: calc(20px + env(safe-area-inset-bottom));
-            right: 0px;
+            right: 10px;
             background-color: rgba(0, 0, 0, 0.2);
             color: #ffffff;
             border: none;
-            padding: 10px 20px;
+            width: 60px;
+            height: 60px;
             border-radius: 30px;
             font-size: 12px;
             font-weight: bold;
@@ -626,8 +627,9 @@
             display: block;
             transition: opacity 0.3s, background-color 0.2s;
         }
-        #back-to-top:hover {
-            background-color: rgba(0, 0, 0, 0.4);
+        #back-to-top p{
+            margin: 0;
+            padding: 0;
         }
         /* ----------------------------------- */
 
@@ -670,7 +672,7 @@
             </div>
     </div>
     
-    <button id="back-to-top">TOP</button>
+    <button id="back-to-top"><p style="font-size:20px; font-weight: bold;">︿</p><p style="margin-bottom: 15px;">TOP</p></button>
 
 <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -738,7 +740,6 @@
         topButton.addEventListener('click', () => {
             window.scrollTo({
                 top: 0,
-                behavior: 'smooth'
             });
         });
     }
