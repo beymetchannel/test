@@ -608,7 +608,6 @@
             text-overflow: ellipsis;
         }
 
-        /* --- TOP Button Style Added Here --- */
         #back-to-top {
             position: fixed;
             bottom: calc(20px + env(safe-area-inset-bottom));
@@ -631,7 +630,6 @@
             margin: 0;
             padding: 0;
         }
-        /* ----------------------------------- */
 
     </style>
 </head>
@@ -734,7 +732,6 @@
     const modalContent = document.getElementById('modal-content');
     const legendContainer = document.getElementById('label-legend-container');
     
-    // --- TOP Button Logic ---
     const topButton = document.getElementById('back-to-top');
     if(topButton) {
         topButton.addEventListener('click', () => {
@@ -743,7 +740,6 @@
             });
         });
     }
-    // ------------------------
 
     function saveSearchState() {
         const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
@@ -1123,7 +1119,6 @@
 
     function showEventDetails(event, eventList = filteredEvents) {
         
-        // Hide TOP button when details modal opens
         if(topButton) topButton.style.display = 'none';
 
         eventList.sort((a, b) => {
@@ -1192,10 +1187,8 @@
             
             createDayEventModal(returnToDayDate, eventsForDay);
             returnToDayDate = null; 
-            // Button stays hidden because createDayEventModal is called
         } else {
             document.body.style.overflow = ''; 
-            // Show TOP button when modal closes and not returning to list
             if(topButton) topButton.style.display = 'block';
         }
     }
@@ -1338,7 +1331,6 @@
 
 
     function createDayEventModal(dateString, dayEvents) {
-        // Hide TOP button when list modal opens
         if(topButton) topButton.style.display = 'none';
 
         document.querySelector('.event-list-modal-overlay')?.remove();
@@ -1353,7 +1345,6 @@
         closeButton.onclick = () => {
             overlay.remove();
             document.body.style.overflow = '';
-            // Show TOP button when list modal closes
             if(topButton) topButton.style.display = 'block';
         };
         
@@ -1400,7 +1391,6 @@
             if (e.target === overlay) {
                 overlay.remove();
                 document.body.style.overflow = '';
-                // Show TOP button when list modal closes
                 if(topButton) topButton.style.display = 'block';
             }
         });
@@ -1821,11 +1811,7 @@
                     dayCell.appendChild(eventLabel);
                 });
 
-                // ★★★ 修正箇所: dayCellのクリックハンドラを修正 ★★★
                 dayCell.onclick = (e) => {
-                    // イベントラベルがクリックされた場合は、イベント詳細モーダルを開くためにイベントラベルのonclickが実行され、
-                    // e.stopPropagation()が呼ばれているため、dayCellのonclickは実行されない。
-                    // そのため、ここではdayNumberがクリックされた場合と同様の処理を実行する。
                     const targetDateElement = dayCell.querySelector('.day-number');
                     if (targetDateElement && targetDateElement.dataset.date) {
                          dayClickHandler({ currentTarget: targetDateElement });
@@ -1954,22 +1940,9 @@
         
         generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
         
-        // dayClickHandlerをdayCellに設定したため、ここではaddDayNumberClickHandlersは不要
-        // addDayNumberClickHandlers(); 
     }
 
-    // dayCellのクリックで処理されるため、day-numberのクリックハンドラは不要になりました。
-    // function addDayNumberClickHandlers() {
-    //     const allDayElements = document.querySelectorAll('.day-number');
-
-    //     allDayElements.forEach(dayEl => {
-    //         dayEl.removeEventListener('click', dayClickHandler);
-    //         dayEl.addEventListener('click', dayClickHandler);
-    //     });
-    // }
-
     function dayClickHandler(e) {
-        // e.currentTargetはday-number要素
         const dayEl = e.currentTarget; 
         const dateString = dayEl.dataset.date; 
 
