@@ -78,7 +78,6 @@
         .keyword-search-input-wrapper {
             display: flex;
             width: 100%;
-            font-size: 12px;
         }
         .keyword-search-group label {
             font-size: 14px;
@@ -633,24 +632,12 @@
             padding: 0;
         }
 
-        .modal-nav-indicator {
-            position: fixed; /* 画面に対して固定 */
-            left: 50%;       /* 中央寄せの基準点 */
-            transform: translateX(-50%); /* 画面中央に移動 */
-            font-size: 14px;
-            color: white; /* 白文字 */
-            background: none; /* 背景なし */
-            z-index: 10002; /* モーダルよりも前面に表示 */
-            transition: opacity 0.2s; /* フェードイン効果用 */
-            opacity: 0; /* 初期状態では非表示 */
-        }
-
     </style>
 </head>
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.5.0</label>
+        <label id="version-label">version: β.5.1</label>
     </div>
         
     <div class="search-container">
@@ -1091,6 +1078,11 @@
         }
 
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
+        
+        const navIndicator = eventList.length > 1 ? 
+            `<div style="font-size: 14px; text-align: center; color: #505050; border-top: 1px solid #cccccc; padding-top: 10px; margin-top: 10px;">${currentEventIndex + 1} / ${eventList.length} イベント</div>` 
+            : '';
+
         const newContentWrapper = document.createElement('div');
         newContentWrapper.style.padding = '20px';
         newContentWrapper.style.maxHeight = '90vh';
@@ -1112,7 +1104,7 @@
             ${eligibilityEntryHtml}
             ${detailsHtml}
             ${ownerHtml}
-         `;        
+            ${navIndicator} `;
         
         if (direction === 'next') {
             newContentWrapper.classList.add('content-slide-in-next');
@@ -1132,16 +1124,17 @@
         
         if(topButton) topButton.style.display = 'none';
 
-        const existingIndicator = document.getElementById('modal-event-navigator');
-        if (existingIndicator) {
-            existingIndicator.remove();
-        }
-
+        // 【⭐修正箇所：イベントリストを「その日」でフィルタリングする処理を追加】
+        // returnToDayDateがセットされていれば、それは「日付リスト」からの遷移。
+        // そうでなければ「カレンダーセル」からの遷移と見なす。
         let targetEventList = eventList;
         if (returnToDayDate !== event.dateString) {
+             // returnToDayDateがnullまたは現在のイベントと日付が異なる場合、
+             // その日のイベントに絞り込む（カレンダーセルから直接詳細を開いた場合など）
              targetEventList = eventList.filter(e => e.dateString === event.dateString);
         }
 
+        // eventListを時間順でソート（常に同じ順番でナビゲーションするため）
         targetEventList.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
@@ -1155,12 +1148,11 @@
             e.name === event.name
         );
         
-        swipeableEvents = targetEventList;
+        swipeableEvents = targetEventList; // 【⭐修正箇所：フィルタリングしたリストを使用】
         currentEventIndex = index;
 
         updateEventDetailsModal(event, targetEventList);
-        updateIndicatorPosition();
-
+        
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
@@ -1170,55 +1162,15 @@
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
-        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100);
+        
+        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
     }
     
-    function updateIndicatorPosition() {
-        // modalContent, eventModal, swipeableEvents, currentEventIndex はグローバルで定義されていることを想定
-
-        let indicator = document.getElementById('modal-event-navigator');
-
-        // 1. 必要ない場合は削除して終了 (イベントが1件以下の場合)
-        if (swipeableEvents.length <= 1) {
-            if (indicator) indicator.remove();
-            return;
-        }
-
-        const total = swipeableEvents.length;
-        const current = currentEventIndex + 1;
-        
-        // 2. インジケーターが存在しない場合は作成
-        if (!indicator) {
-            indicator = document.createElement('div');
-            indicator.id = 'modal-event-navigator';
-            indicator.classList.add('modal-nav-indicator');
-            eventModal.appendChild(indicator);
-        }
-
-        // 3. コンテンツの更新
-        indicator.textContent = `${current} / ${total} イベント`;
-        
-        // 4. 位置の計算と適用 (DOM更新後、位置計算のためsetTimeout(0))
-        setTimeout(() => {
-            // modalContent の位置情報を取得
-            const contentRect = modalContent.getBoundingClientRect(); 
-
-            // インジケーターの top 位置を計算: モーダルコンテンツの底辺 + 5px
-            const topPosition = contentRect.bottom + 30; 
-
-            // 位置と不透明度を設定
-            indicator.style.top = `${topPosition}px`;
-            indicator.style.opacity = '1'; 
-        }, 0); 
-    }
-
-
     function showPrevEvent() {
         if (currentEventIndex > 0) {
             currentEventIndex--;
             const prevEvent = swipeableEvents[currentEventIndex];
             updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
-            updateIndicatorPosition();
         }
     }
 
@@ -1227,18 +1179,12 @@
             currentEventIndex++;
             const nextEvent = swipeableEvents[currentEventIndex];
             updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
-            updateIndicatorPosition();
         }
     }
     
     function closeEventModal() {
         eventModal.style.display = 'none';
         modalContent.style.padding = '20px';
-
-        const existingIndicator = document.getElementById('modal-event-navigator');
-        if (existingIndicator) {
-            existingIndicator.remove();
-        }
 
         const closeButton = eventModal.querySelector('.fixed-close-btn');
         if (closeButton) {
