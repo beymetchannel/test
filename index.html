@@ -637,7 +637,6 @@
             position: fixed; /* 画面に対して固定 */
             left: 50%;       /* 中央寄せの基準点 */
             transform: translateX(-50%); /* 画面中央に移動 */
-            padding: 25px 0px 0px 0px;
             font-size: 14px;
             color: white; /* 白文字 */
             background: none; /* 背景なし */
@@ -1162,21 +1161,6 @@
         updateEventDetailsModal(event, targetEventList);
         updateIndicatorPosition();
 
-
-        if (targetEventList.length > 1) {
-            const total = targetEventList.length;
-            const current = currentEventIndex + 1;
-            
-            const indicator = document.createElement('div');
-            indicator.id = 'modal-event-navigator';
-            indicator.classList.add('modal-nav-indicator');
-            indicator.textContent = `${current} / ${total} イベント`;
-            
-            eventModal.appendChild(indicator); 
-        }
-        
-        
-
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
@@ -1185,34 +1169,6 @@
 
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
-        
-        if (targetEventList.length > 1) {
-            const total = targetEventList.length;
-            const current = currentEventIndex + 1;
-            
-            const indicator = document.createElement('div');
-            indicator.id = 'modal-event-navigator';
-            indicator.classList.add('modal-nav-indicator');
-            indicator.textContent = `${current} / ${total} イベント`;
-            
-            eventModal.appendChild(indicator); 
-
-            // DOMが表示され、レイアウトが計算された後に位置を確定させる
-            // setTimeout(0) を使うことで、次の描画サイクルで実行されるようにする
-            setTimeout(() => {
-                // modalContent (#modal-content) の位置情報を取得
-                // 注: modalContent はグローバル変数として #modal-content 要素を指すことを仮定
-                const contentRect = modalContent.getBoundingClientRect(); 
-
-                // インジケーターの top 位置を計算:
-                // モーダルコンテンツの底辺位置 (contentRect.bottom) に 5px のオフセットを加える
-                const topPosition = contentRect.bottom + 5; 
-
-                // インジケーターの top プロパティを設定 (position: fixed のため、ビューポート基準)
-                indicator.style.top = `${topPosition}px`;
-                indicator.style.opacity = '1'; // 表示をフェードイン
-            }, 0); 
-        }
         
         setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100);
     }
@@ -1248,7 +1204,7 @@
             const contentRect = modalContent.getBoundingClientRect(); 
 
             // インジケーターの top 位置を計算: モーダルコンテンツの底辺 + 5px
-            const topPosition = contentRect.bottom + 5; 
+            const topPosition = contentRect.bottom + 30; 
 
             // 位置と不透明度を設定
             indicator.style.top = `${topPosition}px`;
@@ -1262,6 +1218,7 @@
             currentEventIndex--;
             const prevEvent = swipeableEvents[currentEventIndex];
             updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
+            updateIndicatorPosition();
         }
     }
 
@@ -1270,6 +1227,7 @@
             currentEventIndex++;
             const nextEvent = swipeableEvents[currentEventIndex];
             updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
+            updateIndicatorPosition();
         }
     }
     
