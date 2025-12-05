@@ -36,7 +36,7 @@
 
         #title-image {
             display: block;
-            width: 70%;
+            width: 80%;
             max-width: 300px; 
             height: auto;
             margin-top: 10px;
@@ -116,7 +116,7 @@
         .calendar-container {
             width: 100%;
             max-width: 1000px;
-            margin: 10px auto;
+            margin: 5px auto;
             border: 1px solid #cccccc;
             background-color: #ffffff;
         }
@@ -616,7 +616,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.3.2</label>
+        <label id="version-label">version: β.4.1</label>
     </div>
         
     <div class="search-container">
@@ -638,7 +638,7 @@
         
     </div>
 
-    <div id="filter-status" style="color: #505050;font-size:10px;text-align: center;"></div>
+    <div id="filter-status" style="color: #505050;font-size:10px;text-align: center;margin-top: 5px;"></div>
 
     <div class="calendar-container">
         <div id="calendar-wrapper">
@@ -949,7 +949,7 @@
         if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
             return { class: 'label-yellow', label: '' };
         } else if (eventType.includes("G3大会/チーム戦（G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
-            return { class: 'label-label', label: '' };
+            return { class: 'label-yellow', label: '' };
         } else if (eventType.includes("G3大会（オープン") || eventType.includes("オープンクラス")) {
             return { class: 'label-orange', label: '' };
         } else if (eventType.includes("G3大会/チーム戦（オープン") || eventType.includes("オープンクラス")) {
@@ -1775,9 +1775,14 @@
                     dayCell.appendChild(eventLabel);
                 });
 
+                // ★★★ 修正箇所: dayCellのクリックハンドラを修正 ★★★
                 dayCell.onclick = (e) => {
-                    if (e.target === dayNumber) { 
-                        dayClickHandler({ currentTarget: dayNumber });
+                    // イベントラベルがクリックされた場合は、イベント詳細モーダルを開くためにイベントラベルのonclickが実行され、
+                    // e.stopPropagation()が呼ばれているため、dayCellのonclickは実行されない。
+                    // そのため、ここではdayNumberがクリックされた場合と同様の処理を実行する。
+                    const targetDateElement = dayCell.querySelector('.day-number');
+                    if (targetDateElement && targetDateElement.dataset.date) {
+                         dayClickHandler({ currentTarget: targetDateElement });
                     }
                 };
 
@@ -1903,20 +1908,23 @@
         
         generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
         
-        addDayNumberClickHandlers();
+        // dayClickHandlerをdayCellに設定したため、ここではaddDayNumberClickHandlersは不要
+        // addDayNumberClickHandlers(); 
     }
 
-    function addDayNumberClickHandlers() {
-        const allDayElements = document.querySelectorAll('.day-number');
+    // dayCellのクリックで処理されるため、day-numberのクリックハンドラは不要になりました。
+    // function addDayNumberClickHandlers() {
+    //     const allDayElements = document.querySelectorAll('.day-number');
 
-        allDayElements.forEach(dayEl => {
-            dayEl.removeEventListener('click', dayClickHandler);
-            dayEl.addEventListener('click', dayClickHandler);
-        });
-    }
+    //     allDayElements.forEach(dayEl => {
+    //         dayEl.removeEventListener('click', dayClickHandler);
+    //         dayEl.addEventListener('click', dayClickHandler);
+    //     });
+    // }
 
     function dayClickHandler(e) {
-        const dayEl = e.currentTarget;
+        // e.currentTargetはday-number要素
+        const dayEl = e.currentTarget; 
         const dateString = dayEl.dataset.date; 
 
         if (!dateString) {
@@ -1947,5 +1955,3 @@
 </script>
 </body>
 </html>
-
-
