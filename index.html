@@ -39,7 +39,7 @@
             width: 80%;
             max-width: 300px; 
             height: auto;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         #version-label{
             display: block;
@@ -191,7 +191,7 @@
         }
         .label-yellow { background-color: #FFC75Fbb; color: #505050; }
         .label-orange { background-color: #fd9048dd;color: white; }
-        .label-lightblue { background-color: #98f8f8;color: #505050; }
+        .label-lightblue { background-color: #97f3f3;color: #505050; }
         .label-gray { background-color: #ff4444bb; color: white; }
         .label-black { background-color: #845EC2bb; color: white; }
         .label-green { background-color: #FAF871; color: #505050; }
@@ -400,7 +400,7 @@
             background-color: #FFC75Fbb;
         }
         .legend-item.active.style-S1AMB {
-            background-color: #98f8f8;
+            background-color: #97f3f3;
         }
         .legend-item.active.style-Meetup {
             background-color: #A0FA8D;
@@ -545,7 +545,7 @@
         .type-G2 { background-color: #ff4444dd; color: white; }
         .type-G3O { background-color: #fd9048dd; color: white; }
         .type-G3R { background-color: #FFC75Fbb; }
-        .type-S1 { background-color: #98f8f8; }
+        .type-S1 { background-color: #97f3f3; }
         .type-Meetup { background-color: #A0FA8D; }
         .type-Other { background-color: #FAF871; }
 
@@ -607,12 +607,36 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        /* --- TOP Button Style Added Here --- */
+        #back-to-top {
+            position: fixed;
+            bottom: calc(20px + env(safe-area-inset-bottom));
+            right: 0px;
+            background-color: rgba(0, 0, 0, 0.2);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 900;
+            backdrop-filter: blur(2px);
+            display: block;
+            transition: opacity 0.3s, background-color 0.2s;
+        }
+        #back-to-top:hover {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        /* ----------------------------------- */
+
     </style>
 </head>
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.4.3</label>
+        <label id="version-label">version: β.5.0</label>
     </div>
         
     <div class="search-container">
@@ -645,6 +669,8 @@
         <div id="modal-content">
             </div>
     </div>
+    
+    <button id="back-to-top">TOP</button>
 
 <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -705,7 +731,18 @@
     const eventModal = document.getElementById('event-modal');
     const modalContent = document.getElementById('modal-content');
     const legendContainer = document.getElementById('label-legend-container');
-
+    
+    // --- TOP Button Logic ---
+    const topButton = document.getElementById('back-to-top');
+    if(topButton) {
+        topButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+    // ------------------------
 
     function saveSearchState() {
         const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
@@ -1085,6 +1122,9 @@
 
     function showEventDetails(event, eventList = filteredEvents) {
         
+        // Hide TOP button when details modal opens
+        if(topButton) topButton.style.display = 'none';
+
         eventList.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
@@ -1151,8 +1191,11 @@
             
             createDayEventModal(returnToDayDate, eventsForDay);
             returnToDayDate = null; 
+            // Button stays hidden because createDayEventModal is called
         } else {
             document.body.style.overflow = ''; 
+            // Show TOP button when modal closes and not returning to list
+            if(topButton) topButton.style.display = 'block';
         }
     }
     window.closeEventModal = closeEventModal;
@@ -1294,6 +1337,9 @@
 
 
     function createDayEventModal(dateString, dayEvents) {
+        // Hide TOP button when list modal opens
+        if(topButton) topButton.style.display = 'none';
+
         document.querySelector('.event-list-modal-overlay')?.remove();
 
         const overlay = document.createElement('div');
@@ -1305,7 +1351,9 @@
         
         closeButton.onclick = () => {
             overlay.remove();
-            document.body.style.overflow = ''; 
+            document.body.style.overflow = '';
+            // Show TOP button when list modal closes
+            if(topButton) topButton.style.display = 'block';
         };
         
         overlay.appendChild(closeButton);
@@ -1350,7 +1398,9 @@
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) {
                 overlay.remove();
-                document.body.style.overflow = ''; 
+                document.body.style.overflow = '';
+                // Show TOP button when list modal closes
+                if(topButton) topButton.style.display = 'block';
             }
         });
         
