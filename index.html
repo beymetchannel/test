@@ -1079,7 +1079,7 @@
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
         
         const navIndicator = eventList.length > 1 ? 
-            `<div style="font-size: 14px; text-align: center; color: #808080; margin-bottom: 0px;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>` 
+            `<div style="font-size: 12px; text-align: center; color: #808080; margin-bottom: 0px;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>` 
             : '';
 
         const newContentWrapper = document.createElement('div');
@@ -1123,17 +1123,14 @@
         
         if(topButton) topButton.style.display = 'none';
 
-        // 【⭐修正箇所：イベントリストを「その日」でフィルタリングする処理を追加】
-        // returnToDayDateがセットされていれば、それは「日付リスト」からの遷移。
-        // そうでなければ「カレンダーセル」からの遷移と見なす。
+        
         let targetEventList = eventList;
         if (returnToDayDate !== event.dateString) {
-             // returnToDayDateがnullまたは現在のイベントと日付が異なる場合、
-             // その日のイベントに絞り込む（カレンダーセルから直接詳細を開いた場合など）
+             
              targetEventList = eventList.filter(e => e.dateString === event.dateString);
         }
 
-        // eventListを時間順でソート（常に同じ順番でナビゲーションするため）
+        
         targetEventList.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
@@ -1147,7 +1144,7 @@
             e.name === event.name
         );
         
-        swipeableEvents = targetEventList; // 【⭐修正箇所：フィルタリングしたリストを使用】
+        swipeableEvents = targetEventList; 
         currentEventIndex = index;
 
         updateEventDetailsModal(event, targetEventList);
