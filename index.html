@@ -78,6 +78,7 @@
         .keyword-search-input-wrapper {
             display: flex;
             width: 100%;
+            font-size: 12px;
         }
         .keyword-search-group label {
             font-size: 14px;
@@ -621,6 +622,7 @@
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
+            margin-bottom: 0px;
             z-index: 900;
             backdrop-filter: blur(2px);
             display: block;
@@ -629,6 +631,19 @@
         #back-to-top p{
             margin: 0;
             padding: 0;
+        }
+
+        .modal-nav-indicator {
+            position: fixed; /* 画面に対して固定 */
+            left: 50%;       /* 中央寄せの基準点 */
+            transform: translateX(-50%); /* 画面中央に移動 */
+            padding: 25px 0px 0px 0px;
+            font-size: 12px;
+            color: white; /* 白文字 */
+            background: none; /* 背景なし */
+            z-index: 10002; /* モーダルよりも前面に表示 */
+            transition: opacity 0.2s; /* フェードイン効果用 */
+            opacity: 0; /* 初期状態では非表示 */
         }
 
     </style>
@@ -1077,9 +1092,6 @@
         }
 
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
-        
-        const navIndicator = eventList.length > 1 ? ` (${currentEventIndex + 1}/${eventList.length})` : '';
-
         const newContentWrapper = document.createElement('div');
         newContentWrapper.style.padding = '20px';
         newContentWrapper.style.maxHeight = '90vh';
@@ -1101,7 +1113,7 @@
             ${eligibilityEntryHtml}
             ${detailsHtml}
             ${ownerHtml}
-        `;
+         `;        
         
         if (direction === 'next') {
             newContentWrapper.classList.add('content-slide-in-next');
@@ -1121,24 +1133,46 @@
         
         if(topButton) topButton.style.display = 'none';
 
-        eventList.sort((a, b) => {
+        const existingIndicator = document.getElementById('modal-event-navigator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
+
+        let targetEventList = eventList;
+        if (returnToDayDate !== event.dateString) {
+             targetEventList = eventList.filter(e => e.dateString === event.dateString);
+        }
+
+        targetEventList.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
             }
             return getTimeValue(a.time) - getTimeValue(b.time);
         });
         
-        const index = eventList.findIndex(e => 
+        const index = targetEventList.findIndex(e => 
             e.dateString === event.dateString && 
             e.time === event.time && 
             e.name === event.name
         );
         
-        swipeableEvents = eventList;
+        swipeableEvents = targetEventList;
         currentEventIndex = index;
 
-        updateEventDetailsModal(event, eventList);
+        updateEventDetailsModal(event, targetEventList);
         
+        if (targetEventList.length > 1) {
+            const total = targetEventList.length;
+            const current = currentEventIndex + 1;
+            
+            const indicator = document.createElement('div');
+            indicator.id = 'modal-event-navigator';
+            indicator.classList.add('modal-nav-indicator');
+            indicator.textContent = `${current} / ${total} イベント`;
+            
+            eventModal.appendChild(indicator); 
+        }
+
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
@@ -1148,9 +1182,35 @@
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
+        if (targetEventList.length > 1) {
+            const total = targetEventList.length;
+            const current = currentEventIndex + 1;
+            
+            const indicator = document.createElement('div');
+            indicator.id = 'modal-event-navigator';
+            indicator.classList.add('modal-nav-indicator');
+            indicator.textContent = `${current} / ${total} イベント`;
+            
+            eventModal.appendChild(indicator); 
+
+            // DOMが表示され、レイアウトが計算された後に位置を確定させる
+            // setTimeout(0) を使うことで、次の描画サイクルで実行されるようにする
+            setTimeout(() => {
+                // modalContent (#modal-content) の位置情報を取得
+                // 注: modalContent はグローバル変数として #modal-content 要素を指すことを仮定
+                const contentRect = modalContent.getBoundingClientRect(); 
+
+                // インジケーターの top 位置を計算:
+                // モーダルコンテンツの底辺位置 (contentRect.bottom) に 5px のオフセットを加える
+                const topPosition = contentRect.bottom + 5; 
+
+                // インジケーターの top プロパティを設定 (position: fixed のため、ビューポート基準)
+                indicator.style.top = `${topPosition}px`;
+                indicator.style.opacity = '1'; // 表示をフェードイン
+            }, 0); 
+        }
         
-        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
-    }
+        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100);}
     
     function showPrevEvent() {
         if (currentEventIndex > 0) {
@@ -1171,6 +1231,11 @@
     function closeEventModal() {
         eventModal.style.display = 'none';
         modalContent.style.padding = '20px';
+
+        const existingIndicator = document.getElementById('modal-event-navigator');
+        if (existingIndicator) {
+            existingIndicator.remove();
+        }
 
         const closeButton = eventModal.querySelector('.fixed-close-btn');
         if (closeButton) {
