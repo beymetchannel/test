@@ -10,7 +10,16 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BEYカレンダー">
     <title>BEYカレンダー</title>
-    <link rel="preload" href="handicon.png" as="image">
+    <script>
+        const SWIPE_GUIDE_KEY = 'yourSwipeGuideKey'; 
+        if (!localStorage.getItem(SWIPE_GUIDE_KEY)) {
+            const preloadLink = document.createElement('link');
+            preloadLink.rel = 'preload';
+            preloadLink.href = 'handicon.png';
+            preloadLink.as = 'image';
+            document.head.appendChild(preloadLink);
+        }
+    </script>
     <style>
         *, *::before, *::after {
             box-sizing: border-box;
@@ -227,14 +236,14 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 5px 0;
+            padding: 5px;
             cursor: pointer;
         }
         .region-header {
             font-weight: bold;
             color: #505050;
             border-left: 3px solid #B3FF52;
-            padding-left: 10px;
+            padding-left: 7px;
             margin: 0;
             flex-grow: 1;
         }
@@ -246,7 +255,7 @@
             font-size: 0.8em;
             font-weight: normal;
             margin-left: 5px;
-            color: #505050;
+            color: #808080;
         }
         .region-select-checkbox {
             margin-right: 3px;
@@ -637,7 +646,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.5.5</label>
+        <label id="version-label">version: β.5.6</label>
     </div>
         
     <div class="search-container">
@@ -656,7 +665,7 @@
         </div>
         <div style="flex-basis: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0px;">
             <p style="margin-bottom: 0;">イベントタイプ絞り込み</p>
-            <label style="font-size: 13px; color: #505050; font-weight: bold; cursor: pointer;">
+            <label style="font-size: 13px; color: #808080; cursor: pointer;">
                 <input type="checkbox" id="type-select-all-checkbox" style="vertical-align: middle; margin-right: 4px;">全選択
             </label>
         </div>
