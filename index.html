@@ -245,6 +245,9 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://yyrsscvofuoufkujetgf.supabase.co';
+    </script>
 </head>
 <body class="page-wrapper">
 
@@ -664,9 +667,9 @@
 
 <script type="module">
     const supabase = window.supabase.createClient(
-        'https://yyrsscvofuoufkujetgf.supabase.co',
+        supabaseUrl,
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4'
-    );
+    );    
     
     const messageDiv = document.getElementById('message');
     const eventNums = [1, 2, 3, 4, 5]; 
