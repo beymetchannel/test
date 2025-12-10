@@ -144,7 +144,7 @@
             color: #505050;
         }
 
-        .day-cell { min-height: 40px; padding: 5px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
+        .day-cell { min-height: 40px; padding: 5px 2px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
         
         .day-cell.today-cell { 
             background-color: #EDFFED !important;
@@ -322,8 +322,7 @@
             color: #505050;
             border-bottom: 2px solid #B3FF52;
             padding-bottom: 5px;
-            margin-top: 5px; /* マージン調整 */
-            width: 100%; /* 横幅いっぱい */
+            margin-top: 0;
         }
 
         #modal-content p {
@@ -561,7 +560,6 @@
             cursor: pointer;
             transition: background-color 0.2s;
             gap: 10px;
-            position: relative; /* お気に入りボタン配置用 */
         }
         .event-card:hover {
             background-color: rgb(245, 245, 245);
@@ -591,7 +589,6 @@
             justify-content: center;
             gap: 3px;
             overflow: hidden;
-            padding-right: 25px; /* お気に入りボタンと被らないように余白 */
         }
 
         .event-name {
@@ -634,155 +631,13 @@
             padding: 0;
         }
 
-        /* --- お気に入りボタンのスタイル --- */
-        .favorite-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 24px;
-            color: #e0e0e0; /* 未選択時はグレー */
-            padding: 0;
-            line-height: 1;
-            transition: transform 0.1s, color 0.2s;
-            -webkit-tap-highlight-color: transparent;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .favorite-btn.active {
-            color: #ffd700; /* 選択時は金色 */
-            text-shadow: 0 0 2px rgba(200, 150, 0, 0.5);
-        }
-
-        .favorite-btn:active {
-            transform: scale(1.2);
-        }
-
-        /* 詳細モーダル内の配置調整 */
-        .modal-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center; /* 垂直方向中央揃え */
-            margin-bottom: 5px;
-        }
-
-        /* リストカード内の配置 */
-        .card-favorite-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            z-index: 10;
-            font-size: 22px;
-            padding: 5px; /* タップ領域を広げる */
-        }
-        
-        /* --- filter-statusとトグルスイッチの2列レイアウトのためのスタイル --- */
-        #filter-status-row {
-            width: 100%;
-            max-width: 1000px;
-            margin: 5px auto 0 auto;
-            padding: 0 15px; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        #filter-status-row > #filter-status {
-            flex-basis: 85%;
-            margin-top: 0 !important; /* 元のインラインスタイルを上書き */
-            padding-right: 5px; /* トグルスイッチとの間隔 */
-            text-align: left !important; /* 中央寄せを左寄せに戻す */
-        }
-
-        #favorite-toggle-container {
-            flex-basis: 15%;
-            display: flex;
-            /* ★ 変更: 縦並びにして、中央揃え */
-            flex-direction: column; 
-            justify-content: center;
-            align-items: center;
-            white-space: nowrap;
-        }
-
-        /* --- トグルスイッチのスタイル --- */
-        /* label要素全体をトグルスイッチとして機能させる */
-        .toggle-switch {
-            position: relative;
-            display: inline-flex; /* flexに変更 */
-            width: 40px; 
-            height: 20px; 
-            user-select: none;
-            align-items: center; /* 垂直方向中央揃え */
-            justify-content: center; /* 水平方向中央揃え */
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            box-shadow: 0 0 1px #ccc;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-        }
-
-        input:checked ~ .slider {
-            background-color: #ffd700; /* お気に入りカラーに合わせる */
-            box-shadow: 0 0 1px #ffd700;
-        }
-
-        input:checked ~ .slider:before {
-            transform: translateX(20px);
-        }
-
-        /* Round sliders */
-        .slider.round {
-            border-radius: 20px;
-        }
-
-        .slider.round:before {
-            border-radius: 50%;
-        }
-
-        .toggle-label {
-            font-size: 10px;
-            color: #505050;
-            font-weight: bold;
-            /* ★ 変更: 上下のマージンと、スイッチとの間隔を調整 */
-            margin-top: 2px; 
-            margin-right: 0; /* 横並び時のマージンを削除 */
-            line-height: 1.2;
-            text-align: center;
-            width: 100%;
-        }
-
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.6.0</label>
+        <label id="version-label">version: β.5.5</label>
     </div>
         
     <div class="search-container">
@@ -799,21 +654,17 @@
                 <button id="search-button" class="search-button-icon">🔍</button>
             </div>
         </div>
-        <p>イベントタイプ絞り込み</p>
+        <div style="flex-basis: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0px;">
+            <p style="margin-bottom: 0;">イベントタイプ絞り込み</p>
+            <label style="font-size: 13px; color: #505050; font-weight: bold; cursor: pointer;">
+                <input type="checkbox" id="type-select-all-checkbox" style="vertical-align: middle; margin-right: 4px;">全選択
+            </label>
+        </div>
         <div id="label-legend-container"></div>
         
     </div>
 
-    <div id="filter-status-row">
-        <div id="filter-status" style="color: #505050;font-size:10px;text-align: center;"></div>
-        <div id="favorite-toggle-container">
-            <label class="toggle-switch">
-                <input type="checkbox" id="favorite-only-toggle">
-                <span class="slider round"></span>
-            </label>
-            <span class="toggle-label">お気に入りのみ</span>
-        </div>
-    </div>
+    <div id="filter-status" style="color: #505050;font-size:10px;text-align: center;margin-top: 5px;"></div>
 
     <div class="calendar-container">
         <div id="calendar-wrapper">
@@ -830,18 +681,18 @@
 <script type="module">
     const supabase = window.supabase.createClient(
         'https://yyrsscvofuoufkujetgf.supabase.co',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGKKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4'
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4'
     );
 
     const JAPAN_PREFECTURES_BY_REGION = {
-        "北海道": ["北海道"],
-        "東北地方": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
-        "関東地方": ["茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県"],
-        "中部地方": ["新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県", "岐阜県", "静岡県", "愛知県"],
-        "近畿地方": ["三重県", "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"],
-        "中国地方": ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
-        "四国地方": ["徳島県", "香川県", "愛媛県", "高知県"],
-        "九州・沖縄地方": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"]
+        "北海道・東北": ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
+        "関東": ["茨城県", "栃木県", "群馬県", "山梨県", "長野県", "埼玉県", "千葉県", "東京都", "神奈川県"],
+        "東海": ["岐阜県", "静岡県", "愛知県", "三重県"],
+        "北陸": ["新潟県", "富山県", "石川県", "福井県"],
+        "近畿": ["滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"],
+        "中国": ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
+        "四国": ["徳島県", "香川県", "愛媛県", "高知県"],
+        "九州・沖縄": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"]
     };
 
     const JAPANESE_WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
@@ -876,12 +727,7 @@
 
     let savedScrollPosition = 0;
     let isReturningFromDetail = false;
-
-    // --- お気に入り機能用ステート ---
-    let favoriteEventIds = new Set();
-    const FAVORITES_STORAGE_KEY = 'beyCalendarFavorites';
-    let isFavoriteOnly = false; 
-
+    
     const searchButton = document.getElementById('search-button');
     const prefectureContainer = document.getElementById('prefecture-checkbox-container');
     const cityInput = document.getElementById('city-input'); 
@@ -890,9 +736,7 @@
     const eventModal = document.getElementById('event-modal');
     const modalContent = document.getElementById('modal-content');
     const legendContainer = document.getElementById('label-legend-container');
-    
-    const favoriteOnlyToggle = document.getElementById('favorite-only-toggle'); 
-
+    const typeSelectAllCheckbox = document.getElementById('type-select-all-checkbox');
     const topButton = document.getElementById('back-to-top');
     if(topButton) {
         topButton.addEventListener('click', () => {
@@ -901,47 +745,6 @@
             });
         });
     }
-
-    // --- お気に入り機能の実装 ---
-    function loadFavorites() {
-        const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
-        if (saved) {
-            try {
-                const ids = JSON.parse(saved);
-                favoriteEventIds = new Set(ids);
-            } catch (e) {
-                console.error('Failed to parse favorites:', e);
-                favoriteEventIds = new Set();
-            }
-        }
-    }
-
-    function saveFavorites() {
-        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(Array.from(favoriteEventIds)));
-    }
-
-    // イベントの一意なIDを生成
-    function getEventId(event) {
-        // 日付_時間_名前_場所 をIDとして使用
-        return `${event.dateString}_${event.time}_${event.name}_${event.location || ''}`;
-    }
-
-    function isFavorite(event) {
-        return favoriteEventIds.has(getEventId(event));
-    }
-
-    function toggleFavorite(event) {
-        const id = getEventId(event);
-        if (favoriteEventIds.has(id)) {
-            favoriteEventIds.delete(id);
-        } else {
-            favoriteEventIds.add(id);
-        }
-        saveFavorites();
-        return favoriteEventIds.has(id);
-    }
-
-    // --- 既存の機能 ---
 
     function saveSearchState() {
         const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
@@ -957,8 +760,7 @@
                 .map(checkbox => checkbox.value),
             keyword: cityInput.value.trim(),
             eventTypes: activeEventTypes,
-            expandedRegions: expandedRegions,
-            favoriteOnly: favoriteOnlyToggle ? favoriteOnlyToggle.checked : false 
+            expandedRegions: expandedRegions 
         };
         localStorage.setItem('beyCalendarSearchState', JSON.stringify(state));
     }
@@ -979,9 +781,6 @@
                 }
                 if (Array.isArray(state.expandedRegions)) {
                     expandedRegionsFromStorage = state.expandedRegions;
-                }
-                if (state.favoriteOnly !== undefined) { 
-                    isFavoriteOnly = state.favoriteOnly;
                 }
             } catch (e) {
                 console.error('Failed to parse search state from localStorage:', e);
@@ -1050,32 +849,39 @@
         if (match) {
             return `${match[1].padStart(2, '0')}：${match[2]}`;
         }
-        return timeStr;
+        return timeStr; 
     }
 
     function formatDate(dateStr) {
         if (!dateStr) return '';
         const date = new Date(dateStr);
         if (isNaN(date.getTime())) return dateStr;
+        
         return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
     }
 
     function linkifyText(text) {
         if (!text) return '';
+        
         let processedText = text.replace(/\n/g, '<br>');
+
         const urlRegex = /((?:https?:\/\/|www\.)[^\s()<>]+)/g;
+        
         return processedText.replace(urlRegex, (fullMatch) => {
             let url = fullMatch;
             let trailing = '';
+
             const unwantedSingleChars = ['(', ')'];
             while (url.length > 0 && unwantedSingleChars.includes(url.slice(-1))) {
                 trailing = url.slice(-1) + trailing;
                 url = url.slice(0, -1);
             }
+            
             let href = url;
             if (url.startsWith('www.') && !url.match(/^https?:\/\//i)) {
                 href = 'http://' + url;
             }
+            
             return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>${trailing}`;
         });
     }
@@ -1091,7 +897,7 @@
             if (Object.prototype.hasOwnProperty.call(event, key)) {
                 let value = event[key];
                 if (typeof value === 'string') {
-                    value = replaceFullWidthSpaces(value);
+                    value = replaceFullWidthSpaces(value); 
                 }
                 cleaned[key] = value;
             }
@@ -1099,39 +905,57 @@
         return cleaned;
     }
 
+
     function parseDate(dateStr) {
         if (!dateStr) return null;
+
         const jpMatch = dateStr.match(/(\d{4})年[\s\n]*(\d{1,2})月[\s\n]*(\d{1,2})日/);
         if (jpMatch) {
-            return { year: parseInt(jpMatch[1], 10), month: parseInt(jpMatch[2], 10), day: parseInt(jpMatch[3], 10) };
+            return {
+                year: parseInt(jpMatch[1], 10),
+                month: parseInt(jpMatch[2], 10), 
+                day: parseInt(jpMatch[3], 10)
+            };
         }
-        const isoMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+
+        const isoMatch = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
         if (isoMatch) {
-            return { year: parseInt(isoMatch[1], 10), month: parseInt(isoMatch[2], 10), day: parseInt(isoMatch[3], 10) };
+            return {
+                year: parseInt(isoMatch[1], 10),
+                month: parseInt(isoMatch[2], 10),
+                day: parseInt(isoMatch[3], 10)
+            };
         }
+
+        console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
         return null;
     }
     
+    function getUniqueEventDates(events) {
+        const dateStrings = events.map(e => e.dateString).filter(d => d);
+        const sortedDates = dateStrings.sort((a, b) => new Date(a) - new Date(b));
+        return [...new Set(sortedDates)];
+    }
+
     function getAllDatesInCalendarRange() {
-        if (ALL_BEYBLADE_EVENTS.length === 0) return [];
-        
-        let startYear = TARGET_START_YEAR;
-        let startMonth = TARGET_START_MONTH; 
-        const maxDate = TARGET_MAX_DATE;
-        const maxYear = maxDate.getFullYear();
-        const maxMonth = maxDate.getMonth() + 1;
-        
-        let dates = [];
-        let currentYear = startYear;
-        let currentMonth = startMonth;
-        
+        const dates = [];
+        let currentYear = TARGET_START_YEAR;
+        let currentMonth = TARGET_START_MONTH;
+        const maxYear = TARGET_MAX_DATE.getFullYear();
+        const maxMonth = TARGET_MAX_DATE.getMonth() + 1;
+        const maxDay = TARGET_MAX_DATE.getDate();
+
         while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
             const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            
             for (let day = 1; day <= daysInMonth; day++) {
+                if (currentYear === maxYear && currentMonth === maxMonth && day > maxDay) {
+                    break;
+                }
                 const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 dates.push(dateString);
             }
-            
+
             currentMonth++;
             if (currentMonth > 12) {
                 currentMonth = 1;
@@ -1141,25 +965,22 @@
         return dates;
     }
 
-    function getUniqueEventDates(events) {
-        const dates = new Set(events.map(event => event.dateString));
-        return Array.from(dates).sort();
-    }
-
-
     function getTimeValue(timeStr) {
-        if (!timeStr) return 99999;
+        if (!timeStr) return 99999; 
+        
         const match = timeStr.match(/(\d{1,2})[:：](\d{2})/);
+        
         if (match) {
             const hours = parseInt(match[1], 10);
             const minutes = parseInt(match[2], 10);
             return hours * 60 + minutes;
         }
-        return 99999;
+        return 99999; 
     }
 
     function getColorClass(eventType) {
-        if (!eventType) return { class: 'label-green', label: '' };
+        if (!eventType) return { class: 'label-green', label: '' }; 
+        
         if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
             return { class: 'label-yellow', label: '' };
         } else if (eventType.includes("G3大会/チーム戦（G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
@@ -1170,14 +991,14 @@
             return { class: 'label-orange', label: '' };
         } else if (eventType.includes("S1イベント") || eventType.includes("アンバサダーイベント")) {
             return { class: 'label-lightblue', label: '' };
-        } else if (eventType.includes("交流会")) {
+        } else if (eventType.includes("交流会")) { 
             return { class: 'label-meetup', label: '' };
         } else if (eventType.includes("G2大会")) {
             return { class: 'label-gray', label: '' };
         } else if (eventType.includes("G1大会")) {
             return { class: 'label-black', label: '' };
         } else {
-            return { class: 'label-green', label: '' };
+            return { class: 'label-green', label: '' }; 
         }
     }
 
@@ -1188,91 +1009,98 @@
         if(colorClass === 'label-orange') return 'type-G3O';
         if(colorClass === 'label-yellow') return 'type-G3R';
         if(colorClass === 'label-lightblue') return 'type-S1';
-        if(colorClass === 'label-meetup') return 'type-Meetup';
+        if(colorClass === 'label-meetup') return 'type-Meetup'; 
         return 'type-Other';
     }
-
+    
     function cleanEventTypeText(eventType) {
         if (!eventType) return '';
         return eventType.replace('B4ストアカップ', '').trim();
     }
 
     function updateEventDetailsModal(event, eventList, direction = null) {
+        
         const eventTypeText = cleanEventTypeText(event.type);
         const badgeClass = getBadgeClass(event.type);
         const timeVal = event.time ? `${event.time} (${event.date})` : `(${event.date})`;
-
+        
         const eligibilityRaw = event.eligibility ? event.eligibility.replace('参加資格：', '').trim() : '';
-        const entryDisplay = event.entry ? event.entry.replace('受付：', '').trim() : '';
-
-        const capacityFee = event.capacity || event.fee;
-        const capacityFeeHtml = capacityFee ? `<p><strong>定員/料金:</strong> ${capacityFee}</p>` : '';
-
-        const detailsContent = linkifyText(event.detail);
         const eligibilityContent = linkifyText(eligibilityRaw);
         
-        const addressText = linkifyText(event.address);
+        const entryContent = linkifyText(event.entry || '');
+        const entryDisplay = entryContent ? ` (${entryContent})` : '';
+
+        const detailsContent = linkifyText(event.details || '');
+
+        const capacityPresent = !!event.capacity;
+        const feePresent = !!event.fee && event.fee !== '-';
+        let capacityFeeHtml = '';
+        if (capacityPresent || feePresent) {
+             capacityFeeHtml = `
+                <p>
+                    <strong>定員:</strong> ${event.capacity|| '-'}${(feePresent && event.fee) ?` (${event.fee})` : ''} 
+                </p>
+             `;
+        }
 
         const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
-        const addressHtml = event.address ? `<p><strong>住所:</strong> ${addressText}</p>` : '';
 
+        const address = event.address || '';
+        const mapLink = address ? `href="http://maps.google.com/?q=${encodeURIComponent(address)}"` : ''; 
+        const addressText = address ? `<a ${mapLink} target="_blank" rel="noopener noreferrer">${address}</a>` : '';
+        
+        const addressHtml = `<p><strong>住所:</strong> ${addressText}</p>`;
+        
         const tel = event.tel || '';
         const telDisplay = tel.replace(/\n/g, '<br>');
-        const telLink = tel.replace(/[^\d+]/g, '');
+        const telLink = tel.replace(/[^\d+]/g, ''); 
         const eventName = event.name.replace('B4G2_','');
-
-        const telHtml = tel ? `
-            <p>
-                <strong>電話:</strong> 
-                <a href="tel:${telLink}">${telDisplay}</a>
-            </p>` : '';
+        
+        const telHtml = tel ? 
+            `<p><strong>電話:</strong> <a href="tel:${telLink}">${telDisplay}</a></p>` : 
+            '';
 
         const eligibilityEntryPresent = eligibilityRaw || event.entry;
+        
         const eligibilityEntryHtml = eligibilityEntryPresent ? `
             <p>
-                <strong>受付:</strong> 
-                ${eligibilityContent || '-'} 
-                ${entryDisplay} 
+                <strong>受付:</strong> ${eligibilityContent || '-'} ${entryDisplay}
             </p>
         ` : '';
         
         const owner = event.owner || '';
         const ownerFlg = event.ownerFlg;
         let ownerHtml = '';
+
         if (owner && ownerFlg) {
             const xUrl = `https://x.com/${owner}`;
             ownerHtml = `
                 <p>
-                    <strong>運営:</strong> 
-                    <a href="${xUrl}" target="_blank" rel="noopener noreferrer">${owner}</a>
+                    <strong>運営:</strong> <a href="${xUrl}" target="_blank" rel="noopener noreferrer">${owner}</a>
                 </p>
             `;
         }
-        
+
         const detailsHtml = `<p><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
         
-        const navIndicator = eventList.length > 1 ? `<div style="font-size: 12px; text-align: center; color: #808080; margin-bottom: 0px;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>` : '';
-
-        // お気に入り状態の確認
-        const isFav = isFavorite(event);
-        const favActiveClass = isFav ? 'active' : '';
+        const navIndicator = eventList.length > 1 ? 
+            `<div style="font-size: 12px; text-align: center; color: #808080; margin-bottom: 0px;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>` 
+            : '';
 
         const newContentWrapper = document.createElement('div');
         newContentWrapper.style.padding = '20px';
         newContentWrapper.style.maxHeight = '90vh';
         newContentWrapper.style.overflowY = 'auto';
 
-        // --- レイアウト変更部分 ---
         newContentWrapper.innerHTML = `
-            <div class="modal-header-row">
-                <div class="event-type-badge ${badgeClass}">${eventTypeText}</div>
-                <button class="favorite-btn ${favActiveClass}" id="modal-fav-btn">★</button>
-            </div>
+            
+            <div class="event-type-badge ${badgeClass}" style="margin-bottom: 5px;">${eventTypeText}</div>
             <h3>${eventName}</h3>
+            
             <p>
-                <strong>日時:</strong> 
-                ${timeVal}
+                <strong>日時:</strong> ${timeVal}
             </p>
+            
             ${capacityFeeHtml}
             ${locationHtml}
             ${addressHtml}
@@ -1280,23 +1108,8 @@
             ${eligibilityEntryHtml}
             ${detailsHtml}
             ${ownerHtml}
-            ${navIndicator}
-        `;
-
-        // お気に入りボタンのイベントリスナー設定
-        const favBtn = newContentWrapper.querySelector('#modal-fav-btn');
-        if(favBtn) {
-            favBtn.onclick = (e) => {
-                e.stopPropagation(); // モーダルを閉じないように念のため
-                const newState = toggleFavorite(event);
-                if (newState) {
-                    favBtn.classList.add('active');
-                } else {
-                    favBtn.classList.remove('active');
-                }
-            };
-        }
-
+            ${navIndicator} `;
+        
         if (direction === 'next') {
             newContentWrapper.classList.add('content-slide-in-next');
         } else if (direction === 'prev') {
@@ -1304,60 +1117,61 @@
         }
 
         modalContent.innerHTML = '';
-        modalContent.style.padding = '0';
+        modalContent.style.padding = '0'; 
         modalContent.appendChild(newContentWrapper);
-        
+
         setupSwipe(modalContent, showPrevEvent, showNextEvent);
     }
 
 
     function showEventDetails(event, eventList = filteredEvents) {
+        
         if(topButton) topButton.style.display = 'none';
+
         
         let targetEventList = eventList;
         if (returnToDayDate !== event.dateString) {
-            targetEventList = eventList.filter(e => e.dateString === event.dateString);
+             
+             targetEventList = eventList.filter(e => e.dateString === event.dateString);
         }
-        
-        targetEventList.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
 
-        swipeableEvents = targetEventList;
-        currentEventIndex = targetEventList.findIndex(e => getEventId(e) === getEventId(event));
         
-        if (currentEventIndex === -1) {
-             // 予期せぬエラーの場合、日付け内のイベントを再構築してインデックスを探す
-            console.warn('Event not found in targetEventList, rebuilding list.');
-            swipeableEvents = eventList.filter(e => e.dateString === event.dateString);
-            swipeableEvents.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
-            currentEventIndex = swipeableEvents.findIndex(e => getEventId(e) === getEventId(event));
-            
-            if (currentEventIndex === -1) {
-                // まだ見つからない場合は単一イベントとして表示
-                swipeableEvents = [event];
-                currentEventIndex = 0;
+        targetEventList.sort((a, b) => {
+            if (a.dateString !== b.dateString) {
+                return new Date(a.dateString) - new Date(b.dateString);
             }
-        }
+            return getTimeValue(a.time) - getTimeValue(b.time);
+        });
         
-        updateEventDetailsModal(event, swipeableEvents);
+        const index = targetEventList.findIndex(e => 
+            e.dateString === event.dateString && 
+            e.time === event.time && 
+            e.name === event.name
+        );
+        
+        swipeableEvents = targetEventList; 
+        currentEventIndex = index;
 
+        updateEventDetailsModal(event, targetEventList);
+        
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
         closeButton.onclick = closeEventModal;
         eventModal.appendChild(closeButton);
-        
+
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
-        setTimeout(() => showSwipeGuide(modalContent, '左右スワイプで同日イベント移動', 'swipeGuideShown_Detail'), 100);
-
+        
+        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
     }
-
+    
     function showPrevEvent() {
         if (currentEventIndex > 0) {
             currentEventIndex--;
             const prevEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev');
+            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
         }
     }
 
@@ -1365,10 +1179,10 @@
         if (currentEventIndex < swipeableEvents.length - 1) {
             currentEventIndex++;
             const nextEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(nextEvent, swipeableEvents, 'next');
+            updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
         }
     }
-
+    
     function closeEventModal() {
         eventModal.style.display = 'none';
         modalContent.style.padding = '20px';
@@ -1380,34 +1194,38 @@
 
         if (returnToDayDate) {
             isReturningFromDetail = true;
-            const eventsForDay = filteredEvents.filter(event => event.dateString === returnToDayDate );
+            const eventsForDay = filteredEvents.filter(event => 
+                event.dateString === returnToDayDate
+            );
+            
             eventsForDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+            
             createDayEventModal(returnToDayDate, eventsForDay);
-            returnToDayDate = null;
+            returnToDayDate = null; 
         } else {
-            document.body.style.overflow = '';
+            document.body.style.overflow = ''; 
             if(topButton) topButton.style.display = 'block';
         }
     }
     window.closeEventModal = closeEventModal;
-
+    
     eventModal.addEventListener('click', (e) => {
         if (e.target === eventModal) {
             closeEventModal();
         }
     });
 
-
     function setupSwipe(element, onSwipeRight, onSwipeLeft) {
         let touchstartX = 0;
         let touchendX = 0;
-        const SWIPE_THRESHOLD = 50;
-        
-        // 既存のリスナーを削除（クリーンアップのため）
+        const SWIPE_THRESHOLD = 50; 
+
         element.removeEventListener('touchstart', element.touchStartHandler);
         element.removeEventListener('touchend', element.touchEndHandler);
-        
+
         element.touchStartHandler = (e) => {
+            
+            
             touchstartX = e.changedTouches[0].screenX;
         };
         
@@ -1422,25 +1240,30 @@
         function handleGesture() {
             const diff = touchendX - touchstartX;
             if (Math.abs(diff) < SWIPE_THRESHOLD) {
-                return;
+                return; 
             }
+
+            
             if (diff > 0) {
                 onSwipeRight();
-            } else {
+            } 
+            
+            else {
                 onSwipeLeft();
             }
         }
     }
 
-
     function updateDayModalContent(contentElement, currentDateString, currentDayEvents, direction = null) {
+        
         const newContentWrapper = document.createElement('div');
         newContentWrapper.classList.add('day-list-content-wrapper');
         newContentWrapper.style.padding = '10px';
-        
+
+
         const date = new Date(currentDateString);
         const dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
-        
+
         const header = document.createElement('h3');
         header.textContent = dateFormatted + (currentDayEvents.length > 0 ? ` ${currentDayEvents.length}件のイベント` : ' のイベントはありません');
         newContentWrapper.appendChild(header);
@@ -1451,52 +1274,48 @@
             currentDayEvents.forEach(event => {
                 const card = document.createElement('div');
                 card.classList.add('event-card');
+                
                 card.onclick = () => {
                     const listModalContent = card.closest('.event-list-modal-content');
                     if (listModalContent) {
                         savedScrollPosition = listModalContent.scrollTop;
                     }
-                    returnToDayDate = currentDateString;
-                    showEventDetails(event, currentDayEvents);
-                    contentElement.closest('.event-list-modal-overlay').remove();
+                    returnToDayDate = currentDateString; 
+                    showEventDetails(event, currentDayEvents); 
+                    contentElement.closest('.event-list-modal-overlay').remove(); 
                 };
-
-                // --- お気に入りボタン (リストビュー) ---
-                const favBtn = document.createElement('button');
-                favBtn.classList.add('favorite-btn', 'card-favorite-btn');
-                if (isFavorite(event)) {
-                    favBtn.classList.add('active');
-                }
-                favBtn.innerHTML = '★';
-
-                favBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    const newState = toggleFavorite(event);
-                    if (newState) {
-                        favBtn.classList.add('active');
-                    } else {
-                        favBtn.classList.remove('active');
-                    }
-                };
-                card.appendChild(favBtn);
-                // --- お気に入りボタン (リストビュー) 終了 ---
 
                 const timeCol = document.createElement('div');
                 timeCol.classList.add('event-time-col');
-                const timeText = document.createElement('div');
-                timeText.classList.add('event-time-text');
-                timeText.textContent = formatTime(event.time);
-                timeCol.appendChild(timeText);
+                
+                let timeText = event.time || '未定';
+                const timeMatch = timeText.match(/\d{1,2}[:：]\d{2}/);
+                if (timeMatch) {
+                    timeText = timeMatch[0].replace('：', ':'); 
+                } else if (timeText.includes('：')) {
+                    timeText = timeText.split('：')[0];
+                }
+                
+                const timeTextNode = document.createElement('span');
+                timeTextNode.classList.add('event-time-text');
+                timeTextNode.textContent = timeText;
+                timeCol.appendChild(timeTextNode);
                 card.appendChild(timeCol);
 
                 const detailsCol = document.createElement('div');
                 detailsCol.classList.add('event-details-col');
+                
+                const eventTypeText = cleanEventTypeText(event.type);
 
                 const typeBadge = document.createElement('div');
-                typeBadge.textContent = cleanEventTypeText(event.type);
-                typeBadge.classList.add('event-type-badge', getBadgeClass(event.type));
-                detailsCol.appendChild(typeBadge);
+                typeBadge.textContent = eventTypeText;
+                typeBadge.classList.add('event-type-badge');
                 
+                const badgeClass = getBadgeClass(event.type);
+                typeBadge.classList.add(badgeClass);
+                
+                detailsCol.appendChild(typeBadge);
+
                 const name = document.createElement('div');
                 name.textContent = event.name.replace('B4G2_','');
                 name.classList.add('event-name');
@@ -1510,6 +1329,7 @@
                 card.appendChild(detailsCol);
                 listContainer.appendChild(card);
             });
+            
             newContentWrapper.appendChild(listContainer);
         }
 
@@ -1520,7 +1340,7 @@
         }
 
         contentElement.innerHTML = '';
-        contentElement.style.padding = '0';
+        contentElement.style.padding = '0'; 
         contentElement.appendChild(newContentWrapper);
     }
 
@@ -1536,15 +1356,18 @@
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
+        
         closeButton.onclick = () => {
             overlay.remove();
             document.body.style.overflow = '';
             if(topButton) topButton.style.display = 'block';
         };
+        
         overlay.appendChild(closeButton);
 
         const content = document.createElement('div');
         content.classList.add('event-list-modal-content');
+        
 
         let currentDayIndex = allCalendarDates.indexOf(dateString);
         let currentDateString = dateString;
@@ -1556,7 +1379,8 @@
                 const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
                 eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = prevDate;
-                updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev');
+
+                updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev'); 
             }
         }
 
@@ -1567,12 +1391,14 @@
                 const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
                 eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
                 currentDateString = nextDate;
-                updateDayModalContent(content, nextDate, eventsForNextDay, 'next');
+
+                updateDayModalContent(content, nextDate, eventsForNextDay, 'next'); 
             }
         }
-        
+
         updateDayModalContent(content, dateString, dayEvents);
-        setupSwipe(content, showPrevDay, showNextDay);
+        
+        setupSwipe(content, showPrevDay, showNextDay); 
 
         overlay.appendChild(content);
 
@@ -1583,23 +1409,30 @@
                 if(topButton) topButton.style.display = 'block';
             }
         });
+        
+        
+        
+        setTimeout(() => showSwipeGuide(overlay, '左右スワイプで日付移動', 'swipeGuideShown_List'), 100); 
+        
+        
 
-        setTimeout(() => showSwipeGuide(overlay, '左右スワイプで日付移動', 'swipeGuideShown_List'), 100);
 
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
 
         const scrollPositionToApply = isReturningFromDetail ? savedScrollPosition : 0;
         isReturningFromDetail = false;
-        
+
         setTimeout(() => {
             content.scrollTop = scrollPositionToApply;
         }, 0);
     }
 
+
     async function fetchSupabaseEvents() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+
         const targetDate = new Date(today);
         targetDate.setDate(today.getDate() - 1);
         
@@ -1617,22 +1450,37 @@
             const filteredData = data.filter(evt => {
                 const eventDateParsed = parseDate(evt.date);
                 if (!eventDateParsed) return false;
+
                 const eventDate = new Date(eventDateParsed.year, eventDateParsed.month - 1, eventDateParsed.day);
-                eventDate.setHours(0, 0, 0, 0);
-                return eventDate >= targetDate;
+                eventDate.setHours(0, 0, 0, 0); 
+                
+                return eventDate.getTime() >= targetDate.getTime();
             });
-
-            return filteredData;
-
-        } catch (error) {
-            console.error('Failed to fetch from Supabase:', error);
+            
+            return filteredData.map(evt => ({
+                name: evt.name,
+                date: formatDate(evt.date), 
+                time: formatTime(evt.time),
+                location: evt.location,
+                address: evt.address,
+                type: evt.type || '交流会', 
+                fee: evt.fee,
+                capacity: evt.capacity,
+                eligibility: evt.eligibility,
+                entry: evt.entry,
+                detailTitle: evt.detailTitle,
+                details: evt.details,
+                tel: evt.tel,
+                owner: evt.owner,
+                ownerFlg: evt.ownerFlg
+            }));
+        } catch (err) {
+            console.error('Supabase connection failed:', err);
             return [];
         }
     }
-
-
-    async function fetchAndInitialize() {
-        loadFavorites(); 
+    
+    async function loadDataAndInitialize() {
         loadSearchState();
 
         try {
@@ -1646,10 +1494,11 @@
                     return [];
                 });
 
-            const [jsonEvents, supabaseEvents] = await Promise.all([ 
-                jsonPromise, 
-                fetchSupabaseEvents() 
+            const [jsonEvents, supabaseEvents] = await Promise.all([
+                jsonPromise,
+                fetchSupabaseEvents()
             ]);
+            
 
             const combinedEvents = [...jsonEvents, ...supabaseEvents];
             
@@ -1658,11 +1507,17 @@
                 .map(event => {
                     const parsedDate = parseDate(event.date);
                     if (!parsedDate) return null;
+                    
                     const dateString = `${parsedDate.year}-${String(parsedDate.month).padStart(2, '0')}-${String(parsedDate.day).padStart(2, '0')}`;
-                    return { ...event, parsedDate: parsedDate, dateString: dateString };
+                    
+                    return {
+                        ...event,
+                        parsedDate: parsedDate,
+                        dateString: dateString 
+                    };
                 })
-                .filter(event => event);
-
+                .filter(event => event); 
+            
             ALL_BEYBLADE_EVENTS.sort((a, b) => {
                 if (a.dateString !== b.dateString) {
                     return new Date(a.dateString) - new Date(b.dateString);
@@ -1673,29 +1528,51 @@
 
             if (ALL_BEYBLADE_EVENTS.length > 0) {
                 const dates = ALL_BEYBLADE_EVENTS.map(event => new Date(event.parsedDate.year, event.parsedDate.month - 1, event.parsedDate.day));
+                
                 const minDate = new Date(Math.min(...dates));
                 TARGET_MAX_DATE = new Date(Math.max(...dates));
+
                 TARGET_START_YEAR = minDate.getFullYear();
                 TARGET_START_MONTH = minDate.getMonth() + 1;
             }
-
-            filteredEvents = ALL_BEYBLADE_EVENTS;
-
-            populatePrefectureSelect();
-            populateLegendButtons();
-            cityInput.value = citySearchTextFromStorage;
-            restorePrefectureSelection(selectedPrefecturesFromStorage);
-            restoreRegionExpansion(expandedRegionsFromStorage);
             
-            // ★ 変更: お気に入りのみトグルスイッチの状態復元とリスナー設定
-            if (favoriteOnlyToggle) {
-                favoriteOnlyToggle.checked = isFavoriteOnly;
-                favoriteOnlyToggle.addEventListener('change', () => {
+            filteredEvents = ALL_BEYBLADE_EVENTS;
+            
+            if(typeSelectAllCheckbox) {
+                typeSelectAllCheckbox.addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    
+                    if (isChecked) {
+                        activeEventTypes = EVENT_TYPES_LEGEND.map(item => item.key);
+                    } else {
+
+                        activeEventTypes = [];
+                    }
+
+
+                    const buttons = legendContainer.querySelectorAll('.legend-item');
+                    buttons.forEach(btn => {
+                        if (isChecked) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+
+                    saveSearchState();
                     handleSearch();
                 });
             }
+            
+            populatePrefectureSelect();
+            populateLegendButtons(); 
+            
+            cityInput.value = citySearchTextFromStorage;
+            restorePrefectureSelection(selectedPrefecturesFromStorage);
+            
+            restoreRegionExpansion(expandedRegionsFromStorage);
 
-            handleSearch(true);
+            handleSearch(true); 
 
         } catch (error) {
             console.error(error);
@@ -1704,24 +1581,52 @@
         }
     }
 
-
     function populateLegendButtons() {
         legendContainer.innerHTML = '';
+        
         EVENT_TYPES_LEGEND.forEach(item => {
             const legendItem = document.createElement('div');
             legendItem.classList.add('legend-item');
-            legendItem.classList.add(item.styleClass);
+            legendItem.classList.add(item.styleClass); 
+            
             if (activeEventTypes.includes(item.key)) {
                 legendItem.classList.add('active');
             }
+
             legendItem.appendChild(document.createTextNode(item.label));
+            
             legendItem.addEventListener('click', () => {
                 legendItem.classList.toggle('active');
                 toggleEventType(item.key);
-                handleSearch();
+                
+                updateSelectAllCheckboxState();
+                
+                handleSearch(); 
             });
+
             legendContainer.appendChild(legendItem);
         });
+
+        updateSelectAllCheckboxState();
+    }
+
+    function updateSelectAllCheckboxState() {
+        if(!typeSelectAllCheckbox) return;
+        
+        const allKeys = EVENT_TYPES_LEGEND.map(item => item.key);
+        const selectedCount = activeEventTypes.length;
+        const totalCount = allKeys.length;
+
+        if (selectedCount === 0) {
+            typeSelectAllCheckbox.checked = false;
+            typeSelectAllCheckbox.indeterminate = false;
+        } else if (selectedCount === totalCount) {
+            typeSelectAllCheckbox.checked = true;
+            typeSelectAllCheckbox.indeterminate = false;
+        } else {
+            typeSelectAllCheckbox.checked = false; 
+            typeSelectAllCheckbox.indeterminate = true;
+        }
     }
 
     function toggleEventType(key) {
@@ -1735,7 +1640,8 @@
     }
 
     function populatePrefectureSelect() {
-        prefectureContainer.innerHTML = '';
+        prefectureContainer.innerHTML = ''; 
+
         for (const region in JAPAN_PREFECTURES_BY_REGION) {
             const prefectures = JAPAN_PREFECTURES_BY_REGION[region];
             
@@ -1755,65 +1661,70 @@
             regionCheckbox.id = `region-select-${region}`;
             
             const regionCheckboxLabel = document.createElement('label');
-            regionCheckboxLabel.htmlFor = `region-select-${region}`;
             regionCheckboxLabel.classList.add('region-select-label');
-            regionCheckboxLabel.innerHTML = `
-                <input type="checkbox" id="region-toggle-${region}" class="region-select-checkbox">
-                全選択
-            `;
-            const toggleCheckbox = regionCheckboxLabel.querySelector('input[type="checkbox"]');
+            regionCheckboxLabel.setAttribute('for', regionCheckbox.id);
+            regionCheckboxLabel.appendChild(regionCheckbox);
+            
+            regionCheckboxLabel.appendChild(document.createTextNode('全選択')); 
 
             headerContainer.appendChild(headerTitle);
             headerContainer.appendChild(regionCheckboxLabel);
-            regionGroup.appendChild(headerContainer);
-
-            headerContainer.addEventListener('click', (e) => {
-                if (e.target !== toggleCheckbox) {
-                    const wrapper = regionGroup.querySelector('.checkbox-wrapper');
-                    wrapper.classList.toggle('open');
-                    saveSearchState(); 
-                }
-            });
-
-            toggleCheckbox.addEventListener('change', (e) => {
-                toggleRegionSelection(region, e.target.checked);
-                handleSearch(false);
-                saveSearchState();
-            });
-
+            regionGroup.appendChild(headerContainer); 
 
             const checkboxWrapper = document.createElement('div');
             checkboxWrapper.classList.add('checkbox-wrapper');
-            checkboxWrapper.setAttribute('data-region-name', region);
-
+            checkboxWrapper.dataset.regionName = region; 
+            
             prefectures.forEach(pref => {
                 const label = document.createElement('label');
                 label.classList.add('pref-label');
-                label.setAttribute('data-region', region);
-                label.textContent = pref;
+                label.setAttribute('data-region', region); 
                 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = pref;
+                checkbox.name = 'prefecture';
+                
+                label.appendChild(checkbox);
+
+                label.appendChild(document.createTextNode(pref));
+                
                 checkbox.addEventListener('change', () => {
+                    label.classList.toggle('checked', checkbox.checked); 
                     updateRegionCheckboxState(region);
                     handleSearch(); 
                 });
 
-                label.appendChild(checkbox);
                 checkboxWrapper.appendChild(label);
             });
-            
+
             regionGroup.appendChild(checkboxWrapper);
             prefectureContainer.appendChild(regionGroup);
+
+            headerTitle.addEventListener('click', () => {
+                checkboxWrapper.classList.toggle('open');
+                saveSearchState(); 
+            });
+            
+             regionCheckbox.addEventListener('change', () => {
+                const select = regionCheckbox.checked;
+                toggleRegionSelection(region, select);
+                handleSearch(); 
+            });
+            
+             regionCheckboxLabel.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+            });
         }
     }
 
     function restorePrefectureSelection(selectedPrefectures) {
-        if (!selectedPrefectures || selectedPrefectures.length === 0) return;
+        if (selectedPrefectures.length === 0) return;
 
+        const allPrefCheckboxes = prefectureContainer.querySelectorAll('input[type="checkbox"][name="prefecture"]');
         const regionsToUpdate = new Set();
-        prefectureContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+
+        allPrefCheckboxes.forEach(checkbox => {
             if (selectedPrefectures.includes(checkbox.value)) {
                 checkbox.checked = true;
                 const label = checkbox.closest('.pref-label');
@@ -1823,7 +1734,7 @@
                 }
             }
         });
-
+        
         regionsToUpdate.forEach(region => {
             updateRegionCheckboxState(region);
             const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${region}"]`);
@@ -1848,19 +1759,18 @@
         const checked = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]:checked`).length;
         
         const regionCheckbox = document.getElementById(`region-select-${region}`);
-        const regionToggleCheckbox = prefectureContainer.querySelector(`#region-toggle-${region}`);
-        
-        if (!regionToggleCheckbox) return;
+
+        if (!regionCheckbox) return;
 
         if (checked === 0) {
-            regionToggleCheckbox.checked = false;
-            regionToggleCheckbox.indeterminate = false;
+            regionCheckbox.checked = false;
+            regionCheckbox.indeterminate = false; 
         } else if (checked === total) {
-            regionToggleCheckbox.checked = true;
-            regionToggleCheckbox.indeterminate = false;
+            regionCheckbox.checked = true;
+            regionCheckbox.indeterminate = false;
         } else {
-            regionToggleCheckbox.checked = false;
-            regionToggleCheckbox.indeterminate = true;
+            regionCheckbox.checked = false;
+            regionCheckbox.indeterminate = true;
         }
     }
 
@@ -1872,22 +1782,13 @@
                 label.classList.toggle('checked', select);
             }
         });
-        updateRegionCheckboxState(region);
     }
 
-
     function generateCalendar(events, startYear, startMonth, maxDate) {
-        calendarWrapper.innerHTML = '';
-        const eventsByDate = events.reduce((acc, event) => {
-            if (!acc[event.dateString]) {
-                acc[event.dateString] = [];
-            }
-            acc[event.dateString].push(event);
-            return acc;
-        }, {});
-
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        calendarWrapper.innerHTML = ''; 
+        
+        const today = new Date(); 
+        today.setHours(0, 0, 0, 0); 
 
         const maxYear = maxDate.getFullYear();
         const maxMonth = maxDate.getMonth() + 1;
@@ -1896,14 +1797,14 @@
         let currentMonth = startMonth;
 
         while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
+            
             const date = new Date(currentYear, currentMonth - 1, 1);
-                        
+            
             const gridWrapperContainer = document.createElement('div');
             gridWrapperContainer.classList.add('calendar-grid-wrapper');
-            
+
             const gridWrapper = document.createElement('div');
             gridWrapper.classList.add('calendar-grid');
-
             gridWrapper.innerHTML = `
                 <div class="day-header">日</div>
                 <div class="day-header">月</div>
@@ -1913,14 +1814,14 @@
                 <div class="day-header">金</div>
                 <div class="day-header">土</div>
             `;
-
-            const startDay = date.getDay();
-            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            
+            const startDay = date.getDay(); 
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate(); 
 
             for (let i = 0; i < startDay; i++) {
                 const emptyCell = document.createElement('div');
                 emptyCell.classList.add('day-cell');
-                emptyCell.style.backgroundColor = '#f9f9f9';
+                emptyCell.style.backgroundColor = '#f9f9f9'; 
                 gridWrapper.appendChild(emptyCell);
             }
 
@@ -1930,62 +1831,58 @@
                 
                 const currentDate = new Date(currentYear, currentMonth - 1, day);
                 currentDate.setHours(0, 0, 0, 0);
-
+                
                 if (currentDate.getTime() === today.getTime()) {
-                    dayCell.classList.add('today-cell');
+                    dayCell.classList.add('today-cell'); 
                 }
-                
-                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                
+
                 const dayNumber = document.createElement('span');
                 dayNumber.classList.add('day-number');
-                // ★ 変更: 日付表示を m/d 形式に変更
+                
                 dayNumber.textContent = `${currentMonth}/${day}`;
+                
+                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 dayNumber.dataset.date = dateString;
-                dayCell.appendChild(dayNumber);
 
-
-                const dayEvents = eventsByDate[dateString] || [];
-                if (dayEvents.length > 0) {
+                const dailyEvents = events.filter(event => {
+                    const pd = event.parsedDate;
+                    return pd && pd.year === currentYear && pd.month === currentMonth && pd.day === day;
+                });
+                
+                if (dailyEvents.length > 0) {
                     dayNumber.classList.add('has-events');
                 }
 
-                dayEvents.forEach(event => {
+                dayCell.appendChild(dayNumber);
+                
+                dailyEvents.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+
+                dailyEvents.forEach(event => {
+                    const { class: colorClass, label } = getColorClass(event.type);
                     const eventLabel = document.createElement('span');
-                    const { class: colorClass } = getColorClass(event.type);
-                    // const label = event.name.replace('B4G2_', '').trim(); // ★ 変更: イベント名を取得する行を削除
                     eventLabel.classList.add('event-label', colorClass);
                     
-                    // ★ 変更: 時刻の全角コロンを半角に置換する処理を追加
-                    let timeStr = event.time || '';
-                    timeStr = timeStr.replace('：', ':');
-                    const timeParts = timeStr.split(':');
-                    const displayTime = timeParts.length >= 2 ? `${timeParts[0]}:${timeParts[1]}` : timeStr;
+                    const timeParts = (event.time || '').split('：');
+                    const displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
+
+                    eventLabel.textContent = `${displayTime} ${label}`;
                     
-                    let labelContent = displayTime; // ★ 変更: 表示内容を時刻のみに変更
-
-                    // お気に入りイベントには★を付ける
-                    if (isFavorite(event)) {
-                        labelContent += `★`; // ★ 変更: お気に入りの場合に「 ☆」を追加
-                    }
-
-                    eventLabel.textContent = labelContent; // ★ 変更: 修正されたコンテンツを設定
-
                     eventLabel.onclick = (e) => {
-                        e.stopPropagation();
-                        returnToDayDate = null;
+                        e.stopPropagation(); 
+                        returnToDayDate = null; 
                         showEventDetails(event);
                     };
+
                     dayCell.appendChild(eventLabel);
                 });
 
                 dayCell.onclick = (e) => {
                     const targetDateElement = dayCell.querySelector('.day-number');
                     if (targetDateElement && targetDateElement.dataset.date) {
-                        dayClickHandler({ currentTarget: targetDateElement });
+                         dayClickHandler({ currentTarget: targetDateElement });
                     }
                 };
-                
+
                 gridWrapper.appendChild(dayCell);
             }
 
@@ -2000,23 +1897,22 @@
         }
     }
 
-
     function handleSearch(updateStatus = true) {
         if (cityInput) {
-            cityInput.blur();
+            cityInput.blur(); 
         }
+
         const viewport = document.querySelector('meta[name="viewport"]');
         if (viewport) {
             const originalContent = viewport.getAttribute('content');
             viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
-            setTimeout(() => { viewport.setAttribute('content', originalContent || 'width=device-width, initial-scale=1.0'); }, 300);
+            setTimeout(() => {
+                viewport.setAttribute('content', originalContent || 'width=device-width, initial-scale=1.0');
+            }, 300);
         }
         
         saveSearchState();
-        
-        // ★ 変更: トグルスイッチの状態を取得
-        isFavoriteOnly = favoriteOnlyToggle ? favoriteOnlyToggle.checked : false; 
-        
+
         if (activeEventTypes.length === 0) {
             filteredEvents = [];
             filterStatus.textContent = "表示するイベントを選択してください。";
@@ -2029,68 +1925,65 @@
             generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
             return;
         }
-
+        
         const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
-            .filter(cb => !cb.classList.contains('region-select-checkbox'))
+            .filter(cb => !cb.classList.contains('region-select-checkbox')) 
             .map(checkbox => checkbox.value);
         
-        const keyword = cityInput.value.trim().toLowerCase();
+        const citySearchText = cityInput.value.trim().toLowerCase();
+        
+        let localFilteredEvents = ALL_BEYBLADE_EVENTS;
+        
         let filterDescription = [];
 
-        // フィルタリング処理
-        let localFilteredEvents = ALL_BEYBLADE_EVENTS.filter(event => {
-            
-            // 1. イベントタイプフィルタ
-            const matchesType = activeEventTypes.some(typeKey => {
-                const searchTerms = EVENT_TYPES_LEGEND.find(item => item.key === typeKey)?.searchKeywords || [];
-                const typeText = event.type || '';
-                
-                // Otherは、どのイベントタイプにもマッチしないものを抽出するロジックが必要だが、
-                // 現状の検索キーワードベースでは難しいので、ここではシンプルにキーワードベースのチェックを行う。
-                return typeText && (searchTerms.length > 0
-                    ? searchTerms.some(term => typeText.includes(term))
-                    : true // Otherを含む場合、常にtrueとして一旦通す (精度は劣る)
-                );
-            });
-            if (!matchesType) return false;
-
-            // 2. 都道府県フィルタ
-            if (selectedPrefectures.length > 0 && !(selectedPrefectures.includes(event.prefecture))) {
-                return false;
-            }
-
-            // 3. キーワード検索
-            if (keyword) {
-                const eventText = `${event.name || ''} ${event.location || ''} ${event.address || ''} ${event.detail || ''} ${event.detailTitle || ''} ${event.type || ''}`.toLowerCase();
-                if (!eventText.includes(keyword)) {
-                    return false;
-                }
-            }
-            
-            // 4. お気に入りのみフィルタリング 
-            if (isFavoriteOnly && !isFavorite(event)) {
-                return false;
-            }
-
-            return true;
-        });
-        
-        // フィルターの説明文作成
         if (selectedPrefectures.length > 0) {
-            filterDescription.push(`${selectedPrefectures.length}都道府県`);
-        }
-        if (keyword) {
-            filterDescription.push(`"${keyword}"`);
-        }
-        if (isFavoriteOnly) { 
-            filterDescription.push(`★お気に入りのみ`);
-        }
-        
-        // イベントタイプの説明は、全てがアクティブな場合は除外
-        if (activeEventTypes.length !== EVENT_TYPES_LEGEND.length) {
-            filterDescription.push(`${activeEventTypes.length}タイプ`);
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                const eventAddress = event.address || '';
+                return selectedPrefectures.some(pref => eventAddress.startsWith(pref)); 
+            });
+            filterDescription.push(`都道府県: ${selectedPrefectures.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('、')}`);
         }
 
+        if (citySearchText !== "") {
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                const searchTarget = [
+                    event.address || '', 
+                    event.location || '',
+                    event.name || '',
+                    event.details || ''
+                ].join(' ').toLowerCase();
+
+                return searchTarget.includes(citySearchText);
+            });
+            filterDescription.push(`キーワード: "${citySearchText}"`);
+        }
+        
+        if (activeEventTypes.length > 0) {
+            const allowedKeywords = activeEventTypes.flatMap(key => 
+                EVENT_TYPES_LEGEND.find(item => item.key === key)?.searchKeywords || []
+            );
+            
+            const includeOther = activeEventTypes.includes('Other');
+            const otherTypesKeywords = EVENT_TYPES_LEGEND.filter(item => item.key !== 'Other').flatMap(item => item.searchKeywords);
+            
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                const eventType = event.type || ''; 
+                
+                const isMatch = allowedKeywords.some(keyword => eventType.includes(keyword));
+                
+                if (includeOther) {
+                    const isOther = !otherTypesKeywords.some(keyword => eventType.includes(keyword));
+                    return isMatch || isOther;
+                }
+                
+                return isMatch;
+            });
+            
+            if (activeEventTypes.length < EVENT_TYPES_LEGEND.length) {
+                filterDescription.push(`${activeEventTypes.map(key => EVENT_TYPES_LEGEND.find(item => item.key === key)?.label || '').join('、')}`);
+            }
+        }
+        
 
         localFilteredEvents.sort((a, b) => {
             if (a.dateString !== b.dateString) {
@@ -2109,7 +2002,7 @@
             : `全イベントを表示中 (${ALL_BEYBLADE_EVENTS.length}件)`; 
         filterStatus.textContent = descriptionText;
 
-
+        
         generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
         
     }
@@ -2135,14 +2028,14 @@
     }
 
     searchButton.addEventListener('click', () => handleSearch()); 
-    cityInput.addEventListener('keydown', (e) => {
+    cityInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             handleSearch();
         }
     });
 
-    fetchAndInitialize(); 
-    
+    loadDataAndInitialize();
+
 </script>
 </body>
 </html>
