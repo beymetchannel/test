@@ -672,12 +672,10 @@
 
         /* リスト（カード）用の配置調整 */
         .event-fav-col {
-            flex: 0 0 40px; /* 右側の固定幅 */
+            flex: 0 0 30px; /* 右側の固定幅 */
             display: flex;
             align-items: center;
             justify-content: center;
-            border-left: 1px solid #f0f0f0; 
-            padding-left: 5px;
         }
         /* --- ステータスバーとトグルスイッチ用スタイル --- */
         #status-bar-container {
@@ -687,14 +685,14 @@
             display: flex;
             justify-content: space-between; /* 左右に配置 */
             align-items: center;
-            padding: 0 5px; /* 端に寄りすぎないように調整 */
+            padding: 0px; /* 端に寄りすぎないように調整 */
         }
 
         #filter-status {
             color: #505050;
             font-size: 10px;
             text-align: left; /* 左揃えに変更 */
-            padding-left: 5px;
+            margin-left: 16px;
             flex-grow: 1; /* 余ったスペースを埋める */
         }
 
@@ -706,63 +704,63 @@
         }
 
         /* トグルスイッチ全体 (元のサイズ: width: 34px, height: 20px -> 1.5倍: width: 51px, height: 30px) */
-    .toggle-switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;   /* 34px * 1.5 = 51px */
-        height: 25px;  /* 20px * 1.5 = 30px */
-    }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;   /* 34px * 1.5 = 51px */
+            height: 25px;  /* 20px * 1.5 = 30px */
+        }
 
-    /* 非表示のチェックボックス (変更なし) */
-    .toggle-switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
+        /* 非表示のチェックボックス (変更なし) */
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
-    /* スライダー部分 (丸い背景) */
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #ccc;
-        transition: .2s;
-        border-radius: 12.5px; /* heightの半分 */
-    }
+        /* スライダー部分 (丸い背景) */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .2s;
+            border-radius: 12.5px; /* heightの半分 */
+        }
 
-    /* スライダー内の「★」マーク（丸） (元のサイズ: height: 14px, width: 14px -> 1.5倍: height: 21px, width: 21px) */
-    .slider:before {
-        position: absolute;
-        content: "★";
-        height: 20px;  /* 14px * 1.5 = 21px */
-        width: 20px;   /* 14px * 1.5 = 21px */
-        left: 2.5px;   /* 3px * 1.5 = 4.5px */
-        bottom: 3px; /* 3px * 1.5 = 4.5px */
-        background-color: white;
-        transition: .2s;
-        border-radius: 50%;
-        /* ★マークのスタイル調整 */
-        color: #cccccc;
-        font-size: 16px; /* 10px * 1.5 = 15px */
-        text-align: center;
-        line-height: 20px; /* heightと同じ値にして垂直中央揃え */
-        font-weight: bold;
-    }
+        /* スライダー内の「★」マーク（丸） (元のサイズ: height: 14px, width: 14px -> 1.5倍: height: 21px, width: 21px) */
+        .slider:before {
+            position: absolute;
+            content: "★";
+            height: 20px;  /* 14px * 1.5 = 21px */
+            width: 20px;   /* 14px * 1.5 = 21px */
+            left: 2.5px;   /* 3px * 1.5 = 4.5px */
+            bottom: 2.5px; /* 3px * 1.5 = 4.5px */
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+            /* ★マークのスタイル調整 */
+            color: #cccccc;
+            font-size: 16px; /* 10px * 1.5 = 15px */
+            text-align: center;
+            line-height: 20px; /* heightと同じ値にして垂直中央揃え */
+            font-weight: bold;
+        }
 
-    /* ON時の背景色 */
-    input:checked + .slider {
-        background-color: #FFD700;
-    }
+        /* ON時の背景色 */
+        input:checked + .slider {
+            background-color: #FFD700;
+        }
 
-    /* ON時のスライダーの位置 (元の移動距離: 14px + 3px*2 = 20px。スライダーの移動距離は width - height。34px - 20px = 14px。
-    今回は 51px - 30px = 21px 移動します) */
-    input:checked + .slider:before {
-        transform: translateX(24px); /* 14px * 1.5 = 21px ではなく、51px(全体) - 30px(高さ) = 21px */
-        color: #FFD700;
-    }
+        /* ON時のスライダーの位置 (元の移動距離: 14px + 3px*2 = 20px。スライダーの移動距離は width - height。34px - 20px = 14px。
+        今回は 51px - 30px = 21px 移動します) */
+        input:checked + .slider:before {
+            transform: translateX(24px); /* 14px * 1.5 = 21px ではなく、51px(全体) - 30px(高さ) = 21px */
+            color: #FFD700;
+        }
 
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
