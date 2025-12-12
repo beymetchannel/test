@@ -207,7 +207,7 @@
         .label-meetup { background-color: #A0FA8D; color: #505050; }
 
         .fav-star {
-            font-size: 8px; /* 親要素の10pxより小さく */
+            font-size: 8px;
             margin-left: 0px;
             padding-left: 0px;
             vertical-align: middle;
@@ -648,10 +648,9 @@
             padding: 0;
         }
 
-/* --- お気に入り機能用スタイル --- */
         .fav-btn {
             cursor: pointer;
-            color: #ccc; /* 未登録時はグレー */
+            color: #ccc;
             font-size: 24px;
             line-height: 1;
             user-select: none;
@@ -666,11 +665,10 @@
         }
 
         .fav-btn.active {
-            color: #FFD700; /* 登録時はゴールド */
+            color: #FFD700;
             text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
         }
 
-        /* 詳細モーダル用の配置調整 */
         .modal-header-row {
             display: flex;
             justify-content: space-between;
@@ -678,56 +676,52 @@
             margin-bottom: 5px;
         }
 
-        /* リスト（カード）用の配置調整 */
         .event-fav-col {
-            flex: 0 0 30px; /* 右側の固定幅 */
+            flex: 0 0 30px;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        /* --- ステータスバーとトグルスイッチ用スタイル --- */
+
         #status-bar-container {
             width: 100%;
             max-width: 1000px;
             margin: 5px auto;
             display: flex;
-            justify-content: space-between; /* 左右に配置 */
+            justify-content: space-between;
             align-items: center;
-            padding: 0px; /* 端に寄りすぎないように調整 */
+            padding: 0px;
         }
 
         #filter-status {
             color: #505050;
             font-size: 10px;
-            text-align: left; /* 左揃えに変更 */
+            text-align: left;
             margin-left: 16px;
-            flex-grow: 1; /* 余ったスペースを埋める */
+            flex-grow: 1;
         }
 
         .fav-filter-wrapper {
             display: flex;
             align-items: center;
             gap: 5px;
-            flex-shrink: 0; /* 縮まないようにする */
+            flex-shrink: 0;
         }
 
-        /* トグルスイッチ全体 (元のサイズ: width: 34px, height: 20px -> 1.5倍: width: 51px, height: 30px) */
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 50px;   /* 34px * 1.5 = 51px */
-            height: 25px;  /* 20px * 1.5 = 30px */
+            width: 50px;
+            height: 25px;
             margin-left: 2px;
         }
 
-        /* 非表示のチェックボックス (変更なし) */
         .toggle-switch input {
             opacity: 0;
             width: 0;
             height: 0;
         }
 
-        /* スライダー部分 (丸い背景) */
         .slider {
             position: absolute;
             cursor: pointer;
@@ -737,37 +731,32 @@
             bottom: 0;
             background-color: #ccc;
             transition: .2s;
-            border-radius: 12.5px; /* heightの半分 */
+            border-radius: 12.5px;
         }
 
-        /* スライダー内の「★」マーク（丸） (元のサイズ: height: 14px, width: 14px -> 1.5倍: height: 21px, width: 21px) */
         .slider:before {
             position: absolute;
             content: "★";
-            height: 20px;  /* 14px * 1.5 = 21px */
-            width: 20px;   /* 14px * 1.5 = 21px */
-            left: 2.5px;   /* 3px * 1.5 = 4.5px */
-            bottom: 2.5px; /* 3px * 1.5 = 4.5px */
+            height: 20px;
+            width: 20px;
+            left: 2.5px;
+            bottom: 2.5px;
             background-color: white;
             transition: .2s;
             border-radius: 50%;
-            /* ★マークのスタイル調整 */
             color: #cccccc;
-            font-size: 15px; /* 10px * 1.5 = 15px */
+            font-size: 13px;
             text-align: center;
-            line-height: 20px; /* heightと同じ値にして垂直中央揃え */
+            line-height: 20px;
             font-weight: bold;
         }
 
-        /* ON時の背景色 */
         input:checked + .slider {
             background-color: #FFD700;
         }
 
-        /* ON時のスライダーの位置 (元の移動距離: 14px + 3px*2 = 20px。スライダーの移動距離は width - height。34px - 20px = 14px。
-        今回は 51px - 30px = 21px 移動します) */
         input:checked + .slider:before {
-            transform: translateX(24px); /* 14px * 1.5 = 21px ではなく、51px(全体) - 30px(高さ) = 21px */
+            transform: translateX(24px);
             color: #FFD700;
         }
         
@@ -778,7 +767,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.5.5</label>
+        <label id="version-label">version: β.6.0</label>
     </div>
         
     <div class="search-container">
@@ -894,17 +883,14 @@
             });
         });
     }
-// --- お気に入り機能用変数と関数 ---
-    let favoriteEventIds = new Set(); // お気に入りIDを保持するSet
+
+    let favoriteEventIds = new Set();
     const FAV_STORAGE_KEY = 'beyCalendarFavorites';
 
-    // イベントから一意のIDを生成するヘルパー関数
-    // (データベースのIDがないため、日付+時間+名前+場所でユニークとみなします)
     function generateEventId(event) {
         return `${event.dateString}_${event.name}_${event.time}_${event.location || ''}`;
     }
 
-    // お気に入りを読み込む
     function loadFavorites() {
         const saved = localStorage.getItem(FAV_STORAGE_KEY);
         if (saved) {
@@ -917,51 +903,41 @@
         }
     }
 
-    // お気に入りを保存する
     function saveFavorites() {
         localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify([...favoriteEventIds]));
     }
 
-// お気に入りトグル処理（即時反映・絞り込み対応版）
     function toggleFavorite(event, btnElement) {
         const id = generateEventId(event);
         const isFavFilterActive = document.getElementById('fav-filter-toggle')?.checked;
 
         if (favoriteEventIds.has(id)) {
-            // ■ 削除時の処理
             favoriteEventIds.delete(id);
             btnElement.classList.remove('active');
 
-            // お気に入り絞り込み中の場合、一覧から除外するために再検索(再描画)
             if (isFavFilterActive) {
                 saveFavorites();
-                handleSearch(); // カレンダーを再生成して該当イベントを除外
+                handleSearch(); 
                 return; 
             }
 
-            // 絞り込み中でなければ、カレンダー上の★をDOM操作で削除（即時反映）
             updateCalendarStar(id, false);
 
         } else {
-            // ■ 追加時の処理
             favoriteEventIds.add(id);
             btnElement.classList.add('active');
             
-            // カレンダー上の該当要素に★を追加（即時反映）
             updateCalendarStar(id, true);
         }
         saveFavorites();
     }
 
-    // カレンダー上の★マークを直接操作するヘルパー関数
     function updateCalendarStar(eventId, isFav) {
-        // generateCalendarで付与した data-event-id を使って要素を特定
         const labels = document.querySelectorAll(`.event-label[data-event-id="${eventId}"]`);
         
         labels.forEach(label => {
             const starSpan = label.querySelector('.fav-star');
             if (isFav) {
-                // ★を追加
                 if (!starSpan) {
                     const newStar = document.createElement('span');
                     newStar.classList.add('fav-star');
@@ -969,7 +945,6 @@
                     label.appendChild(newStar);
                 }
             } else {
-                // ★を削除
                 if (starSpan) {
                     starSpan.remove();
                 }
@@ -1358,7 +1333,7 @@
         const favBtn = newContentWrapper.querySelector('#detail-fav-btn');
         if(favBtn) {
             favBtn.addEventListener('click', (e) => {
-                e.stopPropagation(); // スワイプ等の干渉防止
+                e.stopPropagation(); 
                 toggleFavorite(event, favBtn);
             });
         }
@@ -1519,7 +1494,6 @@
                 card.classList.add('event-card');
                 
                 card.onclick = (e) => {
-                    // もしクリックされたのが★ボタンなら詳細を開かない
                     if (e.target.closest('.fav-btn')) return;
 
                     const listModalContent = card.closest('.event-list-modal-content');
@@ -1584,9 +1558,8 @@
                 if (isFav) favBtn.classList.add('active');
                 favBtn.textContent = '★';
                 
-                // ★クリックイベント
                 favBtn.onclick = (e) => {
-                    e.stopPropagation(); // カードのonclick（詳細表示）を阻止
+                    e.stopPropagation(); 
                     toggleFavorite(event, favBtn);
                 };
 
@@ -2324,4 +2297,3 @@
 </script>
 </body>
 </html>
-
