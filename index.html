@@ -757,7 +757,7 @@
             transform: translateX(24px);
             color: #FFD700;
         }
-        
+
 
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -776,7 +776,7 @@
         </div>
         
         <div class="keyword-search-group" style="margin-top: 10px;color: #505050;">
-            <label for="city-input">キーワード検索</label>
+            <label for="city-input">フリーワード検索</label>
             <div class="keyword-search-input-wrapper">
                 <input type="text" id="city-input" placeholder="市町村名やイベント名など">
                 <button id="search-button" class="search-button-icon">🔍</button>
@@ -792,6 +792,8 @@
         
     </div>
 
+
+
     <div id="status-bar-container">
         <div id="filter-status"></div>
         <div class="fav-filter-wrapper">
@@ -805,6 +807,11 @@
     <div class="calendar-container">
         <div id="calendar-wrapper">
             </div>
+    </div>
+
+    <div class="page-footer" style="font-size: 9px;color: #808080; text-align: center;line-height: 1.0;margin-top: 15px;">
+        <p>Source:<a href="https://beyblade.takaratomy.co.jp/beyblade-x/event/schedule.html" target="_blank" style="color: #505050;">https://beyblade.takaratomy.co.jp</a></p>
+        <p>Developed by <a href="https://youtube.com/channel/UCMwImb7TTdSbQsLz_gyHr4w/" target="_blank" style="color: #505050;">BeyMet</a>.</p>
     </div>
 
     <div id="event-modal" style="display: none;">
