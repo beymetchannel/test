@@ -206,6 +206,14 @@
         .label-green { background-color: #FAF871; color: #505050; }
         .label-meetup { background-color: #A0FA8D; color: #505050; }
 
+        .fav-star {
+            font-size: 8px; /* 親要素の10pxより小さく */
+            margin-left: 0px;
+            padding-left: 0px;
+            vertical-align: middle;
+            font-weight: 900;
+        }
+
         .pref-label {
             display: inline-block;
             padding: 4px 8px;
@@ -744,7 +752,7 @@
             border-radius: 50%;
             /* ★マークのスタイル調整 */
             color: #cccccc;
-            font-size: 16px; /* 10px * 1.5 = 15px */
+            font-size: 15px; /* 10px * 1.5 = 15px */
             text-align: center;
             line-height: 20px; /* heightと同じ値にして垂直中央揃え */
             font-weight: bold;
@@ -761,6 +769,7 @@
             transform: translateX(24px); /* 14px * 1.5 = 21px ではなく、51px(全体) - 30px(高さ) = 21px */
             color: #FFD700;
         }
+        
 
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -912,17 +921,59 @@
         localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify([...favoriteEventIds]));
     }
 
-    // お気に入りトグル処理
+// お気に入りトグル処理（即時反映・絞り込み対応版）
     function toggleFavorite(event, btnElement) {
         const id = generateEventId(event);
+        const isFavFilterActive = document.getElementById('fav-filter-toggle')?.checked;
+
         if (favoriteEventIds.has(id)) {
+            // ■ 削除時の処理
             favoriteEventIds.delete(id);
             btnElement.classList.remove('active');
+
+            // お気に入り絞り込み中の場合、一覧から除外するために再検索(再描画)
+            if (isFavFilterActive) {
+                saveFavorites();
+                handleSearch(); // カレンダーを再生成して該当イベントを除外
+                return; 
+            }
+
+            // 絞り込み中でなければ、カレンダー上の★をDOM操作で削除（即時反映）
+            updateCalendarStar(id, false);
+
         } else {
+            // ■ 追加時の処理
             favoriteEventIds.add(id);
             btnElement.classList.add('active');
+            
+            // カレンダー上の該当要素に★を追加（即時反映）
+            updateCalendarStar(id, true);
         }
         saveFavorites();
+    }
+
+    // カレンダー上の★マークを直接操作するヘルパー関数
+    function updateCalendarStar(eventId, isFav) {
+        // generateCalendarで付与した data-event-id を使って要素を特定
+        const labels = document.querySelectorAll(`.event-label[data-event-id="${eventId}"]`);
+        
+        labels.forEach(label => {
+            const starSpan = label.querySelector('.fav-star');
+            if (isFav) {
+                // ★を追加
+                if (!starSpan) {
+                    const newStar = document.createElement('span');
+                    newStar.classList.add('fav-star');
+                    newStar.textContent = '★';
+                    label.appendChild(newStar);
+                }
+            } else {
+                // ★を削除
+                if (starSpan) {
+                    starSpan.remove();
+                }
+            }
+        });
     }
 
     function saveSearchState() {
@@ -2078,8 +2129,12 @@
                     
                     const timeParts = (event.time || '').split('：');
                     const displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
-
-                    eventLabel.textContent = `${displayTime} ${label}`;
+                    const eventId = generateEventId(event);
+                    const isFav = favoriteEventIds.has(eventId);
+                    const starHtml = isFav ? '<span class="fav-star">★</span>' : '';
+                    
+                    eventLabel.innerHTML = `${displayTime}${label}${starHtml}`;
+                    eventLabel.dataset.eventId = eventId;
                     
                     eventLabel.onclick = (e) => {
                         e.stopPropagation(); 
