@@ -931,6 +931,7 @@
             btnElement.classList.remove('active');
 
             if (isFavFilterActive) {
+                if (event.type === 'ProductRelease') return true;
                 saveFavorites();
                 handleSearch(); 
                 return; 
@@ -2331,6 +2332,7 @@
         const favToggle = document.getElementById('fav-filter-toggle');
         if (favToggle && favToggle.checked) {
             localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
                 const eventId = generateEventId(event);
                 return favoriteEventIds.has(eventId);
             });
