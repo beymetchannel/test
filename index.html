@@ -758,15 +758,15 @@
             color: #FFD700;
         }
 
-        /* モーダル内のバッジ用 */
+        
         .type-Product { 
             background-color: #a0a0a0; 
             color: #ffffff; 
         }
         
         .label-product { 
-            background-color: #a0a0a0 !important; /* チャコールグレー */
-            color: #ffffff !important;           /* 文字色 白 */
+            background-color: #a0a0a0 !important; 
+            color: #ffffff !important;           
         }
 
     </style>
@@ -1273,7 +1273,6 @@
         const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
         const address = event.address || '';
         
-        // イベントデータにaddressがない場合は、addressHtmlを空にする (ユーザーリクエスト)
         const addressHtml = address 
             ? `<p><strong>住所:</strong> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">${address}</a></p>`
             : '';
@@ -1382,14 +1381,12 @@
                 return new Date(a.dateString) - new Date(b.dateString);
             }
 
-            // 【修正点】リストモーダルと同じProductRelease優先ソートを適用
             const isProductA = a.type === 'ProductRelease';
             const isProductB = b.type === 'ProductRelease';
 
             if (isProductA && !isProductB) { return -1; }
             if (!isProductA && isProductB) { return 1; }
             
-            // それ以外は時間順
             return getTimeValue(a.time) - getTimeValue(b.time);
         });
         
@@ -1451,13 +1448,9 @@
             eventsForDay.sort((a, b) => {
                 const isProductA = a.type === 'ProductRelease';
                 const isProductB = b.type === 'ProductRelease';
-
-                // 1. AがProductでBが非ProductならAを先頭に
                 if (isProductA && !isProductB) return -1;
-                // 2. BがProductでAが非ProductならBを先頭に
-                if (!isProductA && isProductB) return 1;
+                 if (!isProductA && isProductB) return 1;
 
-                // 3. 両方同じタイプの場合は時間順
                 return getTimeValue(a.time) - getTimeValue(b.time);
             });
             
@@ -1767,15 +1760,13 @@
         try {
             const { data, error } = await supabase
                 .from('ProductDB')
-                .select('*'); // checkFlgがある場合は .eq('checkFlg', true) を追加してください
-
+                .select('*'); 
             if (error) {
                 console.error('Supabase ProductDB fetch error:', error);
                 return [];
             }
 
             return data.map(item => ({
-                // 修正: item.label から item.name に変更
                 name: item.name, 
                 date: formatDate(item.date),
                 time: item.time || '', 
@@ -1783,7 +1774,7 @@
                 calendarText: item.label,
                 details: item.details || '', 
                 location: '', 
-                address: '', // 後続の要件で使わないが、データ構造は維持
+                address: '',
                 fee: '',
                 capacity: '',
                 entry: '',
@@ -2176,21 +2167,18 @@
 
                 dailyEvents.sort((a, b) => {
                     if (a.type === 'ProductRelease' && b.type !== 'ProductRelease') {
-                        return -1; // a (Product) を b より前に
+                        return -1; 
                     }
                     if (a.type !== 'ProductRelease' && b.type === 'ProductRelease') {
-                        return 1;  // b (Product) を a より前に
+                        return 1;  
                     }
-                    // Product以外は時間順（getTimeValueは既存関数と仮定）
                     return getTimeValue(a.time) - getTimeValue(b.time); 
                 });
 
                 dailyEvents.forEach(event => {
                     let { class: colorClass, label } = getColorClass(event.type);
                     
-                    // --- 追加: ProductReleaseの場合は name (DBのlabel) を表示テキストにする ---
                     if (event.type === 'ProductRelease') {
-                        // Productの場合は時間を表示せず、ラベルテキストのみにする場合
                         label = event.calendarText || event.name;
                     }
                     const eventLabel = document.createElement('span');
@@ -2380,12 +2368,9 @@
             const isProductA = a.type === 'ProductRelease';
             const isProductB = b.type === 'ProductRelease';
 
-            // 1. AがProductでBが非ProductならAを先頭に
             if (isProductA && !isProductB) return -1;
-            // 2. BがProductでAが非ProductならBを先頭に
             if (!isProductA && isProductB) return 1;
 
-            // 3. 両方同じタイプの場合は時間順
             return getTimeValue(a.time) - getTimeValue(b.time);
         });
 
