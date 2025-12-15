@@ -758,6 +758,16 @@
             color: #FFD700;
         }
 
+        .label-product { 
+            background-color: #36454F !important; /* チャコールグレー */
+            color: #ffffff !important;           /* 文字色 白 */
+        }
+        /* モーダル内のバッジ用 */
+        .type-Product { 
+            background-color: #36454F; 
+            color: #ffffff; 
+        }
+
 
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -765,7 +775,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.6.0</label>
+        <label id="version-label">version: β.6.1</label>
     </div>
         
     <div class="search-container">
@@ -810,7 +820,7 @@
     </div>
 
     <div class="page-footer" style="font-size: 9px;color: #808080; text-align: center;line-height: 1.0;margin-top: 15px;">
-        <p>Source:<a href="https://beyblade.takaratomy.co.jp/beyblade-x/event/schedule.html" target="_blank" style="color: #505050;">https://beyblade.takaratomy.co.jp</a></p>
+        <p>Source:<a href="https://beyblade.takaratomy.co.jp/beyblade-x/event/schedule.html" target="_blank" style="color: #505050;">beyblade.takaratomy.co.jp</a></p>
         <p>Developed by <a href="https://youtube.com/channel/UCMwImb7TTdSbQsLz_gyHr4w/" target="_blank" style="color: #505050;">BeyMet</a>.</p>
     </div>
 
@@ -1192,6 +1202,9 @@
     function getColorClass(eventType) {
         if (!eventType) return { class: 'label-green', label: '' }; 
         
+        if (eventType === 'ProductRelease') {
+            return { class: 'label-product', label: '' };
+        }
         if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
             return { class: 'label-yellow', label: '' };
         } else if (eventType.includes("G3大会/チーム戦（G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
@@ -1215,6 +1228,7 @@
 
     function getBadgeClass(eventType) {
         const { class: colorClass } = getColorClass(eventType);
+        if(colorClass === 'label-product') return 'type-Product';
         if(colorClass === 'label-black') return 'type-G1';
         if(colorClass === 'label-gray') return 'type-G2';
         if(colorClass === 'label-orange') return 'type-G3O';
@@ -1226,6 +1240,7 @@
     
     function cleanEventTypeText(eventType) {
         if (!eventType) return '';
+        if (eventType === 'ProductRelease') return '情報';
         return eventType.replace('B4ストアカップ', '').trim();
     }
 
@@ -1723,6 +1738,40 @@
         }
     }
     
+
+    async function fetchProductEvents() {
+        try {
+            const { data, error } = await supabase
+                .from('ProductDB')
+                .select('*'); // checkFlgがある場合は .eq('checkFlg', true) を追加してください
+
+            if (error) {
+                console.error('Supabase ProductDB fetch error:', error);
+                return [];
+            }
+
+            return data.map(item => ({
+                // 修正: item.label から item.name に変更
+                name: item.name, 
+                date: formatDate(item.date),
+                time: item.time || '', 
+                type: 'ProductRelease',
+                details: item.details || '', 
+                location: '', 
+                address: '', // 後続の要件で使わないが、データ構造は維持
+                fee: '',
+                capacity: '',
+                entry: '',
+                owner: ''
+            })).filter(item => item !== null);
+        } catch (err) {
+            console.error('ProductDB connection failed:', err);
+            return [];
+        }
+    }
+
+
+
     async function loadDataAndInitialize() {
         loadSearchState();
         loadFavorites();
@@ -1738,13 +1787,13 @@
                     return [];
                 });
 
-            const [jsonEvents, supabaseEvents] = await Promise.all([
+            const [jsonEvents, supabaseEvents, productEvents] = await Promise.all([
                 jsonPromise,
-                fetchSupabaseEvents()
+                fetchSupabaseEvents(),
+                fetchProductEvents()
             ]);
             
-
-            const combinedEvents = [...jsonEvents, ...supabaseEvents];
+            const combinedEvents = [...jsonEvents, ...supabaseEvents, ...productEvents];
             
             ALL_BEYBLADE_EVENTS = combinedEvents
                 .map(event => cleanEventStrings(event))
@@ -2092,22 +2141,41 @@
                     const pd = event.parsedDate;
                     return pd && pd.year === currentYear && pd.month === currentMonth && pd.day === day;
                 });
+
                 
                 if (dailyEvents.length > 0) {
                     dayNumber.classList.add('has-events');
                 }
 
                 dayCell.appendChild(dayNumber);
-                
-                dailyEvents.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+
+                dailyEvents.sort((a, b) => {
+                    if (a.type === 'ProductRelease' && b.type !== 'ProductRelease') {
+                        return -1; // a (Product) を b より前に
+                    }
+                    if (a.type !== 'ProductRelease' && b.type === 'ProductRelease') {
+                        return 1;  // b (Product) を a より前に
+                    }
+                    // Product以外は時間順（getTimeValueは既存関数と仮定）
+                    return getTimeValue(a.time) - getTimeValue(b.time); 
+                });
 
                 dailyEvents.forEach(event => {
-                    const { class: colorClass, label } = getColorClass(event.type);
+                    let { class: colorClass, label } = getColorClass(event.type);
+                    
+                    // --- 追加: ProductReleaseの場合は name (DBのlabel) を表示テキストにする ---
+                    if (event.type === 'ProductRelease') {
+                        // Productの場合は時間を表示せず、ラベルテキストのみにする場合
+                        label = event.name; 
+                    }
                     const eventLabel = document.createElement('span');
                     eventLabel.classList.add('event-label', colorClass);
                     
                     const timeParts = (event.time || '').split('：');
-                    const displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
+                    let displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
+                    if (event.type === 'ProductRelease') {
+                        displayTime = '';
+                    }
                     const eventId = generateEventId(event);
                     const isFav = favoriteEventIds.has(eventId);
                     const starHtml = isFav ? '<span class="fav-star">★</span>' : '';
@@ -2186,6 +2254,7 @@
 
         if (selectedPrefectures.length > 0) {
             localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
                 const eventAddress = event.address || '';
                 return selectedPrefectures.some(pref => eventAddress.startsWith(pref)); 
             });
@@ -2194,6 +2263,7 @@
 
         if (citySearchText !== "") {
             localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
                 const searchTarget = [
                     event.address || '', 
                     event.location || '',
@@ -2215,6 +2285,8 @@
             const otherTypesKeywords = EVENT_TYPES_LEGEND.filter(item => item.key !== 'Other').flatMap(item => item.searchKeywords);
             
             localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
+
                 const eventType = event.type || ''; 
                 
                 const isMatch = allowedKeywords.some(keyword => eventType.includes(keyword));
