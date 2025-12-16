@@ -286,7 +286,7 @@
                             <select id="type_1" name="type_1" class="input-field">
                                 <option value="交流会" selected>交流会</option>
                                 <option value="非公式大会">非公式大会</option>
-                                <option value="S1≪予定≫">S1≪予定≫</option>
+                                <option value="S1【予定】">S1【予定】</option>
                             </select>
                         </div>
                         <div>
@@ -371,7 +371,7 @@
                             <select id="type_2" name="type_2" class="input-field">
                                 <option value="交流会" selected>交流会</option>
                                 <option value="非公式大会">非公式大会</option>
-                                <option value="S1≪予定≫">S1≪予定≫</option>
+                                <option value="S1【予定】">S1【予定】</option>
                             </select>
                         </div>
                         <div>
@@ -457,7 +457,7 @@
                             <select id="type_3" name="type_3" class="input-field">
                                 <option value="交流会" selected>交流会</option>
                                 <option value="非公式大会">非公式大会</option>
-                                <option value="S1≪予定≫">S1≪予定≫</option>
+                                <option value="S1【予定】">S1【予定】</option>
                             </select>
                         </div>
                         <div>
@@ -542,7 +542,7 @@
                             <select id="type_4" name="type_4" class="input-field">
                                 <option value="交流会" selected>交流会</option>
                                 <option value="非公式大会">非公式大会</option>
-                                <option value="S1≪予定≫">S1≪予定≫</option>
+                                <option value="S1【予定】">S1【予定】</option>
                             </select>
                         </div>
                         <div>
@@ -627,7 +627,7 @@
                             <select id="type_5" name="type_5" class="input-field">
                                 <option value="交流会" selected>交流会</option>
                                 <option value="非公式大会">非公式大会</option>
-                                <option value="S1≪予定≫">S1≪予定≫</option>
+                                <option value="S1【予定】">S1【予定】</option>
                             </select>
                         </div>
                         <div>
@@ -719,10 +719,43 @@
     const urlParams = new URLSearchParams(window.location.search);
     const urlId = urlParams.get('id');
     const CURRENT_OWNER_ID = urlId ? urlId : '@TEST'; 
+    const TYPE_COLORS = {
+        'S1【予定】': '#97f3f3',
+        'default': '#A0FA8D' 
+    };
     
     document.getElementById('ownerIdDisplay').textContent = CURRENT_OWNER_ID; 
     
     const defaultFee = '参加費：無料';
+
+    function updateCardBorderColor(num) {
+        const typeSelect = document.getElementById(`type_${num}`);
+        const cardTitleWrapper = document.querySelector(`#card_${num} .card-title-wrapper`);
+        
+        if (typeSelect && cardTitleWrapper) {
+            const selectedType = typeSelect.value;
+            const color = TYPE_COLORS[selectedType] || TYPE_COLORS['default'];
+            cardTitleWrapper.style.borderColor = color;
+        }
+    }
+
+    function setupCardTypeListeners() {
+        eventNums.forEach(num => {
+            const typeSelect = document.getElementById(`type_${num}`);
+            if (typeSelect) {
+                // 変更時のリスナー
+                typeSelect.addEventListener('change', () => {
+                    updateCardBorderColor(num);
+                    updateStatusDisplay(num); // 既存のステータス更新も実行
+                });
+                
+                // ページ読み込み時/データロード後の初期色設定
+                updateCardBorderColor(num);
+            }
+        });
+    }
+
+
 
     function showMessage(text, isError = false, isWarning = false) {
         messageDiv.innerHTML = text;
@@ -979,6 +1012,8 @@
                 }
             });
             
+            updateCardBorderColor(num);
+
             updateStatusDisplay(num); 
             if (showConfirmation) {
                 showMessage(`イベント${num} の入力内容をクリアしました。`, false, true);
@@ -1185,7 +1220,8 @@
         });
         
         setupStatusListeners();
-        
+        setupCardTypeListeners();
+
         const calendarLink = document.getElementById('beyCalendarLink');
         if (calendarLink) {
             calendarLink.addEventListener('click', (e) => {
