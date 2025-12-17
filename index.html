@@ -789,7 +789,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.6.3</label>
+        <label id="version-label">version: β.6.4</label>
     </div>
         
     <div class="search-container">
@@ -1329,9 +1329,7 @@
             `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="detail-link-button" style="text-decoration: none;">公式ページはこちら</a>` 
             : '';
 
-        const navIndicator = eventList.length > 1 ? 
-            `<div style="font-size: 12px; text-align: center; color: #808080; padding-top: 8px; border-top: 1px solid #cccccc;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>` 
-            : '';
+        const navIndicator = `<div style="font-size: 12px; text-align: center; color: #808080; padding-top: 8px; border-top: 1px solid #cccccc;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>`;
 
         const newContentWrapper = document.createElement('div');
         newContentWrapper.style.padding = '20px';
@@ -1670,7 +1668,13 @@
                 currentDayIndex--;
                 const prevDate = allCalendarDates[currentDayIndex];
                 const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
-                eventsForPrevDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+                eventsForPrevDay.sort((a, b) => {
+                    const isProductA = a.type === 'ProductRelease';
+                    const isProductB = b.type === 'ProductRelease';
+                    if (isProductA && !isProductB) return -1;
+                    if (!isProductA && isProductB) return 1;
+                    return getTimeValue(a.time) - getTimeValue(b.time);
+                });
                 currentDateString = prevDate;
 
                 updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev'); 
@@ -1682,7 +1686,13 @@
                 currentDayIndex++;
                 const nextDate = allCalendarDates[currentDayIndex];
                 const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
-                eventsForNextDay.sort((a, b) => getTimeValue(a.time) - getTimeValue(b.time));
+                eventsForNextDay.sort((a, b) => {
+                    const isProductA = a.type === 'ProductRelease';
+                    const isProductB = b.type === 'ProductRelease';
+                    if (isProductA && !isProductB) return -1;
+                    if (!isProductA && isProductB) return 1;
+                    return getTimeValue(a.time) - getTimeValue(b.time);
+                });
                 currentDateString = nextDate;
 
                 updateDayModalContent(content, nextDate, eventsForNextDay, 'next'); 
@@ -2261,19 +2271,14 @@
         
         saveSearchState();
 
-        // if (activeEventTypes.length === 0) {
-        //     filteredEvents = [];
-        //     filterStatus.textContent = "表示するイベントを選択してください。";
-        //     generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
-        //     return;
-        // }
-
         if (ALL_BEYBLADE_EVENTS.length === 0) {
             filterStatus.textContent = "イベントデータがありません。";
             generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
             return;
         }
         
+        const allNonProductEventsCount = ALL_BEYBLADE_EVENTS.filter(event => event.type !== 'ProductRelease').length;
+
         const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
             .filter(cb => !cb.classList.contains('region-select-checkbox')) 
             .map(checkbox => checkbox.value);
@@ -2336,6 +2341,11 @@
             filterDescription.push(`${activeEventTypes.map(key => EVENT_TYPES_LEGEND.find(item => item.key === key)?.label || '').join('、')}`);
         }
 
+        const relevantFavsCount = localFilteredEvents.filter(event => {
+            if (event.type === 'ProductRelease') return false;
+            const eventId = generateEventId(event);
+            return favoriteEventIds.has(eventId);
+        }).length;
         
         const favToggle = document.getElementById('fav-filter-toggle');
         if (favToggle && favToggle.checked) {
@@ -2357,16 +2367,32 @@
         filteredEvents = localFilteredEvents;
         uniqueEventDates = getUniqueEventDates(filteredEvents); 
         allCalendarDates = getAllDatesInCalendarRange();
+        
+        const productCountInFiltered = filteredEvents.filter(event => event.type === 'ProductRelease').length;
+        const areNoEventTypesSelected = activeEventTypes.length === 0;
+        const isFavFilterActive = favToggle && favToggle.checked; 
+        
+        let descriptionText = '';
 
+        if (areNoEventTypesSelected) {
+            descriptionText = `表示するイベントを選択してください。`;
+        } else if (isFavFilterActive) {
 
-        const descriptionText = filterDescription.length > 0 
-            ? `${filterDescription.join(' / ')} に一致する ${filteredEvents.length} 件のイベントを表示中`
-            : `全イベントを表示中 (${ALL_BEYBLADE_EVENTS.length}件)`; 
+            const combinedDescription = filterDescription.join(' / ');
+
+            const displayCount = filteredEvents.length - productCountInFiltered;
+
+            descriptionText = `${combinedDescription} に一致する ${relevantFavsCount}件のイベントを表示中`;
+
+        } else if (filterDescription.length > 0) {
+            descriptionText = `${filterDescription.join(' / ')} に一致する ${filteredEvents.length - productCountInFiltered} 件のイベントを表示中`;
+        } else {
+            descriptionText = `全イベントを表示中 (${allNonProductEventsCount}件)`;
+        }
+
         filterStatus.textContent = descriptionText;
 
-        
         generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
-        
     }
 
     function dayClickHandler(e) {
