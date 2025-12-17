@@ -248,7 +248,7 @@
         .region-header {
             font-weight: bold;
             color: #505050;
-            border-left: 3px solid #B3FF52;
+            border-left: 3px solid #C3FC6D;
             padding-left: 7px;
             margin: 0;
             flex-grow: 1;
@@ -331,12 +331,15 @@
           animation: fadeIn 0.3s;
           position: relative;
           overflow: hidden;
+          overscroll-behavior: contain;
+          overflow-y: auto; 
+          -webkit-overflow-scrolling: touch;
       }
 
         #modal-content h3 {
             color: #505050;
-            border-bottom: 2px solid #B3FF52;
-            padding-bottom: 5px;
+            border-bottom: 2px solid #C3FC6D;
+            padding-bottom: 3px;
             margin-top: 0;
         }
 
@@ -460,6 +463,9 @@
             overflow-y: auto; 
             overflow-x: hidden; 
             animation: fadeIn 0.3s;
+            overscroll-behavior: contain;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
         }
 
         .swipe-guide-overlay {
@@ -540,7 +546,7 @@
         .event-list-modal-content h3 {
             font-size: 16px;
             padding-bottom: 5px;
-            border-bottom: 2px solid #B3FF52;
+            border-bottom: 2px solid #C3FC6D;
             text-align: center;
             color: #505050;
             margin: 0px;
@@ -776,7 +782,7 @@
             font-size: 12px;
             margin: 5px 0; 
             padding: 5px;
-            background-color: #B3FF52; 
+            background-color: #C3FC6D; 
             color: #222222; 
             text-decoration: none; 
             border-radius: 15px;
@@ -1325,9 +1331,9 @@
 
         const detailsHtml = `<p style="border:none ;"><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
         
-        const linkHtml = event.link ? 
-            `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="detail-link-button" style="text-decoration: none;">公式ページはこちら</a>` 
-            : '';
+        const linkLabel = (badgeClass === 'type-S1') ? '詳細はこちら' : '公式ページはこちら';
+
+        const linkHtml = event.link ? `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="detail-link-button" style="text-decoration: none;">${linkLabel}</a>` : '';
 
         const navIndicator = `<div style="font-size: 12px; text-align: center; color: #808080; padding-top: 8px; border-top: 1px solid #cccccc;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>`;
 
@@ -1643,6 +1649,11 @@
 
         const overlay = document.createElement('div');
         overlay.classList.add('event-list-modal-overlay');
+        overlay.addEventListener('touchmove', function(e) {
+            if (e.target === overlay) {
+                e.preventDefault();
+            }
+        }, { passive: false });
 
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
