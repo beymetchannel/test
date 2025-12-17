@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.6.4</label>
+        <label id="version-label">version: β.6.5</label>
     </div>
         
     <div class="search-container">
@@ -1660,11 +1660,16 @@
         closeButton.innerHTML = '×';
         
         closeButton.onclick = () => {
-            overlay.remove();
-            document.body.style.overflow = '';
-            if(topButton) topButton.style.display = 'block';
+            if (isReturningFromDetail) {
+                // リストに戻るだけなら body のロック（overflow:hidden等）は解除しない！
+                showDayEventList(savedDate); 
+            } else {
+                // 完全に閉じるときだけ解除
+                document.body.style.overflow = '';
+                overlay.remove();
+            }        
         };
-        
+    
         overlay.appendChild(closeButton);
 
         const content = document.createElement('div');
