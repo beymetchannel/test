@@ -2,736 +2,2515 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcuticon" type="image/x-icon" href="favicon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <link rel="shortcuticon" type="image/x-icon" href="BeyCalendarIcon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="BeyCalendarIcon.png">
+    <link rel="icon" href="BeyCalendarIcon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="交流会登録フォーム">
-    <link rel="icon" href="favicon.png">
-    <title>交流会登録フォーム</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="apple-mobile-web-app-title" content="BEYカレンダー">
+    <title>BEYカレンダー</title>
+    <script>
+        const SWIPE_GUIDE_KEY = 'yourSwipeGuideKey'; 
+        if (!localStorage.getItem(SWIPE_GUIDE_KEY)) {
+            const preloadLink = document.createElement('link');
+            preloadLink.rel = 'preload';
+            preloadLink.href = 'handicon.png';
+            preloadLink.as = 'image';
+            document.head.appendChild(preloadLink);
+        }
+    </script>
     <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: "ヒラギノ角ゴ Pro W3", "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, Osaka, Arial, Helvetica, Verdana, sans-serif;
-            background-color: #f7f9fb;
-            margin: 0px;
-        }
-        .main-container {
-            width: 100%;
-            margin-left: auto;
-            margin-right: auto;
-            background-color: #ffffff;
-            border-radius: 4px;
-            padding: 1.5rem;
-        }
-        .header-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #505050;
-            margin-bottom: 10px;
-            border-bottom-width: 1px;
-            padding-bottom: 5px;
-        }
-        .owner-box {
-            margin-bottom: 10px;
-            padding: 1rem;
-            background-color: #DCFCE7;
-            border-radius: 4px;
-        }
-        .owner-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: #16A34A;
-            margin-bottom: 0.25rem;
-        }
-        .owner-id-wrapper {
-            display: flex;
-            align-items: center; 
-            justify-content: space-between; 
-            gap: 1rem; 
-        }
-        .owner-id {
-            flex-grow: 1;
-            min-width: 0; 
-            font-size: 18px;
-            font-weight: 800;
-            color: #505050;
-            overflow: hidden; 
-            display: block;
-        }
-        .event-cards-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .event-card {
-            border: 1px solid #cccccc;
-            border-radius: 4px;
-        }
-        .card-summary {
-            display: flex;
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 10px 5px;
-            cursor: pointer;
-            outline: none;
-        }
-        .card-title-wrapper {
-            display: flex;
-            flex-direction: column; 
-            justify-content: center;
-            border-left: 3px solid #B3FF52; 
-            padding-left: 10px;
-            margin-left: 5px;
-            color: #505050;
-            max-width: 77%;
-        }
-        .card-date-line {
-            font-size: 12px; 
-            font-weight: 500;
-            color: #808080; 
-        }
-        .card-name-line {
-            font-size: 14px; 
-            font-weight: 700;
-            color: #505050; 
+            margin: 0;
+            padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; 
+            background-color: #f4f4f4;
+            overflow-x: hidden;
         }
         
-        .status-area {
-            font-size: 12px;
-            font-weight: bold;
-            display: flex;
-            align-items: center; 
-            padding-right: 10px;
-        }
-        .chevron-icon-wrapper {
-            color: #cccccc;
-            transition: transform 200ms ease-in-out;
-        }
-        .event-card[open] .chevron-icon-wrapper {
-            transform: rotate(180deg);
-        }
-        .card-content {
-            padding: 10px;
-            border-top: 1px dashed #cccccc;
-            background-color: #ffffff;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-        }
-        .label-text {
+        #title-wrapper {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 15px;
             display: block;
-            font-size: 12px;
-            padding-left: 10px;
+            gap: 0px;
+        }
+
+
+        #title-image {
+            display: block;
+            width: 80%;
+            max-width: 300px; 
+            height: auto;
+            margin-top: 20px;
+        }
+        #version-label{
+            display: block;
+            font-size: 10px;
+            color: #808080;
+            white-space: nowrap;
+            margin-bottom: 5px;
+        }
+        
+        .search-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0px auto;
+            padding: 15px;
+            background-color: #ffffff;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+        .search-container label { font-weight: bold; margin-right: 5px; }
+
+        .search-container p{
+            color: #505050;
+            font-size: 13px;
             font-weight: bold;
+            margin-bottom: 0px;
+        }
+
+        .keyword-search-group {
+            display: flex;
+            align-items: flex-end;
+            flex-basis: 100%;
+            flex-direction: column;
+        }
+        .keyword-search-input-wrapper {
+            display: flex;
+            width: 100%;
+        }
+        .keyword-search-group label {
+            font-size: 14px;
+            align-self: flex-start;
+            margin-bottom: 5px;
+        }
+
+        .keyword-search-group input[type="text"] {
+            padding: 8px;
+            border: 1px solid #cccccc;
+            border-radius: 4px 0 0 4px;
+            flex-grow: 1;
+            margin: 0;
+        }
+
+        .type-search-label {
+            color: #505050;
+            font-size: 14px;
+            align-self: flex-start;
+            margin-bottom: 0px;
+        }
+
+        .search-button-icon {
+            padding: 8px 12px;
+            background-color: #dbdbdb;
+            color: #505050;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 36px;
+            line-height: 1.2;
+            box-sizing: border-box;
+        }
+
+        .calendar-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 5px auto;
+            border: 1px solid #cccccc;
+            background-color: #ffffff;
+        }
+        .calendar-grid-wrapper {
+            margin-top: 15px;
+            border-top: 1px solid #cccccc;
+        }
+        .calendar-grid-wrapper:first-child {
+            margin-top: 0;
+            border-top: none;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            border-left: 1px solid #cccccc;
+        }
+        .day-header {
+            background-color: #f1f1f1;
+            font-size: 10px;
+            padding: 5px 5px;
+            text-align: center;
+            border-right: 1px solid #cccccc;
+            border-bottom: 1px solid #cccccc;
+            color: #505050;
+        }
+
+        .day-cell { min-height: 40px; padding: 5px 2px; border-right: 1px solid #cccccc; border-bottom: 1px solid #cccccc; position: relative; overflow: hidden;}
+        
+        .day-cell.today-cell { 
+            background-color: #EDFFED !important;
+        }
+
+        .day-number {
+            font-size: 10px;
+            color: #505050;
+            margin-bottom: 3px;
+            display: block;
+            text-align: center;
+            cursor: pointer;
+        }
+        .day-number:hover {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        .day-number.has-events {
+            text-decoration: underline;
+        }
+
+        .calendar-grid .day-cell:nth-child(7n) .day-number {
+            color: #5555cc;
+        }
+        .calendar-grid .day-cell:nth-child(7n+1) .day-number {
+            color: #cc5588;
+        }
+        .day-cell:nth-child(7n) { background-color: #f4f4f4; }
+        .day-cell:nth-child(7n+1) { background-color: #f4f4f4; }
+
+        .event-label {
+            text-align: center;
+            display: block;
+            font-size: 10px;
+            padding: 2px 0px;
+            margin-bottom: 1px;
+            border-radius: 3px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .label-yellow { background-color: #FFC75Fbb; color: #505050; }
+        .label-orange { background-color: #fd9048dd;color: white; }
+        .label-lightblue { background-color: #97f3f3;color: #505050; }
+        .label-gray { background-color: #ff4444bb; color: white; }
+        .label-black { background-color: #845EC2bb; color: white; }
+        .label-green { background-color: #FAF871; color: #505050; }
+        .label-meetup { background-color: #C3FC6D; color: #505050; }
+
+        .fav-star {
+            font-size: 10px;
+            margin-left: 0px;
+            padding-left: 0px;
+        }
+
+        .pref-label {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f4f4f4;
+            font-size: 0.8em;
+            user-select: none;
+            transition: background-color 0.2s;
+            color: #505050;
+        }
+        .pref-label input[type="checkbox"] {
+            display: none; 
+        }
+        .pref-label.checked {
+            background-color: #e0FFe0;
+            font-weight: bold;
+            border-color: #92ff52;
+        }
+
+        .region-group {
+            margin-bottom: 5px;
+            border-bottom: 1px dashed #cccccc;
+        }
+        .region-header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            cursor: pointer;
+        }
+        .region-header {
+            font-weight: bold;
+            color: #505050;
+            border-left: 3px solid #C3FC6D;
+            padding-left: 7px;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .region-select-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.8em;
+            font-weight: normal;
+            margin-left: 5px;
             color: #808080;
         }
-        .input-field {
-            margin-top: 0.25rem;
-            display: block; 
-            width: 100%; 
-            padding-left: 10px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            transition: all 150ms ease-in-out; 
-            background-color: #ffffff;
-            font-size: 16px;
-            color: #505050;
-            height: 36px;
-            text-align: left;
-        }
-        .input-field:focus {
-            outline: 2px solid transparent;
-            outline-offset: 2px;
-            border-color: #6beb71; 
-        }
-        
-        .input-field[type="date"],
-        .input-field[type="time"] {
-            -webkit-appearance: none; 
-            appearance: none;
-            font-size: 16px; 
-            padding-left: 10px;   
-            width: 100%;
-            box-sizing: border-box; 
-            height: 36px;
-        }
-        
-        select.input-field {
-            -webkit-appearance: none; 
-            appearance: none;
-            background-image: none; 
-            padding-left: 10px; 
-            height: 36px; 
-        }
-        
-        .input-field::-ms-clear {
-            display: none;
+        .region-select-checkbox {
+            margin-right: 3px;
+            cursor: pointer;
         }
 
-        .button-group {
+        .checkbox-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+        .checkbox-wrapper.open {
+            max-height: 500px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .fixed-close-btn {
+            position: fixed;
+            top: calc(20px + env(safe-area-inset-top)); 
+            right: calc(20px + env(safe-area-inset-right));
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #ffffff;
+            border-radius: 50%;
+            border: none;
+            font-size: 24px;
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #e5e7eb;
-            margin-top: 1rem;
+            align-items: center;
+            cursor: pointer;
+            z-index: 2000;
+            backdrop-filter: blur(2px);
+            line-height: 1;
+            transition: background-color 0.2s;
         }
-        .clear-button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: #374151;
-            background-color: #e5e7eb;
-            border-radius: 4px;
-            transition: background-color 150ms; 
-            width: 80px;
-            border: 1px solid #cccccc;
+        .fixed-close-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
         }
-        .clear-button:hover {
-            background-color: #d1d5db;
-        }
-        .register-button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
+
+      #event-modal {
+          display: flex;
+          position: fixed;
+          z-index: 1000;
+          left: 0;
+          top: 0; 
+          width: 100%;
+          height: 100dvh;
+          background-color: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(1px);
+          justify-content: center;
+          align-items: center;
+      }
+
+      #modal-content {
+          background-color: #ffffff;
+          max-height: 90dvh; 
+          padding: 20px;
+          border: 1px solid #cccccc;
+          border-radius: 8px;
+          width: 90%;
+          max-width: 500px;
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+          animation: fadeIn 0.3s;
+          position: relative;
+          overflow: hidden;
+          overscroll-behavior: contain;
+          overflow-y: auto; 
+          -webkit-overflow-scrolling: touch;
+      }
+
+        #modal-content h3 {
             color: #505050;
-            background-color: #B3FF52;
-            border-radius: 4px;
-            transition: background-color 150ms; 
-            width: 80px;
+            border-bottom: 2px solid #C3FC6D;
+            padding-bottom: 3px;
+            margin-top: 0;
+        }
+
+        #modal-content p {
+            font-size: 14px;
+            margin: 8px 0;
+            line-height: 1.5;
+            border-bottom: 0.5px solid #cccccc;
+            color: #505050;
+            word-break: break-word;
+        }
+
+        #modal-content strong {
+            font-size: 14px;
+            display: inline-block;
+            color: #505050;
+        }
+
+        #modal-content a {
+            color: #505050;
+            text-decoration: underline;
+        }
+
+        #label-legend-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0px auto;
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            align-items: center;
+            color: #505050;
+            padding: 0px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            cursor: pointer;
             border: 1px solid #dcdcdc;
+            padding: 6px 0;
+            border-radius: 5px;
+            font-size: 10px;
+            background-color: #ffffff;
+            color: #505050;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            width: 100%;
         }
-        .register-button:hover {
-            background-color: #B3FF52;
+
+        .legend-item:hover {
+            border-color: #b0b0b0;
+            color: #808080;
         }
-        .register-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+
+        .legend-item.active {
+            border-color: transparent;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
-        .delete-button {
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
+
+        .legend-item.active.style-G1 {
+            background-color: #845ec2bb;
+            color:#ffffff;
+        }
+        .legend-item.active.style-G2 {
+            background-color: #ff4444bb;
+            color:#ffffff;
+        }
+        .legend-item.active.style-G3O {
+            background-color: #fd9048dd;
+            color:#ffffff;
+        }
+        .legend-item.active.style-G3R {
+            background-color: #FFC75Fbb;
+        }
+        .legend-item.active.style-S1AMB {
+            background-color: #97f3f3;
+        }
+        .legend-item.active.style-Meetup {
+            background-color: #C3FC6D;
+        }
+        .legend-item.active.style-Other {
+            background-color: #faf871ee;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .event-list-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100dvh;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(1px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1100;
+            overflow-y: hidden;
+            padding-top: max(20px, env(safe-area-inset-top));
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            padding-left: 0;
+            padding-right: 0;
+            box-sizing: border-box;
+        }
+
+        .event-list-modal-content {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 600px;
+            max-height: 100%;
+            position: relative;
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            animation: fadeIn 0.3s;
+            overscroll-behavior: contain;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .swipe-guide-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%; 
+            background-color: rgba(0, 0, 0, 0.2); 
+            z-index: 1500; 
+            display: flex;
+            flex-direction: column; 
+            justify-content: flex-end; 
+            align-items: center;
+            overflow: hidden; 
+            border-radius: 0; 
+            transition: all 0.5s;
+            padding-bottom: 20px; 
+        }
+
+        .swipe-guide-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%; 
+            height: 150px; 
+            position: relative;
+            transition: opacity 0.5s;
+        }
+
+        .hand-icon {
+            width: 120px; 
+            height: 160px;
+            position: absolute;
+            top: -50%; 
+            animation: swipeAnim 4s ease-in-out infinite; 
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.8));
+        }
+
+        .swipe-text {
+            color: white;
+            font-weight: bold;
+            font-size: 28px; 
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.8);
+            position: absolute;
+            top: 0%; 
+            width: 100%;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        @keyframes swipeAnim {
+            0% { transform: translate(-130px, 0) scale(1); opacity: 1; }
+            25% { transform: translate(130px, 0) scale(1); opacity: 1; } 
+            50% { transform: translate(-130px, 0) scale(1); opacity: 1; } 
+            75% { transform: translate(130px, 0) scale(1); opacity: 1; } 
+            100% { transform: translate(-130px, 0) scale(1); opacity: 1; } 
+        }
+        
+        @keyframes slideInFromRight {
+            from { transform: translateX(50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideInFromLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+
+        .content-slide-in-next {
+            animation: slideInFromRight 0.3s ease-out forwards;
+        }
+        .content-slide-in-prev {
+            animation: slideInFromLeft 0.3s ease-out forwards;
+        }
+
+        .event-list-modal-content h3 {
+            font-size: 16px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #C3FC6D;
+            text-align: center;
+            color: #505050;
+            margin: 0px;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            color: #505050;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            align-self: flex-start;
+        }
+
+        .type-G1 { background-color: #845ec2bb; color: white; }
+        .type-G2 { background-color: #ff4444dd; color: white; }
+        .type-G3O { background-color: #fd9048dd; color: white; }
+        .type-G3R { background-color: #FFC75Fbb; }
+        .type-S1 { background-color: #97f3f3; }
+        .type-Meetup { background-color: #C3FC6D; }
+        .type-Other { background-color: #FAF871; }
+
+
+        .event-card {
+            display: flex;
+            align-items: stretch;
+            padding: 10px;
+            border-radius: 6px;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            gap: 10px;
+        }
+        .event-card:hover {
+            background-color: rgb(245, 245, 245);
+        }
+
+        .event-time-col {
+            flex: 0 0 40px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #e0e0e0;
+            padding-right: 5px;
+        }
+
+        .event-time-text {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #555;
+            text-align: center;
+        }
+
+        .event-details-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3px;
+            overflow: hidden;
+        }
+
+        .event-name {
+            font-weight: bold;
+            font-size: 15px;
+            line-height: 1.3;
+            color: #333;
+        }
+
+        .event-address {
+            font-size: 12px;
+            color: #777;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #back-to-top {
+            position: fixed;
+            bottom: calc(10px + env(safe-area-inset-bottom));
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.2);
             color: #ffffff;
-            background-color: #f06163;
-            border-radius: 4px;
-            transition: background-color 150ms; 
-            border-color:#505050;
-            border: 1px;
-            width: 80px;
-            border: 1px solid #dcdcdc;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 0px;
+            z-index: 900;
+            backdrop-filter: blur(2px);
+            display: block;
+            transition: opacity 0.3s, background-color 0.2s;
         }
-        .delete-button:hover {
-            background-color: #f06163;
+        #back-to-top p{
+            margin: 0;
+            padding: 0;
         }
-        .message-box {
-            margin-top: 2rem;
-            padding: 0.75rem;
-            border-radius: 4px;
-            font-size: 0.875rem;
+
+        .fav-btn {
+            cursor: pointer;
+            color: #ccc;
+            font-size: 24px;
+            line-height: 1;
+            user-select: none;
+            transition: color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .message-box.hidden {
-            display: none;
+
+        .fav-btn:active {
+            transform: scale(1.2);
         }
-        details[open] summary ~ * {
-            animation: sweep .3s ease-in-out;
+
+        .fav-btn.active {
+            color: #FFD700;
+            text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
         }
-        @keyframes sweep {
-            0%    {opacity: 0;
-                transform: translateY(-10px)}
-            100%  {opacity: 1;
-                transform: translateY(0)}
+
+        .modal-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 5px;
         }
-        .hidden-url-box {
-            display: none;
+
+        .event-fav-col {
+            flex: 0 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        #status-bar-container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 5px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0px;
+        }
+
+        #filter-status {
+            color: #505050;
+            font-size: 10px;
+            text-align: left;
+            margin-left: 16px;
+            flex-grow: 1;
+        }
+
+        .fav-filter-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+            margin-left: 2px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .2s;
+            border-radius: 12.5px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "★";
+            height: 20px;
+            width: 20px;
+            left: 2.5px;
+            bottom: 2.5px;
+            background-color: white;
+            transition: .2s;
+            border-radius: 50%;
+            color: #cccccc;
+            font-size: 12px;
+            text-align: center;
+            line-height: 20px;
+            font-weight: bold;
+        }
+
+        input:checked + .slider {
+            background-color: #FFD700;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+            color: #FFD700;
+        }
+
+        
+        .type-Product { 
+            background-color: #a0a0a0; 
+            color: #ffffff; 
+        }
+        
+        .label-product { 
+            background-color: #a0a0a0 !important; 
+            color: #ffffff !important;           
+        }
+
+        .detail-link-button {
+            display: block; 
+            width: 100%; 
+            height: 28px;
+            font-size: 12px;
+            margin: 5px 0; 
+            padding: 5px;
+            background-color: #C3FC6D; 
+            color: #222222; 
+            text-decoration: none; 
+            border-radius: 15px;
+            text-align: center;
+        }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const supabaseUrl = 'https://yyrsscvofuoufkujetgf.supabase.co';
-    </script>
 </head>
-<body class="page-wrapper">
-
-    <div class="main-container">
-        <h1 class="header-title">交流会登録フォーム</h1>
+<body>
+    <div id="title-wrapper">
+        <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
+        <label id="version-label">version: β.7.0</label>
+    </div>
         
-        <div class="owner-box">
-            <p class="owner-label">主催者アカウント</p>
-            <div class="owner-id-wrapper">
-                <div class="flex-grow min-w-0">
-                    <span id="ownerIdDisplay" class="owner-id"></span>
-                </div>
+    <div class="search-container">
+        <p style="margin: 0;">
+            <strong>都道府県から探す</strong> 
+            <span style="font-weight: lighter; font-size: 0.8em;">(タップで展開)</span>
+        </p>
+        <div style="flex-basis: 100%;">
+            <div id="prefecture-checkbox-container" style="border: 1px solid #cccccc; padding: 5px; border-radius: 4px; background-color: #ffffff;">
+                データ読み込み中...
             </div>
         </div>
         
-        <div id="eventForm">
-            <div id="eventCards" class="event-cards-container">
-                <script>
-                    const cardIndices = [1, 2, 3, 4, 5];
-                    const cardSymbols = ['①', '②', '③', '④', '⑤'];
-                    
-                    cardIndices.forEach((num, index) => {
-                        document.write(`
-                        <details id="card_${num}" class="event-card group">
-                            <summary class="card-summary">
-                                <div class="card-title-wrapper">
-                                    <div class="card-date-line" id="dateDisplay_${num}">交流会${cardSymbols[index]}</div>
-                                    <div class="card-name-line" id="nameDisplay_${num}"></div>
-                                </div>
-                                <div class="status-area">
-                                    <span id="statusDisplay_${num}" class="status-text"></span> 
-                                    <span class="chevron-icon-wrapper">
-                                        <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                    </span>
-                                </div>
-                            </summary>
-                            <div class="card-content">
-                                <input type="hidden" name="eventNum_${num}" value="${num}">
-                                <div>
-                                    <label for="type_${num}" class="label-text">イベントタイプ</label>
-                                    <select id="type_${num}" name="type_${num}" class="input-field">
-                                        <option value="交流会" selected>交流会</option>
-                                        <option value="非公式大会">非公式大会</option>
-                                        <option value="S1【予定】">S1【予定】</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="name_${num}" class="label-text">イベント名</label>
-                                    <input type="text" id="name_${num}" name="name_${num}" required class="input-field">
-                                </div>
-                                <div>
-                                    <label for="date_${num}" class="label-text">日付</label>
-                                    <input type="date" id="date_${num}" name="date_${num}" required class="input-field">
-                                </div>
-                                <div>
-                                    <label for="time_${num}" class="label-text">時刻</label>
-                                    <input type="time" id="time_${num}" name="time_${num}" class="input-field">
-                                </div>
-                                <div>
-                                    <label for="location_${num}" class="label-text">会場</label>
-                                    <input type="text" id="location_${num}" name="location_${num}" class="input-field">
-                                </div>
-                                <div>
-                                    <label for="address_${num}" class="label-text">住所</label>
-                                    <input type="text" id="address_${num}" name="address_${num}" class="input-field" placeholder="必ず都道府県から入力して下さい">
-                                </div>
-                                <div>
-                                    <label for="capacity_${num}" class="label-text">定員</label>
-                                    <input type="text" id="capacity_${num}" name="capacity_${num}" placeholder="例: 30名" class="input-field">
-                                </div>
-                                <div>
-                                    <label for="fee_${num}" class="label-text">参加費</label>
-                                    <input type="text" id="fee_${num}" name="fee_${num}" value="参加費：無料" class="input-field">
-                                </div>
-                                <div>
-                                    <label for="eligibility_${num}" class="label-text">参加資格</label>
-                                    <select id="eligibility_${num}" name="eligibility_${num}" class="input-field">
-                                        <option value="6歳以上(オープン)" selected>6歳以上(オープン)</option>
-                                        <option value="12歳未満(レギュラー)">12歳未満(レギュラー)</option>
-                                        <option value="年齢制限なし">年齢制限なし</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="entry_${num}" class="label-text">当日受付</label>
-                                    <select id="entry_${num}" name="entry_${num}" class="input-field">
-                                        <option value="当日受付:なし" selected>当日受付:なし</option>
-                                        <option value="当日受付:あり">当日受付:あり</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="details_${num}" class="label-text">募集方法</label>
-                                    <textarea id="details_${num}" name="details_${num}" rows="8" class="input-field" style="height: 200px;"></textarea>
-                                </div>
-                                <div>
-                                    <label for="linkType_${num}" class="label-text">エントリー用リンク</label>
-                                    <select id="linkType_${num}" name="linkType_${num}" class="input-field" onchange="toggleLinkInput(${num})">
-                                        <option value="x_account" selected>Xアカウントへのリンク(DMでの受付の場合)</option>
-                                        <option value="custom_url">エントリーサイトのURL</option>
-                                        <option value="none">リンク無し(当日受付のみの場合など)</option>
-                                    </select>
-                                    <div id="urlInputContainer_${num}" class="hidden-url-box mt-2">
-                                        <input type="text" id="linkUrl_${num}" name="linkUrl_${num}" class="input-field" placeholder="https://...">
-                                    </div>
-                                </div>
-                                <div class="button-group">
-                                    <button type="button" onclick="deleteEvent(${num})" id="deleteButton_${num}" class="delete-button">削除</button>
-                                    <button type="button" onclick="clearCard(${num}, true)" class="clear-button">Clear</button>
-                                    <button type="button" onclick="registerEvent(${num})" id="registerButton_${num}" class="register-button">登録</button>
-                                </div>
-                            </div>
-                        </details>
-                        `);
-                    });
-                </script>
+        <div class="keyword-search-group" style="margin-top: 10px;color: #505050;">
+            <label for="city-input">フリーワード検索</label>
+            <div class="keyword-search-input-wrapper">
+                <input type="text" id="city-input" placeholder="市町村名やイベント名など">
+                <button id="search-button" class="search-button-icon">🔍</button>
             </div>
-            
-            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                <a href="#" 
-                id="beyCalendarLink"
-                target="_blank" 
-                rel="noopener noreferrer"
-                style="font-size: 16px; font-weight: 700; color: #1e40af; text-decoration: underline;">
-                    最新のBEYカレンダーを確認はこちらから 
-                </a>
-            </div>
-            
-            <div id="message" class="message-box hidden" role="alert"></div>
+        </div>
+        <div style="flex-basis: 100%; display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 0px;">
+            <p style="margin-bottom: 0;">イベントタイプ絞り込み</p>
+            <label style="font-size: 13px; color: #808080; cursor: pointer;">
+                <input type="checkbox" id="type-select-all-checkbox" style="vertical-align: middle; margin-right: 4px;">全選択
+            </label>
+        </div>
+        <div id="label-legend-container"></div>
+        
+    </div>
+
+
+
+    <div id="status-bar-container">
+        <div id="filter-status"></div>
+        <div class="fav-filter-wrapper">
+            <label class="toggle-switch">
+                <input type="checkbox" id="fav-filter-toggle">
+                <span class="slider round"></span>
+            </label>
         </div>
     </div>
 
+    <div class="calendar-container">
+        <div id="calendar-wrapper">
+            </div>
+    </div>
+
+    <div class="page-footer" style="font-size: 9px;color: #808080; text-align: center;line-height: 1.0;margin-top: 15px;">
+        <p>Source:<a href="https://beyblade.takaratomy.co.jp/beyblade-x/event/schedule.html" target="_blank" style="color: #505050;">beyblade.takaratomy.co.jp</a></p>
+        <p>Developed by <a href="https://youtube.com/channel/UCMwImb7TTdSbQsLz_gyHr4w/" target="_blank" style="color: #505050;">BeyMet</a>.</p>
+    </div>
+
+    <div id="event-modal" style="display: none;">
+        <div id="modal-content">
+            </div>
+    </div>
+    
+    <button id="back-to-top"><p style="font-size:20px; font-weight: bold;">︿</p><p style="margin-bottom: 15px;">TOP</p></button>
+
 <script type="module">
     const supabase = window.supabase.createClient(
-        supabaseUrl,
+        'https://yyrsscvofuoufkujetgf.supabase.co',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4'
-    );    
-    
-    const messageDiv = document.getElementById('message');
-    const eventNums = [1, 2, 3, 4, 5]; 
-    const initialCheckFlgs = {};
-    const initialData = {}; 
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlId = urlParams.get('id');
-    const CURRENT_OWNER_ID = urlId ? urlId : '@TEST'; 
-    const TYPE_COLORS = {
-        'S1【予定】': '#97f3f3',
-        'default': '#A0FA8D' 
+    );
+
+    const JAPAN_PREFECTURES_BY_REGION = {
+        "北海道・東北": ["北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
+        "関東": ["茨城県", "栃木県", "群馬県", "山梨県", "長野県", "埼玉県", "千葉県", "東京都", "神奈川県"],
+        "東海": ["岐阜県", "静岡県", "愛知県", "三重県"],
+        "北陸": ["新潟県", "富山県", "石川県", "福井県"],
+        "近畿": ["滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県"],
+        "中国": ["鳥取県", "島根県", "岡山県", "広島県", "山口県"],
+        "四国": ["徳島県", "香川県", "愛媛県", "高知県"],
+        "九州・沖縄": ["福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県", "沖縄県"]
     };
+
+    const JAPANESE_WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
     
-    document.getElementById('ownerIdDisplay').textContent = CURRENT_OWNER_ID; 
+    const EVENT_TYPES_LEGEND = [
+        { key: 'G1', label: 'G1', styleClass: 'style-G1', searchKeywords: ['G1大会'] },
+        { key: 'G2', label: 'G2', styleClass: 'style-G2', searchKeywords: ['G2大会'] },
+        { key: 'G3O', label: 'G3(O)', styleClass: 'style-G3O', searchKeywords: ['G3大会（オープン', 'G3大会/チーム戦（オープン'] },
+        { key: 'G3R', label: 'G3(R)', styleClass: 'style-G3R', searchKeywords: ['G3大会（レギュラー', 'G3大会/チーム戦（レギュラー'] },
+        { key: 'S1AMB', label: 'S1,AMB', styleClass: 'style-S1AMB', searchKeywords: ['S1イベント', 'アンバサダーイベント', 'S1【予定】'] },
+        { key: 'Meetup', label: '交流会', styleClass: 'style-Meetup', searchKeywords: ['交流会', '非公式大会'] }, 
+        { key: 'Other', label: 'その他', styleClass: 'style-Other', searchKeywords: [] }
+    ];
+
+    let TARGET_START_YEAR = new Date().getFullYear(); 
+    let TARGET_START_MONTH = new Date().getMonth() + 1; 
+    let TARGET_MAX_DATE = new Date(); 
+
+    let ALL_BEYBLADE_EVENTS = [];
+    let filteredEvents = []; 
+    let returnToDayDate = null; 
     
-    const defaultFee = '参加費：無料';
+    let activeEventTypes = EVENT_TYPES_LEGEND.map(item => item.key); 
+    let selectedPrefecturesFromStorage = [];
+    let citySearchTextFromStorage = '';
+    let expandedRegionsFromStorage = []; 
+    
+    let swipeableEvents = []; 
+    let currentEventIndex = -1;
+    let uniqueEventDates = []; 
+    let allCalendarDates = [];
 
-    // UI制御関数をグローバルに
-    window.toggleLinkInput = function(num) {
-        const type = document.getElementById(`linkType_${num}`).value;
-        const container = document.getElementById(`urlInputContainer_${num}`);
-        if (type === 'custom_url') {
-            container.style.display = 'block';
-        } else {
-            container.style.display = 'none';
-        }
-    }
-
-    function updateCardBorderColor(num) {
-        const typeSelect = document.getElementById(`type_${num}`);
-        const cardTitleWrapper = document.querySelector(`#card_${num} .card-title-wrapper`);
-        
-        if (typeSelect && cardTitleWrapper) {
-            const selectedType = typeSelect.value;
-            const color = TYPE_COLORS[selectedType] || TYPE_COLORS['default'];
-            cardTitleWrapper.style.borderColor = color;
-        }
-    }
-
-    function setupCardTypeListeners() {
-        eventNums.forEach(num => {
-            const typeSelect = document.getElementById(`type_${num}`);
-            if (typeSelect) {
-                typeSelect.addEventListener('change', () => {
-                    updateCardBorderColor(num);
-                    updateStatusDisplay(num); 
-                });
-                updateCardBorderColor(num);
-            }
+    let savedScrollPosition = 0;
+    let isReturningFromDetail = false;
+    
+    const searchButton = document.getElementById('search-button');
+    const prefectureContainer = document.getElementById('prefecture-checkbox-container');
+    const cityInput = document.getElementById('city-input'); 
+    const filterStatus = document.getElementById('filter-status');
+    const calendarWrapper = document.getElementById('calendar-wrapper');
+    const eventModal = document.getElementById('event-modal');
+    const modalContent = document.getElementById('modal-content');
+    const legendContainer = document.getElementById('label-legend-container');
+    const typeSelectAllCheckbox = document.getElementById('type-select-all-checkbox');
+    const topButton = document.getElementById('back-to-top');
+    if(topButton) {
+        topButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+            });
         });
     }
 
-    function showMessage(text, isError = false, isWarning = false) {
-        messageDiv.innerHTML = text;
-        messageDiv.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-yellow-100', 'text-yellow-700');
-        if (isError) messageDiv.classList.add('bg-red-100', 'text-red-700');
-        else if (isWarning) messageDiv.classList.add('bg-yellow-100', 'text-yellow-700');
-        else messageDiv.classList.add('bg-green-100', 'text-green-700');
+    let favoriteEventIds = new Set();
+    const FAV_STORAGE_KEY = 'beyCalendarFavorites';
+
+    function generateEventId(event) {
+        return `${event.dateString}_${event.name}_${event.time}_${event.location || ''}`;
     }
 
-    async function sendEmailNotification(type, num, data = null) {
-        const emailApiUrl = `${supabaseUrl}/functions/v1/resend-email`;
-        const recipient = 'beymet.channel@gmail.com';
-        try {
-            await fetch(emailApiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ownerId: CURRENT_OWNER_ID,
-                    eventNum: num,
-                    changeType: type,
-                    eventData: data, 
-                    recipient: recipient,
-                })
-            });
-        } catch (error) { console.error('メール通知送信エラー:', error); }
-    }
-    
-    function areRequiredFieldsFilled(num) {
-        const nameInput = document.getElementById(`name_${num}`);
-        const dateInput = document.getElementById(`date_${num}`);
-        return nameInput.value.trim() !== '' && dateInput.value.trim() !== '';
+    function loadFavorites() {
+        const saved = localStorage.getItem(FAV_STORAGE_KEY);
+        if (saved) {
+            try {
+                const ids = JSON.parse(saved);
+                favoriteEventIds = new Set(ids);
+            } catch (e) {
+                console.error('Failed to parse favorites:', e);
+            }
+        }
     }
 
-    function updateStatusDisplay(num) {
-        const isChecked = initialCheckFlgs[num];
-        const isRequiredFilled = areRequiredFieldsFilled(num);
-        const statusDisplay = document.getElementById(`statusDisplay_${num}`);
-        const nameValue = document.getElementById(`name_${num}`).value.trim();
-        const dateValue = document.getElementById(`date_${num}`).value.trim();
-        const dateDisplay = document.querySelector(`#card_${num} summary .card-date-line`); 
-        const nameDisplay = document.querySelector(`#card_${num} summary .card-name-line`); 
-        const defaultTitle = `交流会${['①', '②', '③', '④', '⑤'][num - 1]}`;
+    function saveFavorites() {
+        localStorage.setItem(FAV_STORAGE_KEY, JSON.stringify([...favoriteEventIds]));
+    }
 
-        if (dateDisplay && nameDisplay) {
-            if (nameValue !== '' && dateValue !== '') {
-                const dateObj = new Date(dateValue);
-                if (!isNaN(dateObj.getTime())) { 
-                    dateDisplay.textContent = `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
-                    nameDisplay.textContent = nameValue; 
-                } else {
-                    dateDisplay.textContent = defaultTitle; nameDisplay.textContent = '';
+    function toggleFavorite(event, btnElement) {
+        const id = generateEventId(event);
+        const isFavFilterActive = document.getElementById('fav-filter-toggle')?.checked;
+
+        if (favoriteEventIds.has(id)) {
+            favoriteEventIds.delete(id);
+            btnElement.classList.remove('active');
+
+            if (isFavFilterActive) {
+                if (event.type === 'ProductRelease') return true;
+                saveFavorites();
+                handleSearch(); 
+                return; 
+            }
+
+            updateCalendarStar(id, false);
+
+        } else {
+            favoriteEventIds.add(id);
+            btnElement.classList.add('active');
+            
+            updateCalendarStar(id, true);
+        }
+        saveFavorites();
+    }
+
+    function updateCalendarStar(eventId, isFav) {
+        const labels = document.querySelectorAll(`.event-label[data-event-id="${eventId}"]`);
+        
+        labels.forEach(label => {
+            const starSpan = label.querySelector('.fav-star');
+            if (isFav) {
+                if (!starSpan) {
+                    const newStar = document.createElement('span');
+                    newStar.classList.add('fav-star');
+                    newStar.textContent = '★';
+                    label.appendChild(newStar);
                 }
             } else {
-                dateDisplay.textContent = defaultTitle; nameDisplay.textContent = '';
-            }
-        }
-        if (!statusDisplay) return;
-
-        let isPastDate = false;
-        if (dateValue) {
-            const eventDate = new Date(dateValue);
-            const today = new Date(); today.setHours(0, 0, 0, 0); 
-            const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1); 
-            if (eventDate <= yesterday) isPastDate = true;
-        }
-        
-        if (isPastDate && isChecked) statusDisplay.innerHTML = '<span class="text-red-600">🔴掲載終了</span>';
-        else if (isChecked) statusDisplay.innerHTML = '<span class="text-green-600">🟢掲載中</span>';
-        else statusDisplay.innerHTML = isRequiredFilled ? '<span class="text-yellow-600">🟡未掲載</span>' : '<span class="text-red-600">🔴未入力</span>';
-    }
-
-    function setupStatusListeners() {
-        eventNums.forEach(num => {
-            const cardDiv = document.querySelector(`#card_${num}`);
-            if (cardDiv) {
-                cardDiv.querySelectorAll('input, select, textarea').forEach(input => {
-                    input.addEventListener('input', () => updateStatusDisplay(num));
-                    input.addEventListener('change', () => updateStatusDisplay(num));
-                });
-                updateStatusDisplay(num);
+                if (starSpan) {
+                    starSpan.remove();
+                }
             }
         });
     }
 
-    function getEventData(num) {
-        // エントリー用リンクの判定ロジック
-        const linkType = document.getElementById(`linkType_${num}`).value;
-        let finalLink = '';
-        if (linkType === 'x_account') {
-            const cleanId = CURRENT_OWNER_ID.replace('@', '');
-            finalLink = `https://x.com/${cleanId}`;
-        } else if (linkType === 'custom_url') {
-            finalLink = document.getElementById(`linkUrl_${num}`).value || '';
-        } else {
-            finalLink = '';
-        }
+    function saveSearchState() {
+        const expandedRegions = Array.from(prefectureContainer.querySelectorAll('.region-group .checkbox-wrapper.open'))
+            .map(wrapper => {
+                const regionHeader = wrapper.closest('.region-group').querySelector('.region-header');
+                return regionHeader ? regionHeader.textContent : null;
+            })
+            .filter(name => name); 
 
-        return {
-            owner: CURRENT_OWNER_ID,
-            eventNum: num,
-            date: document.getElementById(`date_${num}`).value || null,
-            name: document.getElementById(`name_${num}`).value || null,
-            time: document.getElementById(`time_${num}`).value || null,
-            location: document.getElementById(`location_${num}`).value || null,
-            fee: document.getElementById(`fee_${num}`).value, 
-            type: document.getElementById(`type_${num}`).value || '交流会',
-            capacity: document.getElementById(`capacity_${num}`).value || null,
-            entry: document.getElementById(`entry_${num}`).value || '当日受付:なし',
-            eligibility: document.getElementById(`eligibility_${num}`).value || '6歳以上(オープン)',
-            address: document.getElementById(`address_${num}`).value || null,
-            details: document.getElementById(`details_${num}`).value || null,
-            link: finalLink // 保存するカラム
+        const state = {
+            prefectures: Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
+                .filter(cb => !cb.classList.contains('region-select-checkbox'))
+                .map(checkbox => checkbox.value),
+            keyword: cityInput.value.trim(),
+            eventTypes: activeEventTypes,
+            expandedRegions: expandedRegions 
         };
+        localStorage.setItem('beyCalendarSearchState', JSON.stringify(state));
     }
 
-    function formatDataForComparison(data) {
-        const formatted = {};
-        for (const key in data) {
-            if (key === 'owner' || key === 'eventNum') continue;
-            let value = data[key];
-            if (['date','name','time','location','address','capacity','details','fee','link'].includes(key)) {
-                formatted[key] = (value === null || value === '') ? null : value.toString().trim();
-            } else {
-                formatted[key] = value;
-            }
-        }
-        return formatted;
-    }
-
-    function checkIfDataChanged(num) {
-        const currentData = getEventData(num);
-        const initial = initialData[num];
-        if (!initial) {
-             return Object.values(formatDataForComparison(currentData)).some(val => val !== null && val !== '参加費：無料' && val !== '当日受付:なし' && val !== '6歳以上(オープン)');
-        }
-        const currentFormatted = formatDataForComparison(currentData);
-        const initialFormatted = formatDataForComparison(initial);
-        delete initialFormatted.checkFlg;
-        return JSON.stringify(currentFormatted) !== JSON.stringify(initialFormatted);
-    }
-    
-    function validateEventData(data) {
-        const errors = [];
-        if (!data.name) errors.push(`「イベント名」が未入力です。`);
-        if (!data.date) errors.push(`「日付」が未入力です。`);
-        
-        const prefectures = ["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
-        if (data.address && !prefectures.some(p => data.address.trim().startsWith(p))) {
-            errors.push(`住所が都道府県名から始まっていません。例: 東京都...`);
-        }
-        return errors;
-    }
-
-    window.clearCard = function(num, showConfirmation = true) {
-        if (showConfirmation && !confirm(`イベント${num} の入力内容をクリアしますか？`)) return;
-
-        const cardElement = document.getElementById(`card_${num}`);
-        if (cardElement) {
-            cardElement.querySelectorAll('input:not([type="hidden"]), textarea').forEach(input => {
-                input.value = input.name.startsWith('fee_') ? defaultFee : '';
-            });
-            cardElement.querySelectorAll('select').forEach(select => {
-                if (select.name.startsWith('type_')) select.value = '交流会';
-                else if (select.name.startsWith('eligibility_')) select.value = '6歳以上(オープン)';
-                else if (select.name.startsWith('entry_')) select.value = '当日受付:なし';
-                else if (select.name.startsWith('linkType_')) select.value = 'x_account';
-            });
-            window.toggleLinkInput(num);
-            updateCardBorderColor(num);
-            updateStatusDisplay(num); 
-            if (showConfirmation) showMessage(`イベント${num} の入力内容をクリアしました。`, false, true);
-        }
-    }
-
-    window.deleteEvent = async function(num) {
-        if (!confirm(`イベント${num} をベイカレンダーから削除しますか？`)) return;
-        const btn = document.getElementById(`deleteButton_${num}`);
-        btn.disabled = true; btn.textContent = '削除中...';
-        
-        try {
-            window.clearCard(num, false); 
-            const dataToClear = {
-                owner: CURRENT_OWNER_ID,
-                eventNum: num,
-                date: null, name: null, time: null, location: null, fee: '参加費:無料', 
-                capacity: null, type: '交流会', entry: '当日受付:なし', eligibility: '6歳以上(オープン)',
-                address: null, details: null, checkFlg: false, link: ''
-            };
-            const { error } = await supabase.from('EventDB').upsert([dataToClear], { onConflict: 'owner,eventNum' });
-            if (error) throw error;
-            
-            showMessage(`イベント${num}を削除しました。`, false);
-            initialCheckFlgs[num] = false; 
-            updateStatusDisplay(num);
-            initialData[num] = { ...dataToClear, checkFlg: false }; 
-            document.getElementById(`card_${num}`).open = false;
-            await sendEmailNotification('delete', num, dataToClear);
-        } catch (error) {
-            showMessage(`削除失敗: ${error.message}`, true);
-        } finally {
-            btn.disabled = false; btn.textContent = '削除';
-        }
-    }
-
-    window.registerEvent = async function(num) {
-        const btn = document.getElementById(`registerButton_${num}`);
-        btn.disabled = true; btn.textContent = '登録中...';
-        const data = getEventData(num);
-        const errors = validateEventData(data);
-        if (errors.length > 0) {
-            showMessage(`エラー:<ul class="list-disc ml-4">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`, true);
-            btn.disabled = false; btn.textContent = '登録';
-            return;
-        }
-        if (!checkIfDataChanged(num)) {
-            showMessage(`変更がありません。`, false, true);
-            btn.disabled = false; btn.textContent = '登録';
-            return;
-        }
-        if (!confirm(`登録してよろしいですか？`)) {
-            btn.disabled = false; btn.textContent = '登録';
-            return;
-        }
-
-        try {
-            const { data: updated, error } = await supabase
-                .from('EventDB')
-                .upsert([{ ...data, checkFlg: true }], { onConflict: 'owner,eventNum' }) 
-                .select().single();
-            if (error) throw error;
-            
-            showMessage(`イベント${num}を更新しました。`, false);
-            document.getElementById(`card_${num}`).open = false;
-            initialCheckFlgs[num] = updated.checkFlg;
-            initialData[num] = updated; 
-            updateStatusDisplay(num); 
-            await sendEmailNotification('register', num, updated);
-        } catch (error) {
-            showMessage(`登録失敗: ${error.message}`, true);
-        } finally {
-            btn.disabled = false; btn.textContent = '登録';
-        }
-    }
-    
-    window.addEventListener('load', async () => {
-        const { data: events, error } = await supabase
-            .from('EventDB').select('*').eq('owner', CURRENT_OWNER_ID) 
-            .in('eventNum', eventNums).order('eventNum', { ascending: true }); 
-
-        eventNums.forEach(num => {
-            const event = events ? events.find(e => e.eventNum === num) : null;
-            initialCheckFlgs[num] = event ? (event.checkFlg || false) : false; 
-            initialData[num] = event || null; 
-
-            if (event) {
-                document.getElementById(`type_${num}`).value = event.type || '交流会';
-                document.getElementById(`name_${num}`).value = event.name || '';
-                document.getElementById(`date_${num}`).value = event.date || '';
-                document.getElementById(`time_${num}`).value = event.time || '';
-                document.getElementById(`location_${num}`).value = event.location || '';
-                document.getElementById(`fee_${num}`).value = event.fee || defaultFee;
-                document.getElementById(`capacity_${num}`).value = event.capacity || '';
-                document.getElementById(`eligibility_${num}`).value = event.eligibility || '6歳以上(オープン)'; 
-                document.getElementById(`address_${num}`).value = event.address || '';
-                document.getElementById(`entry_${num}`).value = event.entry || '当日受付:なし'; 
-                document.getElementById(`details_${num}`).value = event.details || '';
-                
-                // linkの復元ロジック
-                const linkVal = event.link || '';
-                const typeSelect = document.getElementById(`linkType_${num}`);
-                const urlInput = document.getElementById(`linkUrl_${num}`);
-                const xUrlBase = `https://x.com/${CURRENT_OWNER_ID.replace('@', '')}`;
-
-                if (linkVal === '') {
-                    typeSelect.value = 'none';
-                } else if (linkVal === xUrlBase) {
-                    typeSelect.value = 'x_account';
-                } else {
-                    typeSelect.value = 'custom_url';
-                    urlInput.value = linkVal;
+    function loadSearchState() {
+        const savedState = localStorage.getItem('beyCalendarSearchState');
+        if (savedState) {
+            try {
+                const state = JSON.parse(savedState);
+                if (state.keyword !== undefined) {
+                    citySearchTextFromStorage = state.keyword;
                 }
-                window.toggleLinkInput(num);
+                if (Array.isArray(state.prefectures)) {
+                    selectedPrefecturesFromStorage = state.prefectures;
+                }
+                if (Array.isArray(state.eventTypes)) {
+                    activeEventTypes = state.eventTypes;
+                }
+                if (Array.isArray(state.expandedRegions)) {
+                    expandedRegionsFromStorage = state.expandedRegions;
+                }
+            } catch (e) {
+                console.error('Failed to parse search state from localStorage:', e);
             }
+        }
+    }
+    
+    function showSwipeGuide(overlayElement, text = '左右スワイプで日付移動', storageKey) { 
+        if (storageKey && localStorage.getItem(storageKey)) { 
+            return; 
+        }
+
+        const guideOverlay = document.createElement('div');
+        guideOverlay.classList.add('swipe-guide-overlay');
+        
+        
+        guideOverlay.style.opacity = '0';
+        guideOverlay.style.transition = 'all 0.5s'; 
+
+
+        const guideContent = document.createElement('div');
+        guideContent.classList.add('swipe-guide-content');
+        
+        const handIcon = document.createElement('img');
+        handIcon.classList.add('hand-icon');
+        handIcon.src = 'handicon.png';
+        handIcon.alt = 'Swipe Hand Icon';
+        
+        const swipeText = document.createElement('div');
+        swipeText.classList.add('swipe-text');
+        swipeText.textContent = text; 
+
+        guideContent.appendChild(swipeText);
+        guideContent.appendChild(handIcon);
+        guideOverlay.appendChild(guideContent);
+
+        overlayElement.appendChild(guideOverlay); 
+
+        guideOverlay.offsetHeight;
+        
+        setTimeout(() => {
+            guideOverlay.style.opacity = '1'; 
+        }, 1); 
+
+
+        
+        setTimeout(() => {
+            
+            guideOverlay.style.opacity = '0'; 
+            
+            
+            setTimeout(() => {
+                guideOverlay.remove();
+                
+                if (storageKey) {
+                    localStorage.setItem(storageKey, 'true');
+                }
+            }, 500);
+        }, 3500); 
+    }
+
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        const match = timeStr.match(/^(\d{1,2}):(\d{2})/);
+        if (match) {
+            return `${match[1].padStart(2, '0')}：${match[2]}`;
+        }
+        return timeStr; 
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        
+        return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    }
+
+    function linkifyText(text) {
+        if (!text) return '';
+        
+        let processedText = text.replace(/\n/g, '<br>');
+
+        const urlRegex = /((?:https?:\/\/|www\.)[^\s()<>]+)/g;
+        
+        return processedText.replace(urlRegex, (fullMatch) => {
+            let url = fullMatch;
+            let trailing = '';
+
+            const unwantedSingleChars = ['(', ')'];
+            while (url.length > 0 && unwantedSingleChars.includes(url.slice(-1))) {
+                trailing = url.slice(-1) + trailing;
+                url = url.slice(0, -1);
+            }
+            
+            let href = url;
+            if (url.startsWith('www.') && !url.match(/^https?:\/\//i)) {
+                href = 'http://' + url;
+            }
+            
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>${trailing}`;
         });
-        setupStatusListeners();
-        setupCardTypeListeners();
-        const calendarLink = document.getElementById('beyCalendarLink');
-        if (calendarLink) {
-            calendarLink.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                window.open('https://beymetchannel.github.io/BeyCalendar/?ts=' + new Date().getTime(), '_blank');
+    }
+
+    function replaceFullWidthSpaces(text) {
+        if (typeof text !== 'string') return text;
+        return text.replace(/　/g, ' ');
+    }
+
+    function cleanEventStrings(event) {
+        const cleaned = {};
+        for (const key in event) {
+            if (Object.prototype.hasOwnProperty.call(event, key)) {
+                let value = event[key];
+                if (typeof value === 'string') {
+                    value = replaceFullWidthSpaces(value); 
+                }
+                cleaned[key] = value;
+            }
+        }
+        return cleaned;
+    }
+
+
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+
+        const jpMatch = dateStr.match(/(\d{4})年[\s\n]*(\d{1,2})月[\s\n]*(\d{1,2})日/);
+        if (jpMatch) {
+            return {
+                year: parseInt(jpMatch[1], 10),
+                month: parseInt(jpMatch[2], 10), 
+                day: parseInt(jpMatch[3], 10)
+            };
+        }
+
+        const isoMatch = dateStr.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (isoMatch) {
+            return {
+                year: parseInt(isoMatch[1], 10),
+                month: parseInt(isoMatch[2], 10),
+                day: parseInt(isoMatch[3], 10)
+            };
+        }
+
+        console.warn(`[ParseError] 日付形式が不正です: ${dateStr}`);
+        return null;
+    }
+    
+    function getUniqueEventDates(events) {
+        const dateStrings = events.map(e => e.dateString).filter(d => d);
+        const sortedDates = dateStrings.sort((a, b) => new Date(a) - new Date(b));
+        return [...new Set(sortedDates)];
+    }
+
+    function getAllDatesInCalendarRange() {
+        const dates = [];
+        let currentYear = TARGET_START_YEAR;
+        let currentMonth = TARGET_START_MONTH;
+        const maxYear = TARGET_MAX_DATE.getFullYear();
+        const maxMonth = TARGET_MAX_DATE.getMonth() + 1;
+        const maxDay = TARGET_MAX_DATE.getDate();
+
+        while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                if (currentYear === maxYear && currentMonth === maxMonth && day > maxDay) {
+                    break;
+                }
+                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                dates.push(dateString);
+            }
+
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+        }
+        return dates;
+    }
+
+    function getTimeValue(timeStr) {
+        if (!timeStr) return 99999; 
+        
+        const match = timeStr.match(/(\d{1,2})[:：](\d{2})/);
+        
+        if (match) {
+            const hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
+            return hours * 60 + minutes;
+        }
+        return 99999; 
+    }
+
+    function getColorClass(eventType) {
+        if (!eventType) return { class: 'label-green', label: '' }; 
+        
+        if (eventType === 'ProductRelease') {
+            return { class: 'label-product', label: '' };
+        }
+        if (eventType.includes("G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
+            return { class: 'label-yellow', label: '' };
+        } else if (eventType.includes("G3大会/チーム戦（G3大会（レギュラー") || eventType.includes("レギュラークラス")) {
+            return { class: 'label-yellow', label: '' };
+        } else if (eventType.includes("G3大会（オープン") || eventType.includes("オープンクラス")) {
+            return { class: 'label-orange', label: '' };
+        } else if (eventType.includes("G3大会/チーム戦（オープン") || eventType.includes("オープンクラス")) {
+            return { class: 'label-orange', label: '' };
+        } else if (eventType.includes("S1イベント") || eventType.includes("アンバサダーイベント") || eventType.includes("S1【予定】")) {
+            return { class: 'label-lightblue', label: '' };
+        } else if (eventType.includes("交流会") || eventType.includes("非公式大会")) { 
+            return { class: 'label-meetup', label: '' };
+        } else if (eventType.includes("G2大会")) {
+            return { class: 'label-gray', label: '' };
+        } else if (eventType.includes("G1大会")) {
+            return { class: 'label-black', label: '' };
+        } else {
+            return { class: 'label-green', label: '' }; 
+        }
+    }
+
+    function getBadgeClass(eventType) {
+        const { class: colorClass } = getColorClass(eventType);
+        if(colorClass === 'label-product') return 'type-Product';
+        if(colorClass === 'label-black') return 'type-G1';
+        if(colorClass === 'label-gray') return 'type-G2';
+        if(colorClass === 'label-orange') return 'type-G3O';
+        if(colorClass === 'label-yellow') return 'type-G3R';
+        if(colorClass === 'label-lightblue') return 'type-S1';
+        if(colorClass === 'label-meetup') return 'type-Meetup'; 
+        return 'type-Other';
+    }
+    
+    function cleanEventTypeText(eventType) {
+        if (!eventType) return '';
+        if (eventType === 'ProductRelease') return '情報';
+        return eventType.replace('B4ストアカップ', '').trim();
+    }
+
+    function updateEventDetailsModal(event, eventList, direction = null) {
+        
+        const eventTypeText = cleanEventTypeText(event.type);
+        const badgeClass = getBadgeClass(event.type);
+        const timeVal = event.time ? `${event.time} (${event.date})` : `(${event.date})`;
+        
+        const eligibilityRaw = event.eligibility ? event.eligibility.replace('参加資格：', '').trim() : '';
+        const eligibilityContent = linkifyText(eligibilityRaw);
+        
+        const entryContent = linkifyText(event.entry || '');
+        const entryDisplay = entryContent ? ` (${entryContent})` : '';
+
+        const detailsContent = linkifyText(event.details || '');
+
+        const capacityPresent = !!event.capacity;
+        const feePresent = !!event.fee && event.fee !== '-';
+        let capacityFeeHtml = '';
+        if (capacityPresent || feePresent) {
+             capacityFeeHtml = `
+                <p>
+                    <strong>定員:</strong> ${event.capacity|| '-'}${(feePresent && event.fee) ?` (${event.fee})` : ''} 
+                </p>
+             `;
+        }
+
+        const locationHtml = event.location ? `<p><strong>会場:</strong> ${event.location}</p>` : '';
+        const address = event.address || '';
+        
+        const addressHtml = address 
+            ? `<p><strong>住所:</strong> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">${address}</a></p>`
+            : '';
+            
+        const eventName = event.name.replace('B4G2_','');        
+       
+        const tel = event.tel || '';
+        const telDisplay = tel.replace(/\n/g, '<br>');
+        const telLink = tel.replace(/[^\d+]/g, ''); 
+
+        
+        const telHtml = tel ? 
+            `<p><strong>電話:</strong> <a href="tel:${telLink}">${telDisplay}</a></p>` : 
+            '';
+
+        const eligibilityEntryPresent = eligibilityRaw || event.entry;
+        
+        const eligibilityEntryHtml = eligibilityEntryPresent ? `
+            <p>
+                <strong>受付:</strong> ${eligibilityContent || '-'} ${entryDisplay}
+            </p>
+        ` : '';
+
+        const detailsHtml = `<p style="border:none ;"><strong>${event.detailTitle || '詳細'}:</strong> <br>${detailsContent || ''}</p>`;
+        
+        let linkLabel = '公式ページはこちら';
+        if (badgeClass === 'type-S1') {
+            linkLabel = '詳細はこちら';
+        } else if (badgeClass === 'type-Meetup') {
+            linkLabel = 'エントリーはこちら';
+        }
+
+        const linkHtml = event.link ? `<a href="${event.link}" target="_blank" rel="noopener noreferrer" class="detail-link-button" style="text-decoration: none;">${linkLabel}</a>` : '';
+
+        const navIndicator = `<div style="font-size: 12px; text-align: center; color: #808080; padding-top: 8px; border-top: 1px solid #cccccc;">( ${currentEventIndex + 1} / ${eventList.length} イベント )</div>`;
+
+        const newContentWrapper = document.createElement('div');
+        newContentWrapper.style.padding = '20px';
+        newContentWrapper.style.maxHeight = '90vh';
+        newContentWrapper.style.overflowY = 'auto';
+        const eventId = generateEventId(event);
+        const isFav = favoriteEventIds.has(eventId);
+        newContentWrapper.innerHTML = `
+            
+            <div class="modal-header-row">
+                <div class="event-type-badge ${badgeClass}">${eventTypeText}</div>
+                <div class="fav-btn ${isFav ? 'active' : ''}" id="detail-fav-btn">★</div>
+            </div>
+            <h3>${eventName}</h3>
+            
+            <p>
+                <strong>日時:</strong> ${timeVal}
+            </p>
+            
+            ${capacityFeeHtml}
+            ${locationHtml}
+            ${addressHtml}
+            ${telHtml}
+            ${eligibilityEntryHtml}
+            ${detailsHtml}
+            ${linkHtml}
+            ${navIndicator} `;
+        
+        if (direction === 'next') {
+            newContentWrapper.classList.add('content-slide-in-next');
+        } else if (direction === 'prev') {
+            newContentWrapper.classList.add('content-slide-in-prev');
+        }
+
+        modalContent.innerHTML = '';
+        modalContent.style.padding = '0'; 
+        modalContent.appendChild(newContentWrapper);
+
+        const favBtn = newContentWrapper.querySelector('#detail-fav-btn');
+        if(favBtn) {
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                toggleFavorite(event, favBtn);
             });
+        }
+
+        setupSwipe(modalContent, showPrevEvent, showNextEvent);
+    }
+
+
+    function showEventDetails(event, eventList = filteredEvents) {
+        
+        if(topButton) topButton.style.display = 'none';
+
+        
+        let targetEventList = eventList;
+        if (returnToDayDate !== event.dateString) {
+             
+             targetEventList = eventList.filter(e => e.dateString === event.dateString);
+        }
+
+        
+        targetEventList.sort((a, b) => {
+            if (a.dateString !== b.dateString) {
+                return new Date(a.dateString) - new Date(b.dateString);
+            }
+
+            const isProductA = a.type === 'ProductRelease';
+            const isProductB = b.type === 'ProductRelease';
+
+            if (isProductA && !isProductB) { return -1; }
+            if (!isProductA && isProductB) { return 1; }
+            
+            return getTimeValue(a.time) - getTimeValue(b.time);
+        });
+        
+        const index = targetEventList.findIndex(e => 
+            e.dateString === event.dateString && 
+            e.time === event.time && 
+            e.name === event.name
+        );
+        
+        swipeableEvents = targetEventList; 
+        currentEventIndex = index;
+
+        updateEventDetailsModal(event, targetEventList);
+        
+        const closeButton = document.createElement('button');
+        closeButton.classList.add('fixed-close-btn');
+        closeButton.innerHTML = '×';
+        closeButton.onclick = closeEventModal;
+        eventModal.appendChild(closeButton);
+
+        eventModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; 
+        
+        
+        setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
+    }
+    
+    function showPrevEvent() {
+        if (currentEventIndex > 0) {
+            currentEventIndex--;
+            const prevEvent = swipeableEvents[currentEventIndex];
+            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
+        }
+    }
+
+    function showNextEvent() {
+        if (currentEventIndex < swipeableEvents.length - 1) {
+            currentEventIndex++;
+            const nextEvent = swipeableEvents[currentEventIndex];
+            updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
+        }
+    }
+    
+    function closeEventModal() {
+        eventModal.style.display = 'none';
+        modalContent.style.padding = '20px';
+
+        const closeButton = eventModal.querySelector('.fixed-close-btn');
+        if (closeButton) {
+            closeButton.remove();
+        }
+
+        if (returnToDayDate) {
+            isReturningFromDetail = true;
+            const eventsForDay = filteredEvents.filter(event => 
+                event.dateString === returnToDayDate
+            );
+            
+            eventsForDay.sort((a, b) => {
+                const isProductA = a.type === 'ProductRelease';
+                const isProductB = b.type === 'ProductRelease';
+                if (isProductA && !isProductB) return -1;
+                 if (!isProductA && isProductB) return 1;
+
+                return getTimeValue(a.time) - getTimeValue(b.time);
+            });
+            
+            createDayEventModal(returnToDayDate, eventsForDay);
+            returnToDayDate = null; 
+        } else {
+            document.body.style.overflow = ''; 
+            if(topButton) topButton.style.display = 'block';
+        }
+    }
+    window.closeEventModal = closeEventModal;
+    
+    eventModal.addEventListener('click', (e) => {
+        if (e.target === eventModal) {
+            closeEventModal();
         }
     });
+
+    function setupSwipe(element, onSwipeRight, onSwipeLeft) {
+        let touchstartX = 0;
+        let touchendX = 0;
+        const SWIPE_THRESHOLD = 50; 
+
+        element.removeEventListener('touchstart', element.touchStartHandler);
+        element.removeEventListener('touchend', element.touchEndHandler);
+
+        element.touchStartHandler = (e) => {
+            
+            
+            touchstartX = e.changedTouches[0].screenX;
+        };
+        
+        element.touchEndHandler = (e) => {
+            touchendX = e.changedTouches[0].screenX;
+            handleGesture();
+        };
+
+        element.addEventListener('touchstart', element.touchStartHandler, { passive: true });
+        element.addEventListener('touchend', element.touchEndHandler);
+
+        function handleGesture() {
+            const diff = touchendX - touchstartX;
+            if (Math.abs(diff) < SWIPE_THRESHOLD) {
+                return; 
+            }
+
+            
+            if (diff > 0) {
+                onSwipeRight();
+            } 
+            
+            else {
+                onSwipeLeft();
+            }
+        }
+    }
+
+    function updateDayModalContent(contentElement, currentDateString, currentDayEvents, direction = null) {
+        
+        const newContentWrapper = document.createElement('div');
+        newContentWrapper.classList.add('day-list-content-wrapper');
+        newContentWrapper.style.padding = '10px';
+
+
+        const date = new Date(currentDateString);
+        const dateFormatted = `${date.getMonth() + 1}月${date.getDate()}日 (${JAPANESE_WEEKDAYS[date.getDay()]})`;
+
+        const header = document.createElement('h3');
+        header.textContent = dateFormatted + (currentDayEvents.length > 0 ? ` ${currentDayEvents.length}件のイベント` : ' のイベントはありません');
+        newContentWrapper.appendChild(header);
+
+        const listContainer = document.createElement('div');
+
+        if (currentDayEvents.length > 0) {
+            currentDayEvents.forEach(event => {
+                const card = document.createElement('div');
+                card.classList.add('event-card');
+                
+                card.onclick = (e) => {
+                    if (e.target.closest('.fav-btn')) return;
+
+                    const listModalContent = card.closest('.event-list-modal-content');
+                    if (listModalContent) {
+                        savedScrollPosition = listModalContent.scrollTop;
+                    }
+                    returnToDayDate = currentDateString; 
+                    showEventDetails(event, currentDayEvents); 
+                    contentElement.closest('.event-list-modal-overlay').remove(); 
+                };
+
+                const timeCol = document.createElement('div');
+                timeCol.classList.add('event-time-col');
+                
+                let timeText = event.time || '';
+                const timeMatch = timeText.match(/\d{1,2}[:：]\d{2}/);
+                if (timeMatch) {
+                    timeText = timeMatch[0].replace('：', ':'); 
+                } else if (timeText.includes('：')) {
+                    timeText = timeText.split('：')[0];
+                }
+                
+                const timeTextNode = document.createElement('span');
+                timeTextNode.classList.add('event-time-text');
+                timeTextNode.textContent = timeText;
+                timeCol.appendChild(timeTextNode);
+                card.appendChild(timeCol);
+
+                const detailsCol = document.createElement('div');
+                detailsCol.classList.add('event-details-col');
+                
+                const eventTypeText = cleanEventTypeText(event.type);
+
+                const typeBadge = document.createElement('div');
+                typeBadge.textContent = eventTypeText;
+                typeBadge.classList.add('event-type-badge');
+                
+                const badgeClass = getBadgeClass(event.type);
+                typeBadge.classList.add(badgeClass);
+                
+                detailsCol.appendChild(typeBadge);
+
+                const name = document.createElement('div');
+                name.textContent = event.name.replace('B4G2_','');
+                name.classList.add('event-name');
+                detailsCol.appendChild(name);
+
+                const address = document.createElement('div');
+                address.textContent = event.address || '';
+                address.classList.add('event-address');
+                detailsCol.appendChild(address);
+
+                card.appendChild(detailsCol);
+                const favCol = document.createElement('div');
+                favCol.classList.add('event-fav-col');
+                
+                const eventId = generateEventId(event);
+                const isFav = favoriteEventIds.has(eventId);
+                
+                const favBtn = document.createElement('div');
+                favBtn.classList.add('fav-btn');
+                if (isFav) favBtn.classList.add('active');
+                favBtn.textContent = '★';
+                
+                favBtn.onclick = (e) => {
+                    e.stopPropagation(); 
+                    toggleFavorite(event, favBtn);
+                };
+
+                favCol.appendChild(favBtn);
+                card.appendChild(favCol);
+                listContainer.appendChild(card);
+            });
+            
+            newContentWrapper.appendChild(listContainer);
+        }
+
+        if (direction === 'next') {
+            newContentWrapper.classList.add('content-slide-in-next');
+        } else if (direction === 'prev') {
+            newContentWrapper.classList.add('content-slide-in-prev');
+        }
+
+        contentElement.innerHTML = '';
+        contentElement.style.padding = '0'; 
+        contentElement.appendChild(newContentWrapper);
+    }
+
+
+    function createDayEventModal(dateString, dayEvents) {
+        if(topButton) topButton.style.display = 'none';
+
+        document.querySelector('.event-list-modal-overlay')?.remove();
+
+        const overlay = document.createElement('div');
+        overlay.classList.add('event-list-modal-overlay');
+        overlay.addEventListener('touchmove', function(e) {
+            if (e.target === overlay) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        const closeButton = document.createElement('button');
+        closeButton.classList.add('fixed-close-btn');
+        closeButton.innerHTML = '×';
+        
+        closeButton.onclick = () => {
+            if (isReturningFromDetail) {
+                // リストに戻るだけなら body のロック（overflow:hidden等）は解除しない！
+                showDayEventList(savedDate); 
+            } else {
+                // 完全に閉じるときだけ解除
+                document.body.style.overflow = '';
+                overlay.remove();
+            }        
+        };
+    
+        overlay.appendChild(closeButton);
+
+        const content = document.createElement('div');
+        content.classList.add('event-list-modal-content');
+        
+
+        let currentDayIndex = allCalendarDates.indexOf(dateString);
+        let currentDateString = dateString;
+
+        function showPrevDay() {
+            if (currentDayIndex > 0) {
+                currentDayIndex--;
+                const prevDate = allCalendarDates[currentDayIndex];
+                const eventsForPrevDay = filteredEvents.filter(event => event.dateString === prevDate);
+                eventsForPrevDay.sort((a, b) => {
+                    const isProductA = a.type === 'ProductRelease';
+                    const isProductB = b.type === 'ProductRelease';
+                    if (isProductA && !isProductB) return -1;
+                    if (!isProductA && isProductB) return 1;
+                    return getTimeValue(a.time) - getTimeValue(b.time);
+                });
+                currentDateString = prevDate;
+
+                updateDayModalContent(content, prevDate, eventsForPrevDay, 'prev'); 
+            }
+        }
+
+        function showNextDay() {
+            if (currentDayIndex < allCalendarDates.length - 1) {
+                currentDayIndex++;
+                const nextDate = allCalendarDates[currentDayIndex];
+                const eventsForNextDay = filteredEvents.filter(event => event.dateString === nextDate);
+                eventsForNextDay.sort((a, b) => {
+                    const isProductA = a.type === 'ProductRelease';
+                    const isProductB = b.type === 'ProductRelease';
+                    if (isProductA && !isProductB) return -1;
+                    if (!isProductA && isProductB) return 1;
+                    return getTimeValue(a.time) - getTimeValue(b.time);
+                });
+                currentDateString = nextDate;
+
+                updateDayModalContent(content, nextDate, eventsForNextDay, 'next'); 
+            }
+        }
+
+        updateDayModalContent(content, dateString, dayEvents);
+        
+        setupSwipe(content, showPrevDay, showNextDay); 
+
+        overlay.appendChild(content);
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                overlay.remove();
+                document.body.style.overflow = '';
+                if(topButton) topButton.style.display = 'block';
+            }
+        });
+        
+        
+        
+        setTimeout(() => showSwipeGuide(overlay, '左右スワイプで日付移動', 'swipeGuideShown_List'), 100); 
+        
+        
+
+
+        document.body.appendChild(overlay);
+        document.body.style.overflow = 'hidden';
+
+        const scrollPositionToApply = isReturningFromDetail ? savedScrollPosition : 0;
+        isReturningFromDetail = false;
+
+        setTimeout(() => {
+            content.scrollTop = scrollPositionToApply;
+        }, 0);
+    }
+
+
+    async function fetchSupabaseEvents() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const targetDate = new Date(today);
+        targetDate.setDate(today.getDate() - 1);
+        
+        try {
+            const { data, error } = await supabase
+                .from('EventDB')
+                .select('*')
+                .eq('checkFlg', true);
+
+            if (error) {
+                console.error('Supabase fetch error:', error);
+                return [];
+            }
+            
+            const filteredData = data.filter(evt => {
+                const eventDateParsed = parseDate(evt.date);
+                if (!eventDateParsed) return false;
+
+                const eventDate = new Date(eventDateParsed.year, eventDateParsed.month - 1, eventDateParsed.day);
+                eventDate.setHours(0, 0, 0, 0); 
+                
+                return eventDate.getTime() >= targetDate.getTime();
+            });
+            
+            return filteredData.map(evt => ({
+                name: evt.name,
+                date: formatDate(evt.date), 
+                time: formatTime(evt.time),
+                location: evt.location,
+                address: evt.address,
+                type: evt.type || '交流会', 
+                fee: evt.fee,
+                capacity: evt.capacity,
+                eligibility: evt.eligibility,
+                entry: evt.entry,
+                detailTitle: evt.detailTitle,
+                details: evt.details,
+                tel: evt.tel,
+                link: evt.link,
+            }));
+        } catch (err) {
+            console.error('Supabase connection failed:', err);
+            return [];
+        }
+    }
+    
+
+    async function fetchProductEvents() {
+        try {
+            const { data, error } = await supabase
+                .from('ProductDB')
+                .select('*'); 
+            if (error) {
+                console.error('Supabase ProductDB fetch error:', error);
+                return [];
+            }
+
+            return data.map(item => ({
+                name: item.name, 
+                date: formatDate(item.date),
+                time: item.time || '', 
+                type: 'ProductRelease',
+                calendarText: item.label,
+                details: item.details || '', 
+                location: '', 
+                address: '',
+                fee: '',
+                capacity: '',
+                entry: '',
+                link: item.link || ''
+            })).filter(item => item !== null);
+        } catch (err) {
+            console.error('ProductDB connection failed:', err);
+            return [];
+        }
+    }
+
+
+
+    async function loadDataAndInitialize() {
+        loadSearchState();
+        loadFavorites();
+
+        try {
+            const jsonPromise = fetch('./events.json')
+                .then(res => {
+                    if(!res.ok) throw new Error('JSON fetch failed');
+                    return res.json();
+                })
+                .catch(err => {
+                    console.warn('events.json読み込みエラー:', err);
+                    return [];
+                });
+
+            const [jsonEvents, supabaseEvents, productEvents] = await Promise.all([
+                jsonPromise,
+                fetchSupabaseEvents(),
+                fetchProductEvents()
+            ]);
+            
+            const combinedEvents = [...jsonEvents, ...supabaseEvents, ...productEvents];
+            
+            ALL_BEYBLADE_EVENTS = combinedEvents
+                .map(event => cleanEventStrings(event))
+                .map(event => {
+                    const parsedDate = parseDate(event.date);
+                    if (!parsedDate) return null;
+                    
+                    const dateString = `${parsedDate.year}-${String(parsedDate.month).padStart(2, '0')}-${String(parsedDate.day).padStart(2, '0')}`;
+                    
+                    return {
+                        ...event,
+                        parsedDate: parsedDate,
+                        dateString: dateString 
+                    };
+                })
+                .filter(event => event); 
+            
+            ALL_BEYBLADE_EVENTS.sort((a, b) => {
+                if (a.dateString !== b.dateString) {
+                    return new Date(a.dateString) - new Date(b.dateString);
+                }
+                return getTimeValue(a.time) - getTimeValue(b.time);
+            });
+
+
+            if (ALL_BEYBLADE_EVENTS.length > 0) {
+                const dates = ALL_BEYBLADE_EVENTS.map(event => new Date(event.parsedDate.year, event.parsedDate.month - 1, event.parsedDate.day));
+                
+                const minDate = new Date(Math.min(...dates));
+                TARGET_MAX_DATE = new Date(Math.max(...dates));
+
+                TARGET_START_YEAR = minDate.getFullYear();
+                TARGET_START_MONTH = minDate.getMonth() + 1;
+            }
+            
+            filteredEvents = ALL_BEYBLADE_EVENTS;
+            
+            if(typeSelectAllCheckbox) {
+                typeSelectAllCheckbox.addEventListener('change', (e) => {
+                    const isChecked = e.target.checked;
+                    
+                    if (isChecked) {
+                        activeEventTypes = EVENT_TYPES_LEGEND.map(item => item.key);
+                    } else {
+
+                        activeEventTypes = [];
+                    }
+
+
+                    const buttons = legendContainer.querySelectorAll('.legend-item');
+                    buttons.forEach(btn => {
+                        if (isChecked) {
+                            btn.classList.add('active');
+                        } else {
+                            btn.classList.remove('active');
+                        }
+                    });
+
+                    saveSearchState();
+                    handleSearch();
+                });
+            }
+            
+            populatePrefectureSelect();
+            populateLegendButtons(); 
+            
+            cityInput.value = citySearchTextFromStorage;
+            restorePrefectureSelection(selectedPrefecturesFromStorage);
+            
+            restoreRegionExpansion(expandedRegionsFromStorage);
+
+            handleSearch(true); 
+
+        } catch (error) {
+            console.error(error);
+            filterStatus.textContent = `データ読み込みエラー: ${error.message}`;
+            generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+        }
+    }
+
+    function populateLegendButtons() {
+        legendContainer.innerHTML = '';
+        
+        EVENT_TYPES_LEGEND.forEach(item => {
+            const legendItem = document.createElement('div');
+            legendItem.classList.add('legend-item');
+            legendItem.classList.add(item.styleClass); 
+            
+            if (activeEventTypes.includes(item.key)) {
+                legendItem.classList.add('active');
+            }
+
+            legendItem.appendChild(document.createTextNode(item.label));
+            
+            legendItem.addEventListener('click', () => {
+                legendItem.classList.toggle('active');
+                toggleEventType(item.key);
+                
+                updateSelectAllCheckboxState();
+                
+                handleSearch(); 
+            });
+
+            legendContainer.appendChild(legendItem);
+        });
+
+        updateSelectAllCheckboxState();
+    }
+
+    function updateSelectAllCheckboxState() {
+        if(!typeSelectAllCheckbox) return;
+        
+        const allKeys = EVENT_TYPES_LEGEND.map(item => item.key);
+        const selectedCount = activeEventTypes.length;
+        const totalCount = allKeys.length;
+
+        if (selectedCount === 0) {
+            typeSelectAllCheckbox.checked = false;
+            typeSelectAllCheckbox.indeterminate = false;
+        } else if (selectedCount === totalCount) {
+            typeSelectAllCheckbox.checked = true;
+            typeSelectAllCheckbox.indeterminate = false;
+        } else {
+            typeSelectAllCheckbox.checked = false; 
+            typeSelectAllCheckbox.indeterminate = true;
+        }
+    }
+
+    function toggleEventType(key) {
+        const index = activeEventTypes.indexOf(key);
+        if (index > -1) {
+            activeEventTypes.splice(index, 1);
+        } else {
+            activeEventTypes.push(key);
+        }
+        saveSearchState();
+    }
+
+    function populatePrefectureSelect() {
+        prefectureContainer.innerHTML = ''; 
+
+        for (const region in JAPAN_PREFECTURES_BY_REGION) {
+            const prefectures = JAPAN_PREFECTURES_BY_REGION[region];
+            
+            const regionGroup = document.createElement('div');
+            regionGroup.classList.add('region-group');
+
+            const headerContainer = document.createElement('div');
+            headerContainer.classList.add('region-header-container');
+            
+            const headerTitle = document.createElement('div');
+            headerTitle.classList.add('region-header');
+            headerTitle.textContent = region;
+            
+            const regionCheckbox = document.createElement('input');
+            regionCheckbox.type = 'checkbox';
+            regionCheckbox.classList.add('region-select-checkbox');
+            regionCheckbox.id = `region-select-${region}`;
+            
+            const regionCheckboxLabel = document.createElement('label');
+            regionCheckboxLabel.classList.add('region-select-label');
+            regionCheckboxLabel.setAttribute('for', regionCheckbox.id);
+            regionCheckboxLabel.appendChild(regionCheckbox);
+            
+            regionCheckboxLabel.appendChild(document.createTextNode('全選択')); 
+
+            headerContainer.appendChild(headerTitle);
+            headerContainer.appendChild(regionCheckboxLabel);
+            regionGroup.appendChild(headerContainer); 
+
+            const checkboxWrapper = document.createElement('div');
+            checkboxWrapper.classList.add('checkbox-wrapper');
+            checkboxWrapper.dataset.regionName = region; 
+            
+            prefectures.forEach(pref => {
+                const label = document.createElement('label');
+                label.classList.add('pref-label');
+                label.setAttribute('data-region', region); 
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = pref;
+                checkbox.name = 'prefecture';
+                
+                label.appendChild(checkbox);
+
+                label.appendChild(document.createTextNode(pref));
+                
+                checkbox.addEventListener('change', () => {
+                    label.classList.toggle('checked', checkbox.checked); 
+                    updateRegionCheckboxState(region);
+                    handleSearch(); 
+                });
+
+                checkboxWrapper.appendChild(label);
+            });
+
+            regionGroup.appendChild(checkboxWrapper);
+            prefectureContainer.appendChild(regionGroup);
+
+            headerTitle.addEventListener('click', () => {
+                checkboxWrapper.classList.toggle('open');
+                saveSearchState(); 
+            });
+            
+             regionCheckbox.addEventListener('change', () => {
+                const select = regionCheckbox.checked;
+                toggleRegionSelection(region, select);
+                handleSearch(); 
+            });
+            
+             regionCheckboxLabel.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+            });
+        }
+    }
+
+    function restorePrefectureSelection(selectedPrefectures) {
+        if (selectedPrefectures.length === 0) return;
+
+        const allPrefCheckboxes = prefectureContainer.querySelectorAll('input[type="checkbox"][name="prefecture"]');
+        const regionsToUpdate = new Set();
+
+        allPrefCheckboxes.forEach(checkbox => {
+            if (selectedPrefectures.includes(checkbox.value)) {
+                checkbox.checked = true;
+                const label = checkbox.closest('.pref-label');
+                if (label) {
+                    label.classList.add('checked');
+                    regionsToUpdate.add(label.getAttribute('data-region'));
+                }
+            }
+        });
+        
+        regionsToUpdate.forEach(region => {
+            updateRegionCheckboxState(region);
+            const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${region}"]`);
+            if (checkboxWrapper) {
+                checkboxWrapper.classList.add('open');
+            }
+        });
+    }
+
+    function restoreRegionExpansion(expandedRegions) {
+        expandedRegions.forEach(regionName => {
+            const checkboxWrapper = prefectureContainer.querySelector(`.checkbox-wrapper[data-region-name="${regionName}"]`);
+            if (checkboxWrapper) {
+                checkboxWrapper.classList.add('open');
+            }
+        });
+    }
+
+
+    function updateRegionCheckboxState(region) {
+        const total = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]`).length;
+        const checked = prefectureContainer.querySelectorAll(`[data-region="${region}"] input[type="checkbox"]:checked`).length;
+        
+        const regionCheckbox = document.getElementById(`region-select-${region}`);
+
+        if (!regionCheckbox) return;
+
+        if (checked === 0) {
+            regionCheckbox.checked = false;
+            regionCheckbox.indeterminate = false; 
+        } else if (checked === total) {
+            regionCheckbox.checked = true;
+            regionCheckbox.indeterminate = false;
+        } else {
+            regionCheckbox.checked = false;
+            regionCheckbox.indeterminate = true;
+        }
+    }
+
+    function toggleRegionSelection(region, select) {
+        prefectureContainer.querySelectorAll(`[data-region="${region}"]`).forEach(label => {
+            const checkbox = label.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = select;
+                label.classList.toggle('checked', select);
+            }
+        });
+    }
+
+function isJapaneseHoliday(year, month, day) {
+        const date = new Date(year, month - 1, day);
+        const w = date.getDay();
+
+        // 国民の祝日の基本判定
+        const checkNationalHoliday = (y, m, d) => {
+            const dt = new Date(y, m - 1, d);
+            const ww = dt.getDay();
+            
+            // 固定祝日
+            if (m === 1 && d === 1) return true;   // 元日
+            if (m === 2 && d === 11) return true;  // 建国記念の日
+            if (m === 2 && d === 23) return true;  // 天皇誕生日
+            if (m === 4 && d === 29) return true;  // 昭和の日
+            if (m === 5 && d === 3) return true;   // 憲法記念日
+            if (m === 5 && d === 4) return true;   // みどりの日
+            if (m === 5 && d === 5) return true;   // こどもの日
+            if (m === 8 && d === 11) return true;  // 山の日
+            if (m === 11 && d === 3) return true;  // 文化の日
+            if (m === 11 && d === 23) return true; // 勤労感謝の日
+
+            // ハッピーマンデー (第2月曜: 1, 10月 / 第3月曜: 7, 9月)
+            const nth = Math.ceil(d / 7);
+            if (ww === 1) {
+                if (m === 1 && nth === 2) return true;  // 成人の日
+                if (m === 7 && nth === 3) return true;  // 海の日
+                if (m === 9 && nth === 3) return true;  // 敬老の日
+                if (m === 10 && nth === 2) return true; // スポーツの日
+            }
+
+            // 春分の日・秋分の日 (簡易計算式: 1980-2099年対応)
+            if (m === 3 && d === Math.floor(20.8431 + 0.242194 * (y - 1980) - Math.floor((y - 1980) / 4))) return true;
+            if (m === 9 && d === Math.floor(23.2488 + 0.242154 * (y - 1980) - Math.floor((y - 1980) / 4))) return true;
+
+            return false;
+        };
+
+        if (checkNationalHoliday(year, month, day)) return true;
+
+        let tempDate = new Date(year, month - 1, day - 1);
+        while (checkNationalHoliday(tempDate.getFullYear(), tempDate.getMonth() + 1, tempDate.getDate())) {
+            if (tempDate.getDay() === 0) return true; 
+            tempDate.setDate(tempDate.getDate() - 1);
+        }
+
+        const prev = new Date(year, month - 1, day - 1);
+        const next = new Date(year, month - 1, day + 1);
+        if (w !== 0 && checkNationalHoliday(prev.getFullYear(), prev.getMonth() + 1, prev.getDate()) && 
+            checkNationalHoliday(next.getFullYear(), next.getMonth() + 1, next.getDate())) {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+    function generateCalendar(events, startYear, startMonth, maxDate) {
+        calendarWrapper.innerHTML = ''; 
+        
+        const today = new Date(); 
+        today.setHours(0, 0, 0, 0); 
+
+        const maxYear = maxDate.getFullYear();
+        const maxMonth = maxDate.getMonth() + 1;
+
+        let currentYear = startYear;
+        let currentMonth = startMonth;
+
+        while (currentYear < maxYear || (currentYear === maxYear && currentMonth <= maxMonth)) {
+            
+            const date = new Date(currentYear, currentMonth - 1, 1);
+            
+            const gridWrapperContainer = document.createElement('div');
+            gridWrapperContainer.classList.add('calendar-grid-wrapper');
+
+            const gridWrapper = document.createElement('div');
+            gridWrapper.classList.add('calendar-grid');
+            gridWrapper.innerHTML = `
+                <div class="day-header">日</div>
+                <div class="day-header">月</div>
+                <div class="day-header">火</div>
+                <div class="day-header">水</div>
+                <div class="day-header">木</div>
+                <div class="day-header">金</div>
+                <div class="day-header">土</div>
+            `;
+            
+            const startDay = date.getDay(); 
+            const daysInMonth = new Date(currentYear, currentMonth, 0).getDate(); 
+
+            for (let i = 0; i < startDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.classList.add('day-cell');
+                emptyCell.style.backgroundColor = '#f9f9f9'; 
+                gridWrapper.appendChild(emptyCell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.classList.add('day-cell');
+                
+                const currentDate = new Date(currentYear, currentMonth - 1, day);
+                currentDate.setHours(0, 0, 0, 0);
+                
+                if (currentDate.getTime() === today.getTime()) {
+                    dayCell.classList.add('today-cell'); 
+                }
+
+                const dayNumber = document.createElement('span');
+                dayNumber.classList.add('day-number');
+                dayNumber.textContent = `${currentMonth}/${day}`;
+                
+
+                const isHoliday = isJapaneseHoliday(currentYear, currentMonth, day);
+                if (isHoliday) {
+                    dayCell.style.backgroundColor = '#f4f4f4'; 
+                    dayNumber.style.color = '#cc5588';
+                }
+
+                const dateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                dayNumber.dataset.date = dateString;
+
+                const dailyEvents = events.filter(event => {
+                    const pd = event.parsedDate;
+                    return pd && pd.year === currentYear && pd.month === currentMonth && pd.day === day;
+                });
+
+                
+                if (dailyEvents.length > 0) {
+                    dayNumber.classList.add('has-events');
+                }
+
+                dayCell.appendChild(dayNumber);
+
+                dailyEvents.sort((a, b) => {
+                    if (a.type === 'ProductRelease' && b.type !== 'ProductRelease') {
+                        return -1; 
+                    }
+                    if (a.type !== 'ProductRelease' && b.type === 'ProductRelease') {
+                        return 1;  
+                    }
+                    return getTimeValue(a.time) - getTimeValue(b.time); 
+                });
+
+                dailyEvents.forEach(event => {
+                    let { class: colorClass, label } = getColorClass(event.type);
+                    
+                    if (event.type === 'ProductRelease') {
+                        label = event.calendarText || event.name;
+                    }
+                    const eventLabel = document.createElement('span');
+                    eventLabel.classList.add('event-label', colorClass);
+                    
+                    const timeParts = (event.time || '').split('：');
+                    let displayTime = timeParts.length === 2 ? `${timeParts[0]}:${timeParts[1]}` : event.time;
+                    if (event.type === 'ProductRelease') {
+                        displayTime = '';
+                    }
+                    const eventId = generateEventId(event);
+                    const isFav = favoriteEventIds.has(eventId);
+                    const starHtml = isFav ? '<span class="fav-star">★</span>' : '';
+                    
+                    eventLabel.innerHTML = `${displayTime}${label}${starHtml}`;
+                    eventLabel.dataset.eventId = eventId;
+                    
+                    eventLabel.onclick = (e) => {
+                        e.stopPropagation(); 
+                        returnToDayDate = null; 
+                        showEventDetails(event);
+                    };
+
+                    dayCell.appendChild(eventLabel);
+                });
+
+                dayCell.onclick = (e) => {
+                    const targetDateElement = dayCell.querySelector('.day-number');
+                    if (targetDateElement && targetDateElement.dataset.date) {
+                         dayClickHandler({ currentTarget: targetDateElement });
+                    }
+                };
+
+                gridWrapper.appendChild(dayCell);
+            }
+
+            gridWrapperContainer.appendChild(gridWrapper);
+            calendarWrapper.appendChild(gridWrapperContainer);
+
+            currentMonth++;
+            if (currentMonth > 12) {
+                currentMonth = 1;
+                currentYear++;
+            }
+        }
+    }
+
+    function handleSearch(updateStatus = true) {
+        if (cityInput) {
+            cityInput.blur(); 
+        }
+
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            const originalContent = viewport.getAttribute('content');
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0');
+            setTimeout(() => {
+                viewport.setAttribute('content', originalContent || 'width=device-width, initial-scale=1.0');
+            }, 300);
+        }
+        
+        saveSearchState();
+
+        if (ALL_BEYBLADE_EVENTS.length === 0) {
+            filterStatus.textContent = "イベントデータがありません。";
+            generateCalendar([], TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+            return;
+        }
+        
+        const allNonProductEventsCount = ALL_BEYBLADE_EVENTS.filter(event => event.type !== 'ProductRelease').length;
+
+        const selectedPrefectures = Array.from(prefectureContainer.querySelectorAll('input[type="checkbox"]:checked'))
+            .filter(cb => !cb.classList.contains('region-select-checkbox')) 
+            .map(checkbox => checkbox.value);
+        
+        const citySearchText = cityInput.value.trim().toLowerCase();
+        
+        let localFilteredEvents = ALL_BEYBLADE_EVENTS;
+        
+        let filterDescription = [];
+
+        if (selectedPrefectures.length > 0) {
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
+                const eventAddress = event.address || '';
+                return selectedPrefectures.some(pref => eventAddress.startsWith(pref)); 
+            });
+            filterDescription.push(`都道府県: ${selectedPrefectures.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join('、')}`);
+        }
+
+        if (citySearchText !== "") {
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
+                const searchTarget = [
+                    event.address || '', 
+                    event.location || '',
+                    event.name || '',
+                    event.details || ''
+                ].join(' ').toLowerCase();
+
+                return searchTarget.includes(citySearchText);
+            });
+            filterDescription.push(`キーワード: "${citySearchText}"`);
+        }
+        
+        const allowedKeywords = activeEventTypes.flatMap(key => 
+            EVENT_TYPES_LEGEND.find(item => item.key === key)?.searchKeywords || []
+        );
+        
+        const includeOther = activeEventTypes.includes('Other');
+        const otherTypesKeywords = EVENT_TYPES_LEGEND.filter(item => item.key !== 'Other').flatMap(item => item.searchKeywords);
+        
+        localFilteredEvents = localFilteredEvents.filter(event => {
+            if (event.type === 'ProductRelease') return true;
+
+            if (activeEventTypes.length === 0) return false;
+
+            const eventType = event.type || ''; 
+            
+            const isMatch = allowedKeywords.some(keyword => eventType.includes(keyword));
+            
+            if (includeOther) {
+                const isOther = !otherTypesKeywords.some(keyword => eventType.includes(keyword));
+                return isMatch || isOther;
+            }
+            
+            return isMatch;
+        });
+
+        if (activeEventTypes.length < EVENT_TYPES_LEGEND.length && activeEventTypes.length > 0) {
+            filterDescription.push(`${activeEventTypes.map(key => EVENT_TYPES_LEGEND.find(item => item.key === key)?.label || '').join('、')}`);
+        }
+
+        const relevantFavsCount = localFilteredEvents.filter(event => {
+            if (event.type === 'ProductRelease') return false;
+            const eventId = generateEventId(event);
+            return favoriteEventIds.has(eventId);
+        }).length;
+        
+        const favToggle = document.getElementById('fav-filter-toggle');
+        if (favToggle && favToggle.checked) {
+            localFilteredEvents = localFilteredEvents.filter(event => {
+                if (event.type === 'ProductRelease') return true;
+                const eventId = generateEventId(event);
+                return favoriteEventIds.has(eventId);
+            });
+            filterDescription.push('お気に入り');
+        }
+
+        localFilteredEvents.sort((a, b) => {
+            if (a.dateString !== b.dateString) {
+                return new Date(a.dateString) - new Date(b.dateString);
+            }
+            return getTimeValue(a.time) - getTimeValue(b.time);
+        });
+
+        filteredEvents = localFilteredEvents;
+        uniqueEventDates = getUniqueEventDates(filteredEvents); 
+        allCalendarDates = getAllDatesInCalendarRange();
+        
+        const productCountInFiltered = filteredEvents.filter(event => event.type === 'ProductRelease').length;
+        const areNoEventTypesSelected = activeEventTypes.length === 0;
+        const isFavFilterActive = favToggle && favToggle.checked; 
+        
+        let descriptionText = '';
+
+        if (areNoEventTypesSelected) {
+            descriptionText = `表示するイベントを選択してください。`;
+        } else if (isFavFilterActive) {
+
+            const combinedDescription = filterDescription.join(' / ');
+
+            const displayCount = filteredEvents.length - productCountInFiltered;
+
+            descriptionText = `${combinedDescription} に一致する ${relevantFavsCount}件のイベントを表示中`;
+
+        } else if (filterDescription.length > 0) {
+            descriptionText = `${filterDescription.join(' / ')} に一致する ${filteredEvents.length - productCountInFiltered} 件のイベントを表示中`;
+        } else {
+            descriptionText = `全イベントを表示中 (${allNonProductEventsCount}件)`;
+        }
+
+        filterStatus.textContent = descriptionText;
+
+        generateCalendar(filteredEvents, TARGET_START_YEAR, TARGET_START_MONTH, TARGET_MAX_DATE);
+    }
+
+    function dayClickHandler(e) {
+        const dayEl = e.currentTarget; 
+        const dateString = dayEl.dataset.date; 
+
+        if (!dateString) {
+            console.error("day-number要素にdata-date属性がありません。");
+            return;
+        }
+
+        isReturningFromDetail = false;
+
+        const eventsForDay = filteredEvents.filter(event => 
+            event.dateString === dateString
+        );
+        
+        eventsForDay.sort((a, b) => {
+            const isProductA = a.type === 'ProductRelease';
+            const isProductB = b.type === 'ProductRelease';
+
+            if (isProductA && !isProductB) return -1;
+            if (!isProductA && isProductB) return 1;
+
+            return getTimeValue(a.time) - getTimeValue(b.time);
+        });
+
+        createDayEventModal(dateString, eventsForDay);
+    }
+
+    searchButton.addEventListener('click', () => handleSearch()); 
+    cityInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
+
+    const favFilterToggle = document.getElementById('fav-filter-toggle');
+    if (favFilterToggle) {
+        favFilterToggle.addEventListener('change', () => {
+            handleSearch();
+        });
+    }
+
+    loadDataAndInitialize();
+
 </script>
 </body>
 </html>
