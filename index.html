@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.8.0</label>
+        <label id="version-label">version: β.8.1</label>
     </div>
         
     <div class="search-container">
@@ -1474,7 +1474,7 @@
             const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
 
-            if (confirm(`前日：${dateStr} の\nイベントを表示しますか？`)) {
+            if (confirm(`翌日：${dateStr} の\nイベントを表示しますか？`)) {
                 const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
                     
                 targetDateEvents.sort((a, b) => {
