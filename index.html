@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.7.1</label>
+        <label id="version-label">version: β.8.0</label>
     </div>
         
     <div class="search-container">
@@ -1428,25 +1428,69 @@
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
-        
+        setupSwipe(eventModal, showPrevEvent, showNextEvent);
+
         setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
     }
     
+
+
     function showPrevEvent() {
         if (currentEventIndex > 0) {
             currentEventIndex--;
-            const prevEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(prevEvent, swipeableEvents, 'prev'); 
+            updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'prev'); 
+        } else {
+            const parts = swipeableEvents[0].dateString.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            d.setDate(d.getDate() - 1);
+            const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
+
+            if (confirm(`前日：${dateStr} の\nイベントを表示しますか？`)) {
+                const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
+                
+                targetDateEvents.sort((a, b) => {
+                    const isProductA = a.type === 'ProductRelease';
+                    const isProductB = b.type === 'ProductRelease';
+                    if (isProductA && !isProductB) return -1;
+                    if (!isProductA && isProductB) return 1;
+                    return getTimeValue(a.time) - getTimeValue(b.time);
+                });
+
+                eventModal.style.display = 'none';
+                createDayEventModal(targetDate, targetDateEvents);
+            }
         }
     }
 
     function showNextEvent() {
         if (currentEventIndex < swipeableEvents.length - 1) {
             currentEventIndex++;
-            const nextEvent = swipeableEvents[currentEventIndex];
-            updateEventDetailsModal(nextEvent, swipeableEvents, 'next'); 
+            updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'next'); 
+        } else {
+            const parts = swipeableEvents[0].dateString.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            d.setDate(d.getDate() + 1);
+            const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+            const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
+
+            if (confirm(`前日：${dateStr} の\nイベントを表示しますか？`)) {
+                const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
+                    
+                targetDateEvents.sort((a, b) => {
+                    const isProductA = a.type === 'ProductRelease';
+                    const isProductB = b.type === 'ProductRelease';
+                    if (isProductA && !isProductB) return -1;
+                    if (!isProductA && isProductB) return 1;
+                    return getTimeValue(a.time) - getTimeValue(b.time);
+                });
+
+                eventModal.style.display = 'none';
+                createDayEventModal(targetDate, targetDateEvents);
+            }
         }
     }
+
     
     function closeEventModal() {
         eventModal.style.display = 'none';
@@ -1713,6 +1757,7 @@
         updateDayModalContent(content, dateString, dayEvents);
         
         setupSwipe(content, showPrevDay, showNextDay); 
+        setupSwipe(overlay, showPrevDay, showNextDay);
 
         overlay.appendChild(content);
 
