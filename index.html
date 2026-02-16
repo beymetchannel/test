@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.8.2</label>
+        <label id="version-label">version: β.8.1</label>
     </div>
         
     <div class="search-container">
@@ -1383,16 +1383,17 @@
 
 
     function showEventDetails(event, eventList = filteredEvents) {
-
-        isReturningFromDetail = false;
         
         if(topButton) topButton.style.display = 'none';
 
+        
         let targetEventList = eventList;
         if (returnToDayDate !== event.dateString) {
+             
              targetEventList = eventList.filter(e => e.dateString === event.dateString);
         }
 
+        
         targetEventList.sort((a, b) => {
             if (a.dateString !== b.dateString) {
                 return new Date(a.dateString) - new Date(b.dateString);
@@ -1418,15 +1419,10 @@
 
         updateEventDetailsModal(event, targetEventList);
         
-        const oldBtn = eventModal.querySelector('.fixed-close-btn');
-        if (oldBtn) oldBtn.remove();
-
         const closeButton = document.createElement('button');
         closeButton.classList.add('fixed-close-btn');
         closeButton.innerHTML = '×';
-
         closeButton.onclick = closeEventModal;
-        
         eventModal.appendChild(closeButton);
 
         eventModal.style.display = 'flex';
@@ -1450,7 +1446,7 @@
             const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
 
-            if (confirm(`当日、これより前のイベントはありません。\n前日：${dateStr} の\nイベントを表示しますか？`)) {
+            if (confirm(`前日：${dateStr} の\nイベントを表示しますか？`)) {
                 const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
                 
                 targetDateEvents.sort((a, b) => {
@@ -1478,7 +1474,7 @@
             const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
 
-            if (confirm(`当日、これより後のイベントはありません。\n翌日：${dateStr} の\nイベントを表示しますか？`)) {
+            if (confirm(`翌日：${dateStr} の\nイベントを表示しますか？`)) {
                 const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
                     
                 targetDateEvents.sort((a, b) => {
