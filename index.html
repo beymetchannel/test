@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.8.4</label>
+        <label id="version-label">version: β.8.5</label>
     </div>
         
     <div class="search-container">
@@ -904,6 +904,9 @@
 
     let savedScrollPosition = 0;
     let isReturningFromDetail = false;
+
+    let isEventProcessing = false;
+    let detailExitScrollTarget = null;
     
     const searchButton = document.getElementById('search-button');
     const prefectureContainer = document.getElementById('prefecture-checkbox-container');
@@ -1484,36 +1487,25 @@
     }
     
 
-
-    let isEventProcessing = false;
-
     function showPrevEvent() {
         if (isEventProcessing) return;
         isEventProcessing = true;
 
         if (currentEventIndex > 0) {
+            // 通常の前のイベントへの遷移
             currentEventIndex--;
-            updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'prev'); 
-
+            updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'prev');
             setTimeout(() => { isEventProcessing = false; }, 300);
         } else {
-            const parts = swipeableEvents[0].dateString.split('-');
-            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            d.setDate(d.getDate() - 1);
-            const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
-            const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
+            // 【変更点】先頭で左スワイプ：リストの一番上に戻る
             
-            targetDateEvents.sort((a, b) => {
-                const isProductA = a.type === 'ProductRelease';
-                const isProductB = b.type === 'ProductRelease';
-                if (isProductA && !isProductB) return -1;
-                if (!isProductA && isProductB) return 1;
-                return getTimeValue(a.time) - getTimeValue(b.time);
-            });
-
-            eventModal.style.display = 'none';
-            createDayEventModal(targetDate, targetDateEvents);
+            // 現在の日付を戻り先にセット
+            returnToDayDate = swipeableEvents[0].dateString;
+            
+            // フラグを「上」に設定
+            detailExitScrollTarget = 'top';
+            
+            closeEventModal();
             setTimeout(() => { isEventProcessing = false; }, 300);
         }
     }
@@ -1523,31 +1515,23 @@
         isEventProcessing = true;
 
         if (currentEventIndex < swipeableEvents.length - 1) {
+            // 通常の次のイベントへの遷移
             currentEventIndex++;
-            updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'next'); 
+            updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'next');
             setTimeout(() => { isEventProcessing = false; }, 300);
         } else {
-            const parts = swipeableEvents[0].dateString.split('-');
-            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            d.setDate(d.getDate() + 1);
-            const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-            const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
-            const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
-                
-            targetDateEvents.sort((a, b) => {
-                const isProductA = a.type === 'ProductRelease';
-                const isProductB = b.type === 'ProductRelease';
-                if (isProductA && !isProductB) return -1;
-                if (!isProductA && isProductB) return 1;
-                return getTimeValue(a.time) - getTimeValue(b.time);
-            });
-
-            eventModal.style.display = 'none';
-            createDayEventModal(targetDate, targetDateEvents);
+            // 【変更点】末尾で右スワイプ：リストの一番下に戻る
+            
+            // 現在の日付を戻り先にセット
+            returnToDayDate = swipeableEvents[0].dateString;
+            
+            // フラグを「下」に設定
+            detailExitScrollTarget = 'bottom';
+            
+            closeEventModal();
             setTimeout(() => { isEventProcessing = false; }, 300);
         }
     }
-
     
     function closeEventModal() {
         eventModal.style.display = 'none';
@@ -1568,18 +1552,19 @@
                 const isProductA = a.type === 'ProductRelease';
                 const isProductB = b.type === 'ProductRelease';
                 if (isProductA && !isProductB) return -1;
-                 if (!isProductA && isProductB) return 1;
-
+                if (!isProductA && isProductB) return 1;
                 return getTimeValue(a.time) - getTimeValue(b.time);
             });
             
             createDayEventModal(returnToDayDate, eventsForDay);
+
             returnToDayDate = null; 
         } else {
             document.body.style.overflow = ''; 
             if(topButton) topButton.style.display = 'block';
         }
     }
+
     window.closeEventModal = closeEventModal;
     
     eventModal.addEventListener('click', (e) => {
@@ -1746,19 +1731,14 @@
         const overlay = document.createElement('div');
         overlay.classList.add('event-list-modal-overlay');
 
-        // ▼▼▼ 【重要修正】 contentの定義をここ（イベント設定より前）に移動 ▼▼▼
         const content = document.createElement('div');
         content.classList.add('event-list-modal-content');
-        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
-        // オーバーレイ背景（黒い部分）のスクロール完全禁止
         overlay.addEventListener('touchmove', (e) => {
             if (e.target === overlay) {
                 e.preventDefault();
             }
         }, { passive: false });
 
-        // コンテンツ内部のスクロール連鎖（突き抜け）を防止する処理
         let startY = 0;
         content.addEventListener('touchstart', (e) => {
             startY = e.touches[0].pageY;
@@ -1771,17 +1751,16 @@
             const scrollHeight = content.scrollHeight;
             const clientHeight = content.clientHeight;
             
-            // スクロールする必要がない（中身が短い）場合、すべてのスクロール操作を禁止
             if (scrollHeight <= clientHeight) {
                 e.preventDefault();
                 return;
             }
 
-            // A. 上端にいるのに、さらに下に引っ張ろうとした（親へ伝播してしまう操作）
+
             if (scrollTop <= 0 && dy > 0) {
                 e.preventDefault();
             }
-            // B. 下端にいるのに、さらに上に引っ張ろうとした（親へ伝播してしまう操作）
+
             if (scrollTop + clientHeight >= scrollHeight && dy < 0) {
                 e.preventDefault();
             }
@@ -1793,18 +1772,16 @@
         
         closeButton.onclick = () => {
             if (isReturningFromDetail) {
-                // リストに戻るだけなら body のロック（overflow:hidden等）は解除しない！
                 showDayEventList(savedDate); 
             } else {
-                // 完全に閉じるときだけ解除
                 document.body.style.overflow = '';
                 overlay.remove();
+                if(topButton) topButton.style.display = 'block';
             }        
         };
 
         overlay.appendChild(closeButton);
 
-        // （contentの定義は上に移動したのでここは削除）
 
         let currentDayIndex = allCalendarDates.indexOf(dateString);
         let currentDateString = dateString;
@@ -1865,11 +1842,25 @@
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
 
-        const scrollPositionToApply = isReturningFromDetail ? savedScrollPosition : 0;
-        isReturningFromDetail = false;
-
+        // ▼▼▼ 修正箇所：スクロール位置の優先順位付け ▼▼▼
         setTimeout(() => {
-            content.scrollTop = scrollPositionToApply;
+            if (detailExitScrollTarget === 'top') {
+                // 先頭へ強制スクロール
+                content.scrollTop = 0;
+            } else if (detailExitScrollTarget === 'bottom') {
+                // 末尾へ強制スクロール
+                content.scrollTop = content.scrollHeight;
+            } else if (isReturningFromDetail) {
+                // 通常の戻り（クリックした位置へ復元）
+                content.scrollTop = savedScrollPosition;
+            } else {
+                // 新規オープン時
+                content.scrollTop = 0;
+            }
+
+            // フラグをリセット
+            isReturningFromDetail = false;
+            detailExitScrollTarget = null; 
         }, 0);
     }
 
