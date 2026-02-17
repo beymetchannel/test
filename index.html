@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.8.3</label>
+        <label id="version-label">version: β.8.4</label>
     </div>
         
     <div class="search-container">
@@ -1429,6 +1429,52 @@
         
         eventModal.appendChild(closeButton);
 
+        // ▼▼▼ 追加・修正したスクロール制御エリア ▼▼▼
+
+        // リスナーが重複しないように、初回のみ登録するフラグチェック
+        if (!eventModal.dataset.hasScrollListener) {
+            
+            // 1. オーバーレイ背景（黒い部分）のスクロール完全禁止
+            eventModal.addEventListener('touchmove', (e) => {
+                if (e.target === eventModal) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            // 2. モーダル中身のスクロール連鎖防止
+            let detailStartY = 0;
+            
+            // modalContentはグローバル変数（HTML内の要素）を指しています
+            modalContent.addEventListener('touchstart', (e) => {
+                detailStartY = e.touches[0].pageY;
+            }, { passive: true });
+
+            modalContent.addEventListener('touchmove', (e) => {
+                const moveY = e.touches[0].pageY;
+                const dy = moveY - detailStartY;
+                const scrollTop = modalContent.scrollTop;
+                const scrollHeight = modalContent.scrollHeight;
+                const clientHeight = modalContent.clientHeight;
+
+                // スクロール不要（中身が短い）なら操作禁止
+                if (scrollHeight <= clientHeight) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // 上端での連鎖防止
+                if (scrollTop <= 0 && dy > 0) {
+                    e.preventDefault();
+                }
+                // 下端での連鎖防止
+                if (scrollTop + clientHeight >= scrollHeight && dy < 0) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            eventModal.dataset.hasScrollListener = 'true';
+        }
+
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
@@ -1456,22 +1502,18 @@
             d.setDate(d.getDate() - 1);
             const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
+            const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
+            
+            targetDateEvents.sort((a, b) => {
+                const isProductA = a.type === 'ProductRelease';
+                const isProductB = b.type === 'ProductRelease';
+                if (isProductA && !isProductB) return -1;
+                if (!isProductA && isProductB) return 1;
+                return getTimeValue(a.time) - getTimeValue(b.time);
+            });
 
-            if (confirm(`これより前のイベントはありません。\n前日：${dateStr} の\nイベント一覧を表示しますか？`)) {
-                const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
-                
-                targetDateEvents.sort((a, b) => {
-                    const isProductA = a.type === 'ProductRelease';
-                    const isProductB = b.type === 'ProductRelease';
-                    if (isProductA && !isProductB) return -1;
-                    if (!isProductA && isProductB) return 1;
-                    return getTimeValue(a.time) - getTimeValue(b.time);
-                });
-
-                eventModal.style.display = 'none';
-                createDayEventModal(targetDate, targetDateEvents);
-            }
-
+            eventModal.style.display = 'none';
+            createDayEventModal(targetDate, targetDateEvents);
             setTimeout(() => { isEventProcessing = false; }, 300);
         }
     }
@@ -1490,21 +1532,18 @@
             d.setDate(d.getDate() + 1);
             const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
             const dateStr = `${d.getMonth() + 1}月${d.getDate()}日(${JAPANESE_WEEKDAYS[d.getDay()]})`;
+            const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
+                
+            targetDateEvents.sort((a, b) => {
+                const isProductA = a.type === 'ProductRelease';
+                const isProductB = b.type === 'ProductRelease';
+                if (isProductA && !isProductB) return -1;
+                if (!isProductA && isProductB) return 1;
+                return getTimeValue(a.time) - getTimeValue(b.time);
+            });
 
-            if (confirm(`これより後のイベントはありません。\n翌日：${dateStr} の\nイベント一覧を表示しますか？`)) {
-                const targetDateEvents = filteredEvents.filter(e => e.dateString === targetDate);
-                    
-                targetDateEvents.sort((a, b) => {
-                    const isProductA = a.type === 'ProductRelease';
-                    const isProductB = b.type === 'ProductRelease';
-                    if (isProductA && !isProductB) return -1;
-                    if (!isProductA && isProductB) return 1;
-                    return getTimeValue(a.time) - getTimeValue(b.time);
-                });
-
-                eventModal.style.display = 'none';
-                createDayEventModal(targetDate, targetDateEvents);
-            }
+            eventModal.style.display = 'none';
+            createDayEventModal(targetDate, targetDateEvents);
             setTimeout(() => { isEventProcessing = false; }, 300);
         }
     }
@@ -1706,8 +1745,44 @@
 
         const overlay = document.createElement('div');
         overlay.classList.add('event-list-modal-overlay');
-        overlay.addEventListener('touchmove', function(e) {
+
+        // ▼▼▼ 【重要修正】 contentの定義をここ（イベント設定より前）に移動 ▼▼▼
+        const content = document.createElement('div');
+        content.classList.add('event-list-modal-content');
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+        // オーバーレイ背景（黒い部分）のスクロール完全禁止
+        overlay.addEventListener('touchmove', (e) => {
             if (e.target === overlay) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // コンテンツ内部のスクロール連鎖（突き抜け）を防止する処理
+        let startY = 0;
+        content.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].pageY;
+        }, { passive: true });
+
+        content.addEventListener('touchmove', (e) => {
+            const moveY = e.touches[0].pageY;
+            const dy = moveY - startY; // プラスなら下へ（上部を見る）、マイナスなら上へ（下部を見る）
+            const scrollTop = content.scrollTop;
+            const scrollHeight = content.scrollHeight;
+            const clientHeight = content.clientHeight;
+            
+            // スクロールする必要がない（中身が短い）場合、すべてのスクロール操作を禁止
+            if (scrollHeight <= clientHeight) {
+                e.preventDefault();
+                return;
+            }
+
+            // A. 上端にいるのに、さらに下に引っ張ろうとした（親へ伝播してしまう操作）
+            if (scrollTop <= 0 && dy > 0) {
+                e.preventDefault();
+            }
+            // B. 下端にいるのに、さらに上に引っ張ろうとした（親へ伝播してしまう操作）
+            if (scrollTop + clientHeight >= scrollHeight && dy < 0) {
                 e.preventDefault();
             }
         }, { passive: false });
@@ -1726,12 +1801,10 @@
                 overlay.remove();
             }        
         };
-    
+
         overlay.appendChild(closeButton);
 
-        const content = document.createElement('div');
-        content.classList.add('event-list-modal-content');
-        
+        // （contentの定義は上に移動したのでここは削除）
 
         let currentDayIndex = allCalendarDates.indexOf(dateString);
         let currentDateString = dateString;
@@ -1787,12 +1860,7 @@
             }
         });
         
-        
-        
         setTimeout(() => showSwipeGuide(overlay, '左右スワイプで日付移動', 'swipeGuideShown_List'), 100); 
-        
-        
-
 
         document.body.appendChild(overlay);
         document.body.style.overflow = 'hidden';
@@ -1804,7 +1872,6 @@
             content.scrollTop = scrollPositionToApply;
         }, 0);
     }
-
 
     async function fetchSupabaseEvents() {
         const today = new Date();
