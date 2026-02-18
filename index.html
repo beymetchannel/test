@@ -789,13 +789,18 @@
             text-align: center;
         }
 
+        .modal-content, .event-list-modal-content {
+            overscroll-behavior: contain; 
+            -webkit-overflow-scrolling: touch;
+        }
+
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.8.7</label>
+        <label id="version-label">version: β.8.8</label>
     </div>
         
     <div class="search-container">
