@@ -795,7 +795,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.8.6</label>
+        <label id="version-label">version: β.8.7</label>
     </div>
         
     <div class="search-container">
@@ -1441,32 +1441,21 @@
                 }
             }, { passive: false });
 
-            let detailStartY = 0;
-            
             modalContent.addEventListener('touchstart', (e) => {
-                detailStartY = e.touches[0].pageY;
-            }, { passive: true });
-
-            modalContent.addEventListener('touchmove', (e) => {
-                const moveY = e.touches[0].pageY;
-                const dy = moveY - detailStartY;
                 const scrollTop = modalContent.scrollTop;
                 const scrollHeight = modalContent.scrollHeight;
-                const clientHeight = modalContent.clientHeight;
+                const offsetHeight = modalContent.offsetHeight;
+                
+                if (scrollHeight <= offsetHeight) return;
 
-                if (scrollHeight <= clientHeight) {
-                    e.preventDefault();
-                    return;
+                if (scrollTop <= 0) {
+                    modalContent.scrollTop = 1;
                 }
-
-                if (scrollTop <= 0 && dy > 0) {
-                    e.preventDefault();
+                
+                if (scrollTop + offsetHeight >= scrollHeight) {
+                    modalContent.scrollTop = scrollTop - 1;
                 }
-
-                if (scrollTop + clientHeight >= scrollHeight && dy < 0) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
+            }, { passive: true });
 
             eventModal.dataset.hasScrollListener = 'true';
         }
