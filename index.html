@@ -920,11 +920,11 @@
         /* マーカー色をevent-labelと完全一致させる */
         .map-marker-pill.label-yellow    { background-color: #FFC75F; color: white; }
         .map-marker-pill.label-orange    { background-color: #fd9048; color: white; }
-        .map-marker-pill.label-lightblue { background-color: #97f3f3;   color: white; }
+        .map-marker-pill.label-lightblue { background-color: #97f3f3;   color: rgb(125, 125, 125); }
         .map-marker-pill.label-gray      { background-color: #ff4a4a; color: white; }
         .map-marker-pill.label-black     { background-color: #8763c1; color: white; }
         .map-marker-pill.label-green     { background-color: #f9f500;   color: rgb(125, 125, 125); }
-        .map-marker-pill.label-meetup    { background-color: #9ffc6d;   color: rgb(100, 100, 100); }
+        .map-marker-pill.label-meetup    { background-color: #9ffc6d;   color: rgb(125, 125, 125); }
         .map-marker-pill.label-product   { background-color: #a0a0a0;   color: white; }
         /* 現在地マーカー */
         .map-current-location-marker {
@@ -946,7 +946,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.10.2</label>
+        <label id="version-label">version: β.10.3</label>
     </div>
         
     <div class="search-container">
@@ -3241,23 +3241,50 @@ function isJapaneseHoliday(year, month, day) {
 
     currentLocationBtn.addEventListener('click', () => {
         if (!navigator.geolocation) return;
+        
+        // ボタンにローディング等の効果を入れる場合はここに追記
+        
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 if (mapInstance) {
                     const lngLat = [pos.coords.longitude, pos.coords.latitude];
-                    mapInstance.flyTo({
-                        center: lngLat,
-                        zoom: 13,
-                        duration: 800
-                    });
-                    // 既存の現在地マーカーを削除
-                    if (currentLocationMarker) { currentLocationMarker.remove(); currentLocationMarker = null; }
-                    // 赤いカスタム現在地マーカーを配置
+                    
+                    // 1. 既存の現在地マーカーを削除し、最新の位置に再配置！
+                    if (currentLocationMarker) { 
+                        currentLocationMarker.remove(); 
+                        currentLocationMarker = null; 
+                    }
+                    
                     const el = document.createElement('div');
                     el.className = 'map-current-location-marker';
                     currentLocationMarker = new maplibregl.Marker({ element: el })
                         .setLngLat(lngLat)
                         .addTo(mapInstance);
+
+                    // 2. ズームしすぎず、現在地と「表示中の全マーカー」が画面に収まるようカメラを制御！
+                    if (mapMarkers.length > 0) {
+                        // 現在地を起点としたバウンディングボックス（境界領域）を作成
+                        const bounds = new maplibregl.LngLatBounds(lngLat, lngLat);
+                        
+                        // 描画されているすべてのマーカーの座標を境界領域に追加（拡張）していく！
+                        mapMarkers.forEach(({ marker }) => {
+                            bounds.extend(marker.getLngLat());
+                        });
+
+                        // 計算された境界領域がすっぽり収まるようにカメラを自動移動！
+                        mapInstance.fitBounds(bounds, {
+                            padding: 50,      // 画面端からの余白（UIのボタン等に被らないよう余裕を持たせる）
+                            maxZoom: 11,      // ★ズームしすぎを防止！数値を下げるほど引いた視点になります（10〜12あたりが推奨）
+                            duration: 800     // 0.8秒かけて滑らかに移動
+                        });
+                    } else {
+                        // 万が一、画面上にマーカーが1つも無い場合は単に現在地へ移動
+                        mapInstance.flyTo({
+                            center: lngLat,
+                            zoom: 11, // ここもズームしすぎない値に！
+                            duration: 800
+                        });
+                    }
                 }
             },
             () => alert('現在地を取得できませんでした。')
