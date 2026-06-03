@@ -308,7 +308,7 @@
       #event-modal {
           display: flex;
           position: fixed;
-          z-index: 1000;
+          z-index: 2000;
           left: 0;
           top: 0; 
           width: 100%;
@@ -443,7 +443,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1100;
+            z-index: 2100;
             overflow-y: hidden;
             padding-top: max(20px, env(safe-area-inset-top));
             padding-bottom: max(20px, env(safe-area-inset-bottom));
@@ -475,7 +475,7 @@
             width: 100%;
             height: 100%; 
             background-color: rgba(0, 0, 0, 0.2); 
-            z-index: 1500; 
+            z-index: 2500; 
             display: flex;
             flex-direction: column; 
             justify-content: flex-end; 
@@ -642,7 +642,7 @@
             font-weight: bold;
             cursor: pointer;
             margin-bottom: 0px;
-            z-index: 900;
+            z-index: 1800;
             backdrop-filter: blur(2px);
             display: block;
             transition: opacity 0.3s, background-color 0.2s;
@@ -790,7 +790,7 @@
         }
 
         /* ===== MAP VIEW STYLES ===== */
-        #map-toggle-btn {
+        #map-btn {
             position: fixed;
             bottom: calc(10px + env(safe-area-inset-bottom));
             right: 78px;
@@ -803,15 +803,13 @@
             font-size: 12px;
             font-weight: bold;
             cursor: pointer;
-            z-index: 900;
+            z-index: 1800;
             backdrop-filter: blur(2px);
             display: block;
             transition: opacity 0.3s, background-color 0.2s;
         }
-        #map-toggle-btn.map-active {
-            background-color: rgba(30, 120, 60, 0.7);
-        }
-        #map-toggle-btn p {
+
+        #map-btn p {
             margin: 0;
             padding: 0;
         }
@@ -824,6 +822,7 @@
             border: 1px solid #cccccc;
             background-color: #ffffff;
             position: relative;
+            z-index: 1;
         }
         #map-container.visible {
             display: block;
@@ -839,7 +838,7 @@
             position: fixed;
             bottom: calc(10px + env(safe-area-inset-bottom));
             left: 10px;
-            background-color: rgba(30, 100, 200, 0.7);
+            background-color: rgba(200, 30, 30, 0.3);
             color: #ffffff;
             border: none;
             width: 60px;
@@ -848,7 +847,7 @@
             font-size: 10px;
             font-weight: bold;
             cursor: pointer;
-            z-index: 900;
+            z-index: 1800;
             backdrop-filter: blur(2px);
             display: none;
             flex-direction: column;
@@ -860,7 +859,7 @@
             line-height: 1;
         }
         #current-location-btn:active {
-            background-color: rgba(30, 100, 200, 1.0);
+            background-color: rgb(200, 30, 30);
         }
 
         .date-filter-group {
@@ -894,30 +893,47 @@
         /* MapLibre custom marker */
         .map-event-marker {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            justify-content: center;
             cursor: pointer;
             position: relative;
+            z-index: 10;
         }
-        .map-marker-date {
-            font-size: 9px;
-            font-weight: bold;
-            color: #333;
-            background: rgba(255,255,255,0.92);
-            border-radius: 3px;
-            padding: 1px 4px;
-            margin-bottom: 2px;
+        /* マップのマーカー基本スタイル（前回ご要望の正円化をベースに最適化！） */
+        .map-marker-pill {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;         /* 視認性と美しさを両立するサイズに微調整！ */
+            height: 34px;        /* 縦横を完全に一致させて正円を保証！ */
+            border-radius: 50%;  /* 完璧な丸型！ */
+            padding: 0;          
+            font-size: 11px;
+            font-weight: 700;
             white-space: nowrap;
-            line-height: 1.3;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-            border: 1px solid rgba(0,0,0,0.08);
+            line-height: 1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.30);
+            letter-spacing: 0.3px;
+            transition: transform 0.2s;
         }
-        .map-marker-circle {
+
+        /* マーカー色をevent-labelと完全一致させる */
+        .map-marker-pill.label-yellow    { background-color: #FFC75F; color: white; }
+        .map-marker-pill.label-orange    { background-color: #fd9048; color: white; }
+        .map-marker-pill.label-lightblue { background-color: #97f3f3;   color: white; }
+        .map-marker-pill.label-gray      { background-color: #ff4444; color: white; }
+        .map-marker-pill.label-black     { background-color: #845EC2; color: white; }
+        .map-marker-pill.label-green     { background-color: #f9f500;   color: white; }
+        .map-marker-pill.label-meetup    { background-color: #9ffc6d;   color: white; }
+        .map-marker-pill.label-product   { background-color: #a0a0a0;   color: white; }
+        /* 現在地マーカー */
+        .map-current-location-marker {
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            border: 2.5px solid rgba(255,255,255,0.9);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.45);
+            background-color: #E8001A;
+            box-shadow: 0 0 0 4px rgba(232,0,26,0.25), 0 2px 6px rgba(0,0,0,0.3);
+            cursor: default;
         }
 
 
@@ -930,7 +946,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.10.0</label>
+        <label id="version-label">version: β.10.1</label>
     </div>
         
     <div class="search-container">
@@ -1002,10 +1018,10 @@
     </div>
     
     <button id="back-to-top"><p style="font-size:20px; font-weight: bold;">︿</p><p style="margin-bottom: 15px;">TOP</p></button>
-    <button id="map-toggle-btn"><img src="MapIcon.png" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto 2px;"><p style="margin-bottom: 12px;">MAP</p></button>
+    <button id="map-btn"><img src="MapIcon.png" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto 2px;"><p style="margin-bottom: 5px;">MAP</p></button>
     <button id="current-location-btn"><img src="GPS.png" style="width:22px;height:22px;object-fit:contain;display:block;"><span>現在地</span></button>
 
-<script type="module">
+mapBtn<script type="module">
     const supabase = window.supabase.createClient(
         'https://yyrsscvofuoufkujetgf.supabase.co',
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4'
@@ -2808,7 +2824,7 @@ function isJapaneseHoliday(year, month, day) {
     let isMapView = false;
     let mapRenderToken = 0;
 
-    const mapToggleBtn      = document.getElementById('map-toggle-btn');
+    const mapBtn      = document.getElementById('map-btn');
     const mapContainer      = document.getElementById('map-container');
     const calendarContainer = document.querySelector('.calendar-container');
     const currentLocationBtn= document.getElementById('current-location-btn');
@@ -2816,16 +2832,16 @@ function isJapaneseHoliday(year, month, day) {
     const mapDateFrom       = document.getElementById('map-date-from');
     const mapDateTo         = document.getElementById('map-date-to');
 
-    // ---------- マーカー色 ----------
-    function getMarkerColor(eventType) {
-        if (!eventType || eventType === 'ProductRelease') return '#a0a0a0';
-        if (eventType.includes('G3大会（レギュラー') || eventType.includes('G3大会/チーム戦（レギュラー') || eventType.includes('G3大会/タッグ戦（レギュラー')) return '#FFC75F';
-        if (eventType.includes('G3大会（オープン')   || eventType.includes('G3大会/チーム戦（オープン')   || eventType.includes('G3大会/タッグ戦（オープン'))   return '#fd9048';
-        if (eventType.includes('S1') || eventType.includes('アンバサダーイベント') || eventType.includes('S1【予定】')) return '#44cccc';
-        if (eventType.includes('交流会') || eventType.includes('非公式大会')) return '#a0e040';
-        if (eventType.includes('G2')) return '#ff4444';
-        if (eventType.includes('G1')) return '#845EC2';
-        return '#e8e050';
+    // ---------- マーカー色クラス（event-labelと完全一致） ----------
+    function getMarkerLabelClass(eventType) {
+        if (!eventType || eventType === 'ProductRelease') return 'label-product';
+        if (eventType.includes('G3大会（レギュラー') || eventType.includes('G3大会/チーム戦（レギュラー') || eventType.includes('G3大会/タッグ戦（レギュラー')) return 'label-yellow';
+        if (eventType.includes('G3大会（オープン')   || eventType.includes('G3大会/チーム戦（オープン')   || eventType.includes('G3大会/タッグ戦（オープン'))   return 'label-orange';
+        if (eventType.includes('S1') || eventType.includes('アンバサダーイベント') || eventType.includes('S1【予定】')) return 'label-lightblue';
+        if (eventType.includes('交流会') || eventType.includes('非公式大会')) return 'label-meetup';
+        if (eventType.includes('G2')) return 'label-gray';
+        if (eventType.includes('G1')) return 'label-black';
+        return 'label-green';
     }
 
     // ---------- 住所クリーニング ----------
@@ -3003,18 +3019,17 @@ function isJapaneseHoliday(year, month, day) {
 
                 const d = new Date(event.dateString);
                 const dateLabel = `${d.getMonth()+1}/${d.getDate()}`;
-                const color = getMarkerColor(event.type);
                 // 開催日が近いほど高いzIndex（今日との日数差が少ないほど前面）
                 const today = new Date(); today.setHours(0,0,0,0);
                 const diffDays = Math.abs(d - today);
                 const zIndex = Math.max(0, 100000 - Math.floor(diffDays / 86400000));
 
+                const labelClass = getMarkerLabelClass(event.type);
                 const markerEl = document.createElement('div');
                 markerEl.className = 'map-event-marker';
                 markerEl.style.zIndex = zIndex;
                 markerEl.innerHTML = `
-                    <div class="map-marker-date">${dateLabel}</div>
-                    <div class="map-marker-circle" style="background-color:${color};"></div>
+                    <div class="map-marker-pill ${labelClass}">${dateLabel}</div>
                 `;
                 markerEl.addEventListener('click', () => {
                     const dayEvents = filteredEvents.filter(e =>
@@ -3047,10 +3062,10 @@ function isJapaneseHoliday(year, month, day) {
     function initMap() {
         if (mapInstance) return;
 
-        // シンプルスタイル（OpenFreeMap Bright）
+        // シンプル・スタイリッシュスタイル（OpenFreeMap Liberty：グレー基調のミニマルデザイン）
         mapInstance = new maplibregl.Map({
             container: 'map-view',
-            style: 'https://tiles.openfreemap.org/styles/bright',
+            style: 'https://tiles.openfreemap.org/styles/liberty',
             center: [138.0, 36.5],
             zoom: 5,
             attributionControl: false
@@ -3077,6 +3092,31 @@ function isJapaneseHoliday(year, month, day) {
                         ]);
                     } catch(e) { /* レイヤーによっては設定不要 */ }
                 }
+
+                // 道路レイヤーをグレー系に統一（オレンジ・黄色系を排除）
+                if (layer.type === 'line') {
+                    try {
+                        const paint = layer.paint || {};
+                        const lineColor = paint['line-color'];
+                        if (lineColor) {
+                            const colorStr = typeof lineColor === 'string' ? lineColor.toLowerCase() : '';
+                            // オレンジ・黄色系の道路色をグレーに置換
+                            const isOrangeish = colorStr.match(/#[ef][a-f0-9]{5}/) ||
+                                colorStr.includes('orange') || colorStr.includes('yellow') ||
+                                (colorStr.match(/#([a-f0-9]{2})([a-f0-9]{2})([a-f0-9]{2})/) &&
+                                    parseInt(RegExp.$1,16) > 200 && parseInt(RegExp.$2,16) > 140 && parseInt(RegExp.$3,16) < 100);
+                            if (isOrangeish) {
+                                mapInstance.setPaintProperty(layer.id, 'line-color', '#c8c8c8');
+                            }
+                        }
+                    } catch(e) { /* skip */ }
+                }
+                // 道路ラベル・シールドの背景色もグレーに
+                if (layer.type === 'symbol' && layer.id && (layer.id.includes('road') || layer.id.includes('highway'))) {
+                    try {
+                        mapInstance.setPaintProperty(layer.id, 'text-color', '#666666');
+                    } catch(e) { /* skip */ }
+                }
             });
             renderMapMarkers();
         });
@@ -3085,13 +3125,12 @@ function isJapaneseHoliday(year, month, day) {
     // ---------- ビュー切替 ----------
     function switchToMapView() {
         isMapView = true;
-        mapToggleBtn.classList.add('map-active');
+        mapBtn.classList.add('map-active');
         calendarContainer.style.display = 'none';
         mapContainer.classList.add('visible');
         currentLocationBtn.style.display = 'flex';
         mapDateFilter.style.display = 'flex';
-        // マップ表示中はボタンを「CAL」＋カレンダーアイコンに変更
-        mapToggleBtn.innerHTML = '<img src="CalendarIcon.png" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto 2px;"><p style="margin-bottom: 12px;">CAL</p>';
+        mapBtn.innerHTML = '<img src="CalendarIcon.png" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto 2px;"><p style="margin-bottom: 5px;">CAL</p>';
 
         if (!mapInstance) {
             initMap();
@@ -3104,31 +3143,42 @@ function isJapaneseHoliday(year, month, day) {
     function switchToCalendarView() {
         isMapView = false;
         mapRenderToken++;
-        mapToggleBtn.classList.remove('map-active');
+        mapBtn.classList.remove('map-active');
         calendarContainer.style.display = '';
         mapContainer.classList.remove('visible');
         currentLocationBtn.style.display = 'none';
         mapDateFilter.style.display = 'none';
         // カレンダー表示中はボタンを「MAP」＋マップアイコンに変更
-        mapToggleBtn.innerHTML = '<img src="MapIcon.png" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto 2px;"><p style="margin-bottom: 12px;">MAP</p>';
+        mapBtn.innerHTML = '<img src="MapIcon.png" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto 2px;"><p style="margin-bottom: 5px;">MAP</p>';
     }
 
     // ---------- イベントリスナー ----------
-    mapToggleBtn.addEventListener('click', () => {
+    mapBtn.addEventListener('click', () => {
         if (isMapView) switchToCalendarView();
         else switchToMapView();
     });
+
+    let currentLocationMarker = null;
 
     currentLocationBtn.addEventListener('click', () => {
         if (!navigator.geolocation) return;
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 if (mapInstance) {
+                    const lngLat = [pos.coords.longitude, pos.coords.latitude];
                     mapInstance.flyTo({
-                        center: [pos.coords.longitude, pos.coords.latitude],
+                        center: lngLat,
                         zoom: 13,
                         duration: 800
                     });
+                    // 既存の現在地マーカーを削除
+                    if (currentLocationMarker) { currentLocationMarker.remove(); currentLocationMarker = null; }
+                    // 赤いカスタム現在地マーカーを配置
+                    const el = document.createElement('div');
+                    el.className = 'map-current-location-marker';
+                    currentLocationMarker = new maplibregl.Marker({ element: el })
+                        .setLngLat(lngLat)
+                        .addTo(mapInstance);
                 }
             },
             () => alert('現在地を取得できませんでした。')
