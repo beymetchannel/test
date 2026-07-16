@@ -680,6 +680,31 @@
             margin-bottom: 5px;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .share-btn {
+            cursor: pointer;
+            color: #808080;
+            line-height: 1;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s, transform 0.1s;
+        }
+
+        .share-btn:active {
+            transform: scale(1.15);
+        }
+
+        .share-btn:hover {
+            color: #505050;
+        }
+
         .event-fav-col {
             flex: 0 0 30px;
             display: flex;
@@ -924,6 +949,18 @@
         .map-marker-pill.label-green     { background-color: #f9f500;   color: rgb(100, 100, 100); }
         .map-marker-pill.label-meetup    { background-color: #9ffc6d;   color: rgb(100, 100, 100); }
 
+        .map-marker-pill.map-marker-fav {
+            width: 38px;
+            height: 38px;
+            font-size: 10px;
+            line-height: 1.2;
+            flex-direction: column;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
         .map-current-location-marker {
             width: 18px;
             height: 18px;
@@ -943,7 +980,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.10.5</label>
+        <label id="version-label">version: β.10.2</label>
     </div>
         
     <div class="search-container">
@@ -973,7 +1010,7 @@
         <div id="label-legend-container"></div>
         
         <div id="map-date-filter" class="date-filter-group" style="display:none;">
-            <label>日程絞り込み</label>
+            <label style="font-size: 13px;">日程絞り込み</label>
             <input type="date" id="map-date-from" placeholder="開始日">
             <span class="date-filter-separator">〜</span>
             <input type="date" id="map-date-to" placeholder="終了日">
@@ -1156,6 +1193,20 @@
                 }
             }
         });
+
+        updateMapMarkerFav(eventId, isFav);
+    }
+
+    function updateMapMarkerFav(eventId, isFav) {
+        if (!isMapView) return;
+        mapMarkers.forEach(({ marker, event, buildPillHTML }) => {
+            if (!event) return;
+            const mId = generateEventId(event);
+            if (mId !== eventId) return;
+            const el = marker.getElement();
+            if (!el) return;
+            el.innerHTML = buildPillHTML(isFav);
+        });
     }
 
     function saveSearchState() {
@@ -1310,7 +1361,9 @@
             if (Object.prototype.hasOwnProperty.call(event, key)) {
                 let value = event[key];
                 if (typeof value === 'string') {
-                    value = replaceFullWidthSpaces(value); 
+                    value = replaceFullWidthSpaces(value);
+
+                    value = value.replace(/（）$/, '').replace(/\(\)$/, '');
                 }
                 cleaned[key] = value;
             }
@@ -1318,6 +1371,73 @@
         return cleaned;
     }
 
+
+    function getMapAppUrl(address) {
+        if (!address) return '#';
+        const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        const isAndroid = /Android/.test(ua);
+        const encoded = encodeURIComponent(address);
+
+        if (isAndroid) {
+            // geo: スキームでOSに地図アプリの選択(またはデフォルトアプリの起動)を委ねる
+            return `geo:0,0?q=${encoded}`;
+        } else if (isIOS) {
+            // maps.apple.com はiOS 17.4以降、EU圏等でユーザーが設定したデフォルト地図アプリに
+            // ルーティングされる。それ以外の環境ではApple Mapsが起動する。
+            return `https://maps.apple.com/?q=${encoded}`;
+        }
+        // PC等、上記に当てはまらない環境はGoogleマップのWeb版にフォールバック
+        return `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+    }
+
+    function buildGoogleCalendarUrl(event, eventName) {
+        let y, mo, d;
+        if (event.dateString && /^\d{4}-\d{2}-\d{2}$/.test(event.dateString)) {
+            [y, mo, d] = event.dateString.split('-').map(Number);
+        } else {
+            const parsed = parseDate(event.date);
+            if (!parsed) return null;
+            y = parsed.year; mo = parsed.month; d = parsed.day;
+        }
+
+        const pad = n => String(n).padStart(2, '0');
+        const timeMatch = (event.time || '').match(/(\d{1,2})[：:](\d{2})/);
+        let datesParam;
+
+        if (timeMatch && event.time !== '時間不明') {
+            const startHour = Number(timeMatch[1]);
+            const startMin = Number(timeMatch[2]);
+            const startDate = new Date(y, mo - 1, d, startHour, startMin);
+            const endDate = new Date(startDate.getTime() + 2 * 60 * 60 * 1000); // 終了時刻不明のため仮に2時間確保
+            const fmtDateTime = dt => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+            datesParam = `${fmtDateTime(startDate)}/${fmtDateTime(endDate)}`;
+        } else {
+            // 時間不明な場合は終日予定として登録
+            const startDate = new Date(y, mo - 1, d);
+            const endDate = new Date(y, mo - 1, d + 1);
+            const fmtDate = dt => `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}`;
+            datesParam = `${fmtDate(startDate)}/${fmtDate(endDate)}`;
+        }
+
+        const detailsParts = [];
+        if (event.details) detailsParts.push(event.details.replace(/<[^>]+>/g, ''));
+        if (event.link) detailsParts.push(event.link);
+
+        const locationParts = [];
+        if (event.location) locationParts.push(event.location);
+        if (event.address) locationParts.push(event.address);
+
+        const params = new URLSearchParams({
+            action: 'TEMPLATE',
+            text: eventName,
+            dates: datesParam,
+            details: detailsParts.join('\n'),
+            location: locationParts.join(' ')
+        });
+
+        return `https://calendar.google.com/calendar/render?${params.toString()}`;
+    }
 
     function parseDate(dateStr) {
         if (!dateStr) return null;
@@ -1477,7 +1597,7 @@
         const address = event.address || '';
         
         const addressHtml = address 
-            ? `<p><strong>住所:</strong> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}" target="_blank" rel="noopener noreferrer">${address}</a></p>`
+            ? `<p><strong>住所:</strong> <a href="${getMapAppUrl(address)}" target="_blank" rel="noopener noreferrer">${address}</a></p>`
             : '';
             
         const eventName = event.name.replace('B4G2_','');        
@@ -1522,7 +1642,12 @@
             
             <div class="modal-header-row">
                 <div class="event-type-badge ${badgeClass}">${eventTypeText}</div>
-                <div class="fav-btn ${isFav ? 'active' : ''}" id="detail-fav-btn">★</div>
+                <div class="header-actions">
+                    <div class="share-btn" id="detail-share-btn" title="Googleカレンダーに追加" aria-label="Googleカレンダーに追加">
+                        <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
+                    </div>
+                    <div class="fav-btn ${isFav ? 'active' : ''}" id="detail-fav-btn">★</div>
+                </div>
             </div>
             <h3>${eventName}</h3>
             
@@ -1557,6 +1682,17 @@
             });
         }
 
+        const shareBtn = newContentWrapper.querySelector('#detail-share-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const calendarUrl = buildGoogleCalendarUrl(event, eventName);
+                if (calendarUrl) {
+                    window.open(calendarUrl, '_blank', 'noopener,noreferrer');
+                }
+            });
+        }
+
         setupSwipe(modalContent, showPrevEvent, showNextEvent);
     }
 
@@ -1566,6 +1702,8 @@
         isReturningFromDetail = false;
         
         if(topButton) topButton.style.display = 'none';
+        if(document.getElementById('map-btn')) document.getElementById('map-btn').style.display = 'none';
+        if(document.getElementById('current-location-btn')) document.getElementById('current-location-btn').style.display = 'none';
 
         let targetEventList = eventList;
         if (returnToDayDate !== event.dateString) {
@@ -1649,11 +1787,21 @@
         eventModal.style.display = 'flex';
         document.body.style.overflow = 'hidden'; 
         
+        flyToEventOnMap(event);
+
         setupSwipe(eventModal, showPrevEvent, showNextEvent);
 
         setTimeout(() => showSwipeGuide(eventModal, '左右スワイプでイベント移動', 'swipeGuideShown_Details'), 100); 
     }
     
+    function flyToEventOnMap(event) {
+        if (!isMapView || !mapInstance) return;
+        const eventId = generateEventId(event);
+        const found = mapMarkers.find(m => m.event && generateEventId(m.event) === eventId);
+        if (found && found.lngLat) {
+            mapInstance.flyTo({ center: found.lngLat, duration: 500 });
+        }
+    }
 
     function showPrevEvent() {
         if (isEventProcessing) return;
@@ -1663,6 +1811,7 @@
 
             currentEventIndex--;
             updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'prev');
+            flyToEventOnMap(swipeableEvents[currentEventIndex]);
             setTimeout(() => { isEventProcessing = false; }, 300);
         } else {
 
@@ -1683,6 +1832,7 @@
 
             currentEventIndex++;
             updateEventDetailsModal(swipeableEvents[currentEventIndex], swipeableEvents, 'next');
+            flyToEventOnMap(swipeableEvents[currentEventIndex]);
             setTimeout(() => { isEventProcessing = false; }, 300);
         } else {
 
@@ -1724,6 +1874,10 @@
         } else {
             document.body.style.overflow = ''; 
             if(topButton) topButton.style.display = 'block';
+            if(document.getElementById('map-btn')) document.getElementById('map-btn').style.display = 'block';
+            if(document.getElementById('current-location-btn') && typeof isMapView !== 'undefined' && isMapView) {
+                document.getElementById('current-location-btn').style.display = 'flex';
+            }
         }
     }
 
@@ -1887,6 +2041,8 @@
 
     function createDayEventModal(dateString, dayEvents) {
         if(topButton) topButton.style.display = 'none';
+        if(document.getElementById('map-btn')) document.getElementById('map-btn').style.display = 'none';
+        if(document.getElementById('current-location-btn')) document.getElementById('current-location-btn').style.display = 'none';
 
         document.querySelector('.event-list-modal-overlay')?.remove();
 
@@ -1939,6 +2095,10 @@
                 document.body.style.overflow = '';
                 overlay.remove();
                 if(topButton) topButton.style.display = 'block';
+                if(document.getElementById('map-btn')) document.getElementById('map-btn').style.display = 'block';
+                if(document.getElementById('current-location-btn') && typeof isMapView !== 'undefined' && isMapView) {
+                    document.getElementById('current-location-btn').style.display = 'flex';
+                }
             }        
         };
 
@@ -2009,6 +2169,10 @@
                 overlay.remove();
                 document.body.style.overflow = '';
                 if(topButton) topButton.style.display = 'block';
+                if(document.getElementById('map-btn')) document.getElementById('map-btn').style.display = 'block';
+                if(document.getElementById('current-location-btn') && typeof isMapView !== 'undefined' && isMapView) {
+                    document.getElementById('current-location-btn').style.display = 'flex';
+                }
             }
         });
         
@@ -2916,7 +3080,6 @@ function isJapaneseHoliday(year, month, day) {
         });
     }
 
-    // 国土地理院 住所検索API（日本政府提供・無料・CORS対応・日本住所に最適）
     async function geocodeByGSI(address) {
         try {
             const url = `https://msearch.gsi.go.jp/address-search/AddressSearch?q=${encodeURIComponent(address)}`;
@@ -2933,7 +3096,6 @@ function isJapaneseHoliday(year, month, day) {
         }
     }
 
-    // Nominatim（OpenStreetMap）フォールバック
     async function geocodeByNominatim(address) {
         try {
             const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&countrycodes=jp&accept-language=ja`;
@@ -3050,7 +3212,7 @@ function isJapaneseHoliday(year, month, day) {
             const events = addressGroups[address];
             events.forEach((event, idx) => {
                 const angle  = idx === 0 ? 0 : (idx / events.length) * 2 * Math.PI;
-                const radius = idx === 0 ? 0 : 0.00045;
+                const radius = idx === 0 ? 0 : 0.00022;
                 const lat = coords.lat + Math.sin(angle) * radius;
                 const lng = coords.lng + Math.cos(angle) * radius;
 
@@ -3061,12 +3223,19 @@ function isJapaneseHoliday(year, month, day) {
                 const zIndex = Math.max(0, 100000 - Math.floor(diffDays / 86400000));
 
                 const labelClass = getMarkerLabelClass(event.type);
+                const eventId = generateEventId(event);
+                const isFav = favoriteEventIds.has(eventId);
+
                 const markerEl = document.createElement('div');
                 markerEl.className = 'map-event-marker';
                 markerEl.style.zIndex = zIndex;
-                markerEl.innerHTML = `
-                    <div class="map-marker-pill ${labelClass}">${dateLabel}</div>
-                `;
+                markerEl.dataset.eventId = eventId;
+
+                function buildPillHTML(fav) {
+                    return `<div class="map-marker-pill ${labelClass}${fav ? ' map-marker-fav' : ''}">${fav ? '★<br>' : ''}${dateLabel}</div>`;
+                }
+                markerEl.innerHTML = buildPillHTML(isFav);
+
                 markerEl.addEventListener('click', () => {
                     const dayEvents = filteredEvents.filter(e =>
                         e.dateString === event.dateString && e.type !== 'ProductRelease'
@@ -3078,7 +3247,7 @@ function isJapaneseHoliday(year, month, day) {
                     .setLngLat([lng, lat])
                     .addTo(mapInstance);
 
-                mapMarkers.push({ marker });
+                mapMarkers.push({ marker, event, lngLat: [lng, lat], buildPillHTML });
                 lngLats.push([lng, lat]);
                 placed++;
             });
@@ -3120,7 +3289,7 @@ function isJapaneseHoliday(year, month, day) {
                             ['get', 'name:ja'],
                             ['get', 'name']
                         ]);
-                    } catch(e) { /* レイヤーによっては設定不要 */ }
+                    } catch(e) { /* skip */ }
                 }
 
                 if (layer.type === 'line') {
