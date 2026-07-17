@@ -980,7 +980,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.11.0.2</label>
+        <label id="version-label">version: β.11.0.3</label>
     </div>
         
     <div class="search-container">
@@ -1439,6 +1439,63 @@
         return `https://calendar.google.com/calendar/render?${params.toString()}`;
     }
 
+    // PWA(ホーム画面に追加したアプリ)や、他アプリ内のビューアー(アプリ内ブラウザ)で
+    // 本アプリが開かれている場合、通常のリンクやwindow.open()ではその場の
+    // ビューアー内でGoogleのログイン画面等が開いてしまい、ユーザーが不安に感じる
+    // 可能性がある。そのため、必ず端末の既定のブラウザ(Safari/Chrome等)を
+    // 呼び出して開くようにする。
+    function openInDefaultBrowser(url) {
+        const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        const isAndroid = /Android/.test(ua);
+
+        if (isIOS) {
+            // iOSでは "x-safari-https://" スキームを使うと、PWAスタンドアロン表示や
+            // 他アプリのアプリ内ビューアー(WKWebViewベース)からでも、その場のビューアー内で
+            // 開かせずに既定のブラウザ(Safari)へ処理を渡すことができる。
+            let handedOff = false;
+            const onVisibilityChange = () => {
+                if (document.hidden) handedOff = true;
+            };
+            document.addEventListener('visibilitychange', onVisibilityChange);
+
+            const safariUrl = url.replace(/^https:\/\//, 'x-safari-https://').replace(/^http:\/\//, 'x-safari-http://');
+            window.location.href = safariUrl;
+
+            // x-safari- スキームに対応していない/ブロックされている環境向けのフォールバック。
+            // Safariへ切り替わった(=ページが非表示になった)場合はフォールバックを行わない。
+            setTimeout(() => {
+                document.removeEventListener('visibilitychange', onVisibilityChange);
+                if (!handedOff) {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }, 800);
+        } else if (isAndroid) {
+            // Androidでは intent スキームを使うことで、その場のアプリ内ビューアーで
+            // 完結させず、OSに解決を委ねて既定のブラウザ(または対応アプリ)を起動できる。
+            // 対応するアプリが見つからない場合は browser_fallback_url により
+            // 通常のURLへ自動的にフォールバックされる。
+            const strippedUrl = url.replace(/^https?:\/\//, '');
+            const intentUrl = `intent://${strippedUrl}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(url)};end`;
+            window.location.href = intentUrl;
+        } else {
+            // PC等はそのまま新しいタブで開く
+            const link = document.createElement('a');
+            link.href = url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
     function parseDate(dateStr) {
         if (!dateStr) return null;
 
@@ -1692,17 +1749,9 @@
                 e.stopPropagation();
                 const calendarUrl = buildGoogleCalendarUrl(event, eventName);
                 if (calendarUrl) {
-                    // window.open()だと環境によってはGoogle側がデバイスを正しく判定できず
-                    // PC向けの表示が開いてしまうことがあるため、住所リンク(地図)と同様に
-                    // 実際の<a>タグをクリックさせる方式で開く。これによりOS標準ブラウザが
-                    // 起動し、スマホではモバイル向け、PCではPC向けの画面が開かれるようになる。
-                    const link = document.createElement('a');
-                    link.href = calendarUrl;
-                    link.target = '_blank';
-                    link.rel = 'noopener noreferrer';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    // PWAや他アプリのビューアーで開いていても、必ず端末の既定ブラウザで
+                    // Googleカレンダーの画面が開くようにする。
+                    openInDefaultBrowser(calendarUrl);
                 }
             });
         }
