@@ -655,7 +655,7 @@
         .fav-btn {
             cursor: pointer;
             color: #ccc;
-            font-size: 28px;
+            font-size: 27px;
             line-height: 1;
             user-select: none;
             transition: color 0.2s, transform 0.1s;
@@ -980,7 +980,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.11.0.1</label>
+        <label id="version-label">version: β.11.0.2</label>
     </div>
         
     <div class="search-container">
@@ -1692,7 +1692,17 @@
                 e.stopPropagation();
                 const calendarUrl = buildGoogleCalendarUrl(event, eventName);
                 if (calendarUrl) {
-                    window.open(calendarUrl, '_blank', 'noopener,noreferrer');
+                    // window.open()だと環境によってはGoogle側がデバイスを正しく判定できず
+                    // PC向けの表示が開いてしまうことがあるため、住所リンク(地図)と同様に
+                    // 実際の<a>タグをクリックさせる方式で開く。これによりOS標準ブラウザが
+                    // 起動し、スマホではモバイル向け、PCではPC向けの画面が開かれるようになる。
+                    const link = document.createElement('a');
+                    link.href = calendarUrl;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
                 }
             });
         }
