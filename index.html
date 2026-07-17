@@ -7,7 +7,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="BeyCalendarIcon.png">
     <link rel="icon" href="BeyCalendarIcon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-status-bar-style"share-btnontent="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BEYカレンダー">
     <title>BEYカレンダー</title>
     <script>
@@ -655,7 +655,7 @@
         .fav-btn {
             cursor: pointer;
             color: #ccc;
-            font-size: 24px;
+            font-size: 28px;
             line-height: 1;
             user-select: none;
             transition: color 0.2s, transform 0.1s;
@@ -980,7 +980,7 @@
 <body>
     <div id="title-wrapper">
         <img id="title-image" src="BeyCalendarTitle.png" alt="BEYカレンダー" loading="lazy">
-        <label id="version-label">version: β.11.0</label>
+        <label id="version-label">version: β.11.0.1</label>
     </div>
         
     <div class="search-container">
@@ -1644,7 +1644,11 @@
                 <div class="event-type-badge ${badgeClass}">${eventTypeText}</div>
                 <div class="header-actions">
                     <div class="share-btn" id="detail-share-btn" title="Googleカレンダーに追加" aria-label="Googleカレンダーに追加">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                    <div class="share-btn" id="detail-share-btn" title="Googleカレンダーに追加" aria-label="Googleカレンダーに追加">
+                        <img src="GoogleCAL.png"
+                            alt="Googleカレンダーに追加"
+                            style="width:24px;height:24px;display:block;object-fit:contain;">
+                    </div>
                     </div>
                     <div class="fav-btn ${isFav ? 'active' : ''}" id="detail-fav-btn">★</div>
                 </div>
