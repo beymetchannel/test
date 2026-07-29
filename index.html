@@ -1,200 +1,1115 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BEYカレンダー</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --border-color: #334155;
-        }
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            width: 100%;
-            max-width: 440px;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 32px 24px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-        .logo-area {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-        }
-        h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-            letter-spacing: -0.025em;
-        }
-        p {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 14px 20px;
-            background-color: var(--accent);
-            color: #0f172a;
-            font-weight: 700;
-            font-size: 1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background-color 0.2s, transform 0.1s;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
-        }
-        .btn:hover {
-            background-color: var(--accent-hover);
-        }
-        .btn:active {
-            transform: scale(0.98);
-        }
-        .guide-box {
-            background-color: rgba(15, 23, 42, 0.6);
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 20px;
-            text-align: left;
-        }
-        .guide-box h3 {
-            font-size: 0.9rem;
-            color: var(--accent);
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .guide-box ol {
-            padding-left: 20px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-        .guide-box li {
-            margin-bottom: 4px;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--accent);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>プラコロ バトル進行</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#FAFAF6;
+    --card:#FFFFFF;
+    --ink:#3A3A3A;
+    --sub:#9A9A93;
+    --line:#ECEAE3;
+    --accent:#BFE3D0;
+    --accent-strong:#8FCDA9;
+    --danger:#F3A8A8;
+    --heal:#9FD6B5;
+    --amp:#B6E28E;
+    --down:#F0A0A0;
+    --weak:#FFD86B;
+    --radius:18px;
+    --shadow:0 4px 18px rgba(60,60,50,0.08);
+
+    --t-くさ:#B8E6C1; --t-ほのお:#FFB199; --t-みず:#A9D6E5; --t-かみなり:#FFE28A;
+    --t-エスパー:#E3B8F0; --t-かくとう:#F4A6A6; --t-あく:#B0A8C0; --t-はがね:#C7CCD1;
+    --t-ひこう:#C9E4FF; --t-ドラゴン:#B8A9E0; --t-ノーマル:#E6E2D3;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Sans","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
+    overflow:hidden;}
+
+  /* 共通画像スタイル */
+  .img-icon { width: 100%; height: 100%; object-fit: contain; }
+
+  /* 端末が縦向きでも常に横向き表示に固定するトリック */
+  @media screen and (orientation: portrait){
+    html{
+      width:100vh;
+      height:100vw;
+      transform-origin: top left;
+      transform: rotate(90deg) translateY(-100%);
+      overflow-x:hidden;
+    }
+  }
+
+  #app{position:relative; width:100%; height:100vh; max-width:100vw; margin:0 auto;
+    background:var(--bg); overflow:hidden; display:flex; flex-direction:column;}
+
+  /* ---------- header ---------- */
+  .topbar{display:flex; align-items:center; justify-content:center; padding:6px 10px 4px; flex-shrink:0;
+    font-size:11px; letter-spacing:.12em; color:var(--sub); font-weight:600;}
+
+  /* ---------- main board ---------- */
+  .board{flex:1; display:flex; flex-direction:column; gap:6px; padding:2px 14px 10px; min-height:0; overflow:hidden;}
+  .player-row{flex:1; display:flex; gap:14px; min-height:0;}
+  .player-card{flex:1; border-radius:var(--radius); box-shadow:var(--shadow);
+    position:relative; transition:transform .15s ease;
+    display:flex; flex-direction:column; min-height:0; overflow:hidden;}
+  .player-card.shake{animation:shake .35s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);} 20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);}
+  }
+
+  /* 行1: 画面上半分（アイコン25% + 情報75%）。背景色はポケモンのタイプ別カラー(未選択時はニュートラル) */
+  .pc-row1{flex:1 1 50%; display:flex; gap:8px; min-height:0; padding:8px 10px 4px;}
+  .pc-icon-col{width:25%; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .pc-info-col{width:75%; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:3px;}
+
+  .mon-slot{width:100%; height:100%; max-width:min(18vh,90px); max-height:min(18vh,90px); border-radius:14px;
+    background:#F3F2EC; display:flex; align-items:center; justify-content:center; font-size:28px;
+    overflow:hidden; position:relative; flex-shrink:0; padding: 4px;}
+  .mon-slot.null-slot{border:2px dashed #D8D6CE; color:#C7C5BC; font-size:10.5px; font-weight:600; padding: 0;}
+
+  .pc-status{font-size:9px; color:var(--sub); font-weight:600; min-height:11px;}
+  .pc-name-hp{display:flex; align-items:baseline; justify-content:space-between; gap:6px;}
+  .pc-name{font-size:15px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .pc-hp-num{font-size:13px; font-weight:800; color:var(--ink); white-space:nowrap; flex-shrink:0;}
+  .pc-weak-hpbar{display:flex; align-items:center; gap:6px;}
+  .pc-weak{width:20%; flex-shrink:0; font-size:9.5px; color:var(--sub); font-weight:700; white-space:nowrap; overflow:hidden;}
+  .pc-hpbar-wrap{width:80%;}
+  .hp-bar-bg{width:100%; height:8px; border-radius:6px; background:#EDEBE3; overflow:hidden;}
+  .hp-bar-fill{height:100%; border-radius:6px; background:linear-gradient(90deg,#9FE3AE,#7FCB98); transition:width .5s ease;}
+  .hp-bar-fill.low{background:linear-gradient(90deg,#F5C97E,#EFAE5C);}
+  .hp-bar-fill.crit{background:linear-gradient(90deg,#F3A8A8,#E77E7E);}
+
+  /* 行2: 画面下半分（ワザ2x2）。選択済みの場合は黒背景になる */
+  .pc-row2{flex:1 1 50%; min-height:0; padding:4px 10px 8px;}
+  .moves-mini{width:100%; height:100%; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:4px;}
+  .move-mini{font-size:9px; background:#F6F5F0; border-radius:8px; padding:4px 6px; color:var(--sub);
+    display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden;
+    text-overflow:ellipsis; white-space:nowrap; font-weight:600;}
+  .move-mini.used-last{opacity:.4; text-decoration:line-through;}
+  .pc-row2.revealed .move-mini{background:rgba(255,255,255,.14); color:#fff;}
+
+  .center-hint{flex-shrink:0; text-align:center; font-size:10.5px; color:var(--sub); padding:2px 12px 4px; line-height:1.4;}
+
+  /* ---------- overlays (phase banners) ---------- */
+  .overlay{position:absolute; inset:0; z-index:50; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:24px; text-align:center; gap:14px;}
+  .overlay.full{background:linear-gradient(180deg,#FAFAF6 0%, #F1F0EA 100%);}
+  .overlay-title{font-size:19px; font-weight:800; color:var(--ink);}
+  .overlay-sub{font-size:13px; color:var(--sub); max-width:280px; line-height:1.6;}
+
+  .btn{border:none; border-radius:14px; padding:14px 22px; font-size:15px; font-weight:800;
+    background:var(--accent-strong); color:#fff; box-shadow:0 3px 10px rgba(143,205,169,.4);
+    cursor:pointer; transition:transform .1s;}
+  .btn:active{transform:scale(.96);}
+  .btn.secondary{background:#EDEBE3; color:var(--ink); box-shadow:none;}
+  .btn.wide{width:100%;}
+
+  .float-cta{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:40;}
+
+  /* first player select */
+  .trainer-pick-row{display:flex; gap:14px; width:100%;}
+  .trainer-pick{flex:1; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+    padding:24px 10px; font-weight:800; font-size:15px; cursor:pointer;}
+  .trainer-pick:active{transform:scale(.97);}
+
+  /* ---------- selection modal (character/move/peek) ---------- */
+  .modal-overlay{position:fixed; inset:0; z-index:200; background:rgba(40,38,32,.4);
+    display:flex; align-items:flex-end; justify-content:center;}
+  .modal-sheet{width:100%; max-width:480px; background:var(--bg); border-radius:22px 22px 0 0;
+    max-height:92vh; overflow-y:auto; padding:18px 16px 26px; box-shadow:0 -6px 30px rgba(0,0,0,.15);}
+  .modal-title{font-size:15px; font-weight:800; margin-bottom:12px; text-align:center;}
+  .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  /* ポケモン選択カード: 上半分(タイプ別カラー・アイコン) + 下半分(黒・名前/タイプ/弱点) */
+  .pick-card{border:2px solid transparent; border-radius:14px; overflow:hidden;
+    text-align:center; box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column;}
+  .pick-card.selected{border-color:var(--accent-strong);}
+  .pick-top{padding:14px 8px 6px;}
+  .pick-card .ic{height:60px; margin: 0 auto; display:flex; align-items:center; justify-content:center;}
+  .pick-bottom{background:#262420; padding:6px 8px 12px;}
+  .pick-card .nm{font-size:12px; font-weight:700; color:#fff;}
+  .pick-card .wk{font-size:9px; color:#C7C4BC; margin-top:4px;}
+
+  .cost-row{display:flex; gap:4px; margin-top:2px;}
+  .pick-count{text-align:center; font-size:11px; color:var(--sub); margin:6px 0 10px;}
+  .move-pick-list .move-card{margin-bottom:10px;}
+
+  .peek-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px;}
+  .peek-item{aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:20px; cursor:pointer; border:3px solid transparent; box-shadow:var(--shadow);}
+  .peek-item.selected{border-color:var(--ink);}
+
+  /* ---------- move select (phase4) ---------- */
+  .move-select-panel{position:absolute; left:0; right:0; bottom:0; height:56%; z-index:30;
+    background:var(--card); border-radius:22px 22px 0 0; box-shadow:0 -8px 24px rgba(0,0,0,.1);
+    padding:12px 12px 14px; display:flex; flex-direction:column;}
+  .ms-header{text-align:center; font-size:11px; font-weight:800; color:var(--sub); margin-bottom:6px; flex-shrink:0;}
+  .ms-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; flex:1; min-height:0;}
+
+  /* ワザカード: 上半分(タイプ別カラー) + 下半分(黒) の2分割構成 */
+  .move-card{display:flex; flex-direction:column; border-radius:12px; overflow:hidden;
+    box-shadow:0 1px 4px rgba(0,0,0,.05); cursor:pointer; border:2px solid transparent; min-height:0;}
+  .move-card.disabled{opacity:.35; pointer-events:none;}
+  .move-card:active{transform:scale(.97);}
+  .move-card.selected{border-color:var(--accent-strong);}
+  .move-card + .move-card{margin-top:0;}
+
+  /* 上半分: タイプ+ワザ名(1行・大きめ) 左 / エネルギー・ダメージ(2行のまま) 右 */
+  .mc-top{flex:1 1 50%; padding:7px 9px 5px; display:flex; align-items:center; justify-content:space-between; gap:6px; min-height:0;}
+  .mc-typename{display:flex; align-items:center; gap:6px; min-width:0; flex:1;}
+  .mc-type-icon{width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mc-name-big{font-size:16px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+
+  .mc-right-stack{display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;}
+  .mc-cost{display:flex; gap:2px;}
+  .cost-dot{width:14px; height:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mc-dmg{font-size:19px; font-weight:900; white-space:nowrap; flex-shrink:0;}
+  .mc-dmg .orig{font-size:9px; font-weight:600; color:#999; margin-left:2px;}
+  .mc-dmg.weak{color:#E8A400;}
+  .mc-dmg.up{color:#6FAE3E;}
+  .mc-dmg.down{color:#D96666;}
+
+  /* 下半分: 黒背景。ワザ効果テキスト + キャラコロ効果(最大3つ、overflow-yで対応) */
+  .mc-bottom{flex:1 1 50%; min-height:0; background:#262420; padding:4px 9px 6px;
+    display:flex; flex-direction:column; justify-content:center; gap:3px; overflow-y:auto;}
+
+  .mc-r3{font-size:9px; color:#C7C4BC; line-height:1.25; flex-shrink:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  /* キャラコロ効果行(白文字・区切り線のみ、独自背景なし) */
+  .mc-chara-row{color:#fff; padding-top:3px; margin-top:1px; border-top:1px solid rgba(255,255,255,.14);
+    display:flex; align-items:center; gap:5px; font-size:8.5px; font-weight:600; line-height:1.2; flex-shrink:0;}
+  .mc-chara-row .oi{width:15px; height:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mc-chara-row .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+  /* ---------- dice phase (phase5) ---------- */
+  .dice-overlay{position:absolute; inset:0; z-index:35; background:var(--bg); display:flex; flex-direction:column;}
+  .dice-top{padding:20px 16px 10px; text-align:center;}
+  .dice-top .lbl{font-size:15px; font-weight:800; margin-bottom:10px;}
+  .dice-icons{display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
+  .die{width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:17px; font-weight:800; box-shadow:var(--shadow); position:relative;}
+  .die.chara-die{background:#FFE8B8; color:#8C6A1F;}
+  .die-note{font-size:9px; color:var(--sub); margin-top:4px; max-width:60px;}
+
+  .dice-bottom{flex:1; background:var(--card); border-radius:22px 22px 0 0; margin-top:8px; padding:16px 14px 20px;
+    display:flex; flex-direction:column; gap:10px; box-shadow:0 -6px 20px rgba(0,0,0,.08); overflow-y:auto;}
+  .move-recap{background:#F8F7F2; border-radius:14px; padding:10px 12px; font-size:11px; color:var(--sub);}
+  .move-recap b{color:var(--ink); font-size:13px;}
+  .result-row{display:flex; gap:8px;}
+  .result-btn{flex:1; border:none; border-radius:14px; padding:14px 6px; font-size:12.5px; font-weight:800;
+    color:#fff; cursor:pointer; box-shadow:var(--shadow);}
+  .result-btn.ok{background:var(--accent-strong);}
+  .result-btn.fail{background:#C9C6BC;}
+  .chara-effect-btn{width:100%; border:none; border-radius:14px; padding:12px 12px; font-size:12px; font-weight:700;
+    background:#FFF3DC; color:#8C6A1F; text-align:left; display:flex; align-items:center; gap:10px; cursor:pointer;
+    box-shadow:var(--shadow); min-height:52px;}
+  .orient-icon{width:30px; height:30px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+
+  /* ---------- effect flash ---------- */
+  .fx-flash{position:absolute; border-radius:50%; pointer-events:none; z-index:60;
+    animation:fxpop .7s ease-out forwards; mix-blend-mode:multiply;}
+  @keyframes fxpop{0%{transform:scale(.2); opacity:0;} 30%{opacity:.85;} 100%{transform:scale(1.6); opacity:0;}}
+  .dmg-pop{position:absolute; z-index:61; font-size:22px; font-weight:900; animation:poprise .8s ease-out forwards;}
+  @keyframes poprise{0%{transform:translateY(0); opacity:0;} 15%{opacity:1;} 100%{transform:translateY(-30px); opacity:0;}}
+
+  /* ---------- win screen ---------- */
+  .win-mon{width: 100px; height: 100px; margin: 0 auto;}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo-area">🚀</div>
-        <div id="status-badge" class="status-badge">Secure Redirect</div>
-        <h1 id="title-text">外部ブラウザでの閲覧を推奨しています</h1>
-        <p id="desc-text">アプリ内ブラウザによるログイン破綻や表示崩れを防ぎ、最高のパフォーマンスでコンテンツを表示するための専用中継ページです。</p>
+<div id="app"></div>
 
-        <!-- Android専用アクション -->
-        <div id="android-section" class="hidden">
-            <a id="android-btn" href="#" class="btn">Chromeアプリで開く</a>
+<script>
+const SUPABASE_URL = 'https://yyrsscvofuoufkujetgf.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5cnNzY3ZvZnVvdWZrdWpldGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQwMzIxMjksImV4cCI6MjA3OTYwODEyOX0.mNPIAGFKhJ65dsSllBprGYk3yZfnJXfYmDcdljW8xA4';
+
+// クライアントの作成！
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* ============================================================
+   データ定義
+   ============================================================ */
+
+const TYPE_KANJI = {
+  "くさ":"草","ほのお":"炎","みず":"水","かみなり":"電","エスパー":"超",
+  "かくとう":"闘","あく":"悪","はがね":"鋼","ひこう":"飛","ドラゴン":"龍","ノーマル":"無"
+};
+function typeVar(t){ return `var(--t-${t})`; }
+
+// ★ ワザ/ポケモンのタイプ別「優しいカラー」背景マップ（カード上半分用）
+const TYPE_BG_COLORS = {
+  "無色":"#E4DFD2",
+  "ちょう":"#DCC4EC",
+  "かくとう":"#FFC79A",
+  "ほのお":"#FFACAC",
+  "みず":"#A8D4EA",
+  "くさ":"#B8E6C0",
+  "はがね":"#D3D6DA",
+  "あく":"#A3D9CE",
+  "ひこう":"#C6E6FA",
+  "かみなり":"#FFE58A"
+};
+const TYPE_BG_FALLBACK = "#ECEAE3";
+const CARD_BOTTOM_DARK = "#262420";
+function typeBgColor(t){ return TYPE_BG_COLORS[t] || TYPE_BG_FALLBACK; }
+
+const PEEK_ICONS = ["🔵","🔴","🟢","🟡","🟣","🟠","⚫","⚪","🔶","🔷"];
+
+// ★ キャラコロの向き（実際のファイル名: image/ICON/立.png などに合わせて設定してください）
+// ====== 環境データを格納する動的変数 ======
+let CHARACTERS = [];
+let MOVES = {};
+let isLoading = true; // スタジアム環境データの同期状態！
+
+// データをSupabaseから取得し、論理的に構築する関数！
+async function fetchSupabaseData() {
+  // PLAKORO_CHARA と PLAKORO_WAZA から最新環境の全データを取得！
+  const { data: charaData, error: charaErr } = await supabaseClient.from('PLAKORO_CHARA').select('*');
+  const { data: wazaData, error: wazaErr } = await supabaseClient.from('PLAKORO_WAZA').select('*');
+  
+  console.log("取得したキャラデータ:", charaData);
+  console.log("取得したワザデータ:", wazaData);
+
+  if (charaErr || wazaErr) {
+    console.error("データの取得に失敗！スタジアム環境にアクセスできない！", charaErr, wazaErr);
+    return;
+  }
+
+  // ====== 1. ワザデータ（MOVES）の論理的構築 ======
+  wazaData.forEach(w => {
+    let chara = [];
+    
+    // キャラコロ効果を生成！"0"や空データは論理的に除外する！
+    const buildCharaEffect = (die, effectStr, type, val) => {
+      if (!die || String(die) === "0") return null;
+      
+      let target = 'opponent';
+      let dmg = 0;
+      
+      // データ数値の比較により、リコイル（自傷）か通常ダメージかを正確に判定！
+      if (type === 'damage') {
+        target = 'opponent';
+        dmg = parseInt(val, 10) || 0;
+      } else if (type === 'recoil') {
+        target = 'self';
+        dmg = parseInt(val, 10) || 0;
+      }
+      
+      // 「立,左,右」のような複数の出目を配列化し、どんな複雑なダイス判定にも対応させる！
+      const orientations = String(die).replace(/"/g, '').split(',').map(s => s.trim());
+
+      return {
+        orientations: orientations,
+        text: effectStr || "",
+        dmg: dmg,
+        target: target,
+        zero: false,
+        type: type,
+        val: val
+      };
+    };
+
+    const c1 = buildCharaEffect(w.chara_die1, w.chara_effect1, w.chara_effect_type1, w.chara_effect_value1);
+    if(c1) chara.push(c1);
+    const c2 = buildCharaEffect(w.chara_die2, w.chara_effect2, w.chara_effect_type2, w.chara_effect_value2);
+    if(c2) chara.push(c2);
+    const c3 = buildCharaEffect(w.chara_die3, w.chara_effect3, w.chara_effect_type3, w.chara_effect_value3);
+    if(c3) chara.push(c3);
+
+    // エネコストの処理！"0"の場合は空配列にしてコスト無しを表現！
+    let cost = [];
+    if (w.waza_energy && String(w.waza_energy) !== "0") {
+      cost = String(w.waza_energy).replace(/"/g, '').split(',').map(s => s.trim()).filter(s => s !== "");
+    }
+
+    MOVES[w.id] = {
+      id: w.id,
+      chara_name: w.chara_name, // このパラメータがキャラとの結びつけの絶対的なキーになる！
+      name: w.waza_name,
+      type: w.waza_type,
+      cost: cost,
+      baseDamage: parseInt(w.waza_damage, 10) || 0,
+      effect: w.waza_effect || "",
+      chara: chara
+    };
+  });
+
+  // ====== 2. キャラクター（CHARACTERS）の構築 ======
+CHARACTERS = charaData.map(c => {
+    // 選択されたモンスター名と、ワザのchara_nameが完全に一致するものを全て抽出！
+    const charaMoves = Object.values(MOVES)
+      .filter(m => m.chara_name === c.name)
+      .map(m => m.id);
+
+    return {
+      id: c.id,
+      name: c.name,
+      type: c.type,
+      // 弱点カラムの正確なマッピング
+      weakness: c.weakness_type1 || c.weakness || "", 
+      hp: parseInt(c.HP, 10) || 100,
+      moves: charaMoves
+    };
+  });
+
+  // データの同期完了！UIを一気に展開する！
+  isLoading = false;
+  render(); 
+}
+
+
+/* ============================================================
+   状態管理
+   ============================================================ */
+function newPlayer(name){
+  return {
+    name, character:null, moveIds:[], peekCode:null, locked:false,
+    hp:0, maxHp:0, lastMoveId:null, nextTurnDamageMod:0
+  };
+}
+let state = {
+  phase:"select",
+  players:{ A:newPlayer("トレーナーA"), B:newPlayer("トレーナーB") },
+  firstPlayer:null, turnPlayer:null, turnCount:0,
+  modal:null,
+  editingPlayerKey:null,
+  selectedMove:null,
+  winner:null,
+  revealed:false
+};
+
+function opponentKey(k){ return k==="A" ? "B" : "A"; }
+
+/* ============================================================
+   レンダリング
+   ============================================================ */
+const app = document.getElementById("app");
+
+function renderBoard() {
+  const board = document.createElement("div");
+  board.className = "board";
+
+  const row = document.createElement("div");
+  row.className = "player-row";
+
+  // プレイヤーAとBのカードを生成して追加
+  row.appendChild(renderPlayerCard("A"));
+  row.appendChild(renderPlayerCard("B"));
+
+  board.appendChild(row);
+  return board;
+}
+
+function render(){
+  app.innerHTML = "";
+  // データ取得中はローディング画面を展開！
+  if (isLoading) {
+    app.innerHTML = `<div style="display:flex; height:100%; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:var(--sub);">最新のスタジアム環境を同期中...</div>`;
+    return;
+  }
+  const top = document.createElement("div");
+  top.className = "topbar";
+  top.textContent = "プラコロ バトル進行";
+  app.appendChild(top);
+
+  app.appendChild(renderBoard());
+
+  if(state.phase === "select"){
+    if(bothLocked()){
+      app.appendChild(renderStartCTA());
+    } else {
+      const hint = document.createElement("div");
+      hint.className = "center-hint";
+      hint.textContent = "各プレイヤーはポケモンをタップして、ポケモンと4つのワザを非公開で選んでください。";
+      app.appendChild(hint);
+    }
+  }
+  if(state.phase === "firstPlayer") app.appendChild(renderFirstPlayerOverlay());
+  if(state.phase === "moveSelect") app.appendChild(renderMoveSelectPanel());
+  if(state.phase === "diceRoll") app.appendChild(renderDiceOverlay());
+  if(state.phase === "win") app.appendChild(renderWinOverlay());
+
+  if(state.modal) app.appendChild(renderModal());
+}
+
+function bothLocked(){ return state.players.A.locked && state.players.B.locked; }
+
+function hpBarClass(p){
+  if(p.maxHp<=0) return "";
+  const ratio = p.hp/p.maxHp;
+  if(ratio<=0.25) return "crit";
+  if(ratio<=0.5) return "low";
+  return "";
+}
+
+function renderPlayerCard(key){
+  const p = state.players[key];
+  const card = document.createElement("div");
+  card.className = "player-card";
+  card.id = "card-"+key;
+
+  const showAsSelected = p.locked && state.revealed;
+
+  const row1 = document.createElement("div");
+  row1.className = "pc-row1";
+  row1.style.background = showAsSelected ? typeBgColor(p.character.type) : "var(--card)";
+
+  const iconCol = document.createElement("div");
+  iconCol.className = "pc-icon-col";
+  const slot = document.createElement("div");
+  if(!showAsSelected){
+    slot.className = "mon-slot null-slot";
+    slot.textContent = "未選択";
+  } else {
+    slot.className = "mon-slot";
+    // ★ ポケモンのイラスト画像をCHARAフォルダから取得
+    slot.innerHTML = `<img src="image/CHARA/${p.character.name}.png" class="img-icon" alt="${p.character.name}">`;
+  }
+  slot.onclick = () => onCardTap(key);
+  iconCol.appendChild(slot);
+  row1.appendChild(iconCol);
+
+  const infoCol = document.createElement("div");
+  infoCol.className = "pc-info-col";
+
+  const status = document.createElement("div");
+  status.className = "pc-status";
+  if(showAsSelected){
+    status.textContent = p.nextTurnDamageMod ? `効果: 次ワザダメージ${p.nextTurnDamageMod>0?"+":""}${p.nextTurnDamageMod}` : "";
+  }
+  infoCol.appendChild(status);
+
+  const nameHp = document.createElement("div");
+  nameHp.className = "pc-name-hp";
+  const nm = document.createElement("div");
+  nm.className = "pc-name";
+  nm.textContent = showAsSelected ? p.character.name + (state.turnPlayer===key && (state.phase==="moveSelect"||state.phase==="diceRoll") ? "（手番）":"") : p.name;
+  const hpNum = document.createElement("div");
+  hpNum.className = "pc-hp-num";
+  hpNum.id = "hpnum-"+key;
+  hpNum.textContent = showAsSelected ? `${Math.max(0,p.hp)}/${p.maxHp}` : "";
+  nameHp.appendChild(nm); nameHp.appendChild(hpNum);
+  infoCol.appendChild(nameHp);
+
+  const weakHp = document.createElement("div");
+  weakHp.className = "pc-weak-hpbar";
+  const weak = document.createElement("div");
+  weak.className = "pc-weak";
+  weak.textContent = showAsSelected ? "弱点"+TYPE_KANJI[p.character.weakness] : (p.locked ? "選択済み" : "");
+  const barWrap = document.createElement("div");
+  barWrap.className = "pc-hpbar-wrap";
+  const bg = document.createElement("div");
+  bg.className = "hp-bar-bg";
+  const fill = document.createElement("div");
+  fill.className = "hp-bar-fill " + (showAsSelected ? hpBarClass(p) : "");
+  fill.style.width = showAsSelected ? Math.max(0,(p.hp/p.maxHp*100)) + "%" : "0%";
+  fill.id = "hpfill-"+key;
+  bg.appendChild(fill);
+  barWrap.appendChild(bg);
+  weakHp.appendChild(weak); weakHp.appendChild(barWrap);
+  infoCol.appendChild(weakHp);
+
+  row1.appendChild(infoCol);
+  card.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "pc-row2" + (showAsSelected ? " revealed" : "");
+  row2.style.background = showAsSelected ? CARD_BOTTOM_DARK : "var(--card)";
+  const mm = document.createElement("div");
+  mm.className = "moves-mini";
+  if(showAsSelected){
+    p.moveIds.forEach(mid=>{
+      const mv = MOVES[mid];
+      const d = document.createElement("div");
+      d.className = "move-mini" + (p.lastMoveId===mid ? " used-last":"");
+      d.textContent = mv.name;
+      mm.appendChild(d);
+    });
+  } else {
+    for(let i=0;i<4;i++){
+      const d = document.createElement("div");
+      d.className = "move-mini";
+      d.textContent = "?";
+      mm.appendChild(d);
+    }
+  }
+  row2.appendChild(mm);
+  card.appendChild(row2);
+
+  return card;
+}
+
+function onCardTap(key){
+  const p = state.players[key];
+  if(state.phase !== "select") return;
+  if(!p.locked){
+    openCharSelect(key);
+  } else {
+    openPeekGate(key);
+  }
+}
+
+function openCharSelect(key){
+  state.modal = {type:"char", playerKey:key, tempChar:null};
+  render();
+}
+function openMoveSelect(key, char){
+  state.modal = {type:"move", playerKey:key, tempChar:char, tempMoves:[]};
+  render();
+}
+function openPeekSet(key, char, moveIds){
+  state.modal = {type:"peekset", playerKey:key, tempChar:char, tempMoves:moveIds, tempCode:null};
+  render();
+}
+function openPeekGate(key){
+  state.modal = {type:"peekgate", playerKey:key, tempPick:null};
+  render();
+}
+
+function renderModal(){
+  const wrap = document.createElement("div");
+  wrap.className = "modal-overlay";
+  wrap.onclick = (e)=>{ if(e.target===wrap){ state.modal=null; render(); } };
+  const sheet = document.createElement("div");
+  sheet.className = "modal-sheet";
+  wrap.appendChild(sheet);
+
+  const m = state.modal;
+  if(m.type==="char") buildCharModal(sheet, m);
+  if(m.type==="move") buildMoveModal(sheet, m);
+  if(m.type==="peekset") buildPeekSetModal(sheet, m);
+  if(m.type==="peekgate") buildPeekGateModal(sheet, m);
+
+  return wrap;
+}
+
+function buildCharModal(sheet, m){
+  const title = document.createElement("div");
+  title.className = "modal-title";
+  title.textContent = "ポケモンを選択";
+  sheet.appendChild(title);
+
+  const grid = document.createElement("div");
+  grid.className = "grid-2";
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement("div");
+    card.className = "pick-card";
+    
+    // タイプと弱点をアイコン画像で表示。上半分はタイプ別カラー、下半分は黒背景
+    card.innerHTML = `
+      <div class="pick-top" style="background:${typeBgColor(c.type)}">
+        <div class="ic"><img src="image/CHARA/${c.name}.png" class="img-icon" alt="${c.name}"></div>
+      </div>
+      <div class="pick-bottom">
+        <div class="nm">${c.name}</div>
+        <div class="wk" style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:4px;">
+          <span style="font-size:9px; color:rgba(255,255,255,.6);">タイプ:</span>
+          <div style="width:16px; height:16px; display:flex; align-items:center;"><img src="image/ICON/${c.type}.png" class="img-icon" alt="${c.type}"></div>
+          <span style="font-size:9px; color:rgba(255,255,255,.6);">弱点:</span>
+          <div style="width:16px; height:16px; display:flex; align-items:center;"><img src="image/ICON/${c.weakness}.png" class="img-icon" alt="${c.weakness}"></div>
         </div>
+      </div>`;
+    card.onclick = ()=> openMoveSelect(m.playerKey, c);
+    grid.appendChild(card);
+  });
+  sheet.appendChild(grid);
+}
 
-        <!-- iOS (iPhone) 専用ガイド -->
-        <div id="ios-section" class="hidden">
-            <a id="safari-btn" href="#" class="btn">リンクをコピーしてSafariを開く</a>
-            <div class="guide-box">
-                <h3>💡 Safariで開く手順</h3>
-                <ol>
-                    <li>右下のメニューアイコン（<strong>…</strong> または <strong>共有ボタン</strong>）をタップ</li>
-                    <li><strong>「Safariで開く」</strong>を選択してください</li>
-                </ol>
+function buildMoveModal(sheet, m){
+  const title = document.createElement("div");
+  title.className = "modal-title";
+  title.textContent = `${m.tempChar.name} のワザを4つ選択`;
+  sheet.appendChild(title);
+
+  const count = document.createElement("div");
+  count.className = "pick-count";
+  count.textContent = `${m.tempMoves.length} / 4 選択中`;
+  sheet.appendChild(count);
+
+  // ★ バトル中のワザカードと同じレイアウト・配色を使用
+  const list = document.createElement("div");
+  list.className = "move-pick-list";
+
+  m.tempChar.moves.forEach(mid=>{
+    const mv = MOVES[mid];
+    const el = document.createElement("div");
+    const selected = m.tempMoves.includes(mid);
+    el.className = "move-card" + (selected?" selected":"");
+
+    el.innerHTML = `
+      <div class="mc-top" style="background:${typeBgColor(mv.type)}">
+        <div class="mc-typename">
+          <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
+          <div class="mc-name-big">${mv.name}</div>
+        </div>
+        <div class="mc-right-stack">
+          <div class="mc-cost">${mv.cost.map(t=>`<div class="cost-dot"><img src="image/ICON/${t}.png" class="img-icon" alt="${t}"></div>`).join("")}</div>
+          <div class="mc-dmg">${mv.baseDamage}</div>
+        </div>
+      </div>
+      <div class="mc-bottom">
+        <div class="mc-r3">${mv.effect || ""}</div>
+        ${mv.chara.map(ce=>`
+          <div class="mc-chara-row">
+            <div style="display:flex; gap:2px; flex-shrink:0;">
+              ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
             </div>
+            <div class="txt">${ce.text}</div>
+          </div>`).join("")}
+      </div>
+    `;
+    el.onclick = ()=>{
+      if(selected){
+        m.tempMoves = m.tempMoves.filter(x=>x!==mid);
+      } else if(m.tempMoves.length<4){
+        m.tempMoves.push(mid);
+      }
+      render();
+    };
+    list.appendChild(el);
+  });
+  sheet.appendChild(list);
+
+  const btn = document.createElement("button");
+  btn.className = "btn wide";
+  btn.textContent = "次へ（のぞき見防止コード設定）";
+  btn.disabled = m.tempMoves.length!==4;
+  btn.style.opacity = m.tempMoves.length!==4 ? .4 : 1;
+  btn.onclick = ()=>{
+    if(m.tempMoves.length!==4) return;
+    openPeekSet(m.playerKey, m.tempChar, m.tempMoves);
+  };
+  sheet.appendChild(btn);
+}
+
+function buildPeekSetModal(sheet, m){
+  const title = document.createElement("div");
+  title.className = "modal-title";
+  title.textContent = "のぞき見防止コードを選んでください";
+  sheet.appendChild(title);
+  const sub = document.createElement("div");
+  sub.style.cssText = "font-size:11px; color:var(--sub); text-align:center; margin:-6px 0 14px;";
+  sub.textContent = "後で自分の情報を確認・変更するときに使います";
+  sheet.appendChild(sub);
+
+  const grid = document.createElement("div");
+  grid.className = "peek-grid";
+  PEEK_ICONS.forEach((ic,i)=>{
+    const el = document.createElement("div");
+    el.className = "peek-item" + (m.tempCode===i ? " selected":"");
+    el.style.background = "#F3F2EC";
+    el.textContent = ic;
+    el.onclick = ()=>{ m.tempCode = i; render(); };
+    grid.appendChild(el);
+  });
+  sheet.appendChild(grid);
+
+  const btn = document.createElement("button");
+  btn.className = "btn wide";
+  btn.textContent = "この内容で確定";
+  btn.disabled = m.tempCode===null;
+  btn.style.opacity = m.tempCode===null ? .4 : 1;
+  btn.onclick = ()=>{
+    if(m.tempCode===null) return;
+    const p = state.players[m.playerKey];
+    p.character = m.tempChar;
+    p.moveIds = m.tempMoves;
+    p.peekCode = m.tempCode;
+    p.locked = true;
+    p.hp = m.tempChar.hp;
+    p.maxHp = m.tempChar.hp;
+    state.modal = null;
+    render();
+  };
+  sheet.appendChild(btn);
+}
+
+function buildPeekGateModal(sheet, m){
+  const title = document.createElement("div");
+  title.className = "modal-title";
+  title.textContent = "設定したのぞき見防止コードを選んでください";
+  sheet.appendChild(title);
+
+  const grid = document.createElement("div");
+  grid.className = "peek-grid";
+  PEEK_ICONS.forEach((ic,i)=>{
+    const el = document.createElement("div");
+    el.className = "peek-item";
+    el.style.background = "#F3F2EC";
+    el.textContent = ic;
+    el.onclick = ()=> verifyPeek(m.playerKey, i);
+    grid.appendChild(el);
+  });
+  sheet.appendChild(grid);
+
+  const cancel = document.createElement("button");
+  cancel.className = "btn secondary wide";
+  cancel.textContent = "閉じる";
+  cancel.onclick = ()=>{ state.modal=null; render(); };
+  sheet.appendChild(cancel);
+}
+
+function verifyPeek(key, pick){
+  const p = state.players[key];
+  if(pick === p.peekCode){
+    state.modal = null;
+    render();
+    openMoveSelect(key, p.character);
+    state.modal.tempMoves = [...p.moveIds];
+  } else {
+    state.modal = null;
+    render();
+    const card = document.getElementById("card-"+key);
+    if(card){
+      card.classList.add("shake");
+      setTimeout(()=>card.classList.remove("shake"), 400);
+    }
+    if(navigator.vibrate) navigator.vibrate([80,40,80]);
+  }
+}
+
+function renderStartCTA(){
+  const wrap = document.createElement("div");
+  wrap.className = "float-cta";
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.textContent = "バトル開始";
+  btn.onclick = ()=>{ state.revealed = true; state.phase = "firstPlayer"; render(); };
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function renderFirstPlayerOverlay(){
+  const ov = document.createElement("div");
+  ov.className = "overlay full";
+  const title = document.createElement("div");
+  title.className = "overlay-title";
+  title.textContent = "先行プレイヤーを選択";
+  ov.appendChild(title);
+
+  const row = document.createElement("div");
+  row.className = "trainer-pick-row";
+  ["A","B"].forEach(k=>{
+    const el = document.createElement("div");
+    el.className = "trainer-pick";
+    el.textContent = state.players[k].name;
+    el.onclick = ()=>{
+      state.firstPlayer = k;
+      state.turnPlayer = k;
+      state.turnCount = 0;
+      state.phase = "moveSelect";
+      render();
+    };
+    row.appendChild(el);
+  });
+  ov.appendChild(row);
+  return ov;
+}
+
+function computeDisplayDamage(mv, mover, target){
+  let base = mv.baseDamage;
+  let mode = "normal";
+  if(mv.type === target.character.weakness && base>0){
+    base += 20;
+    mode = "weak";
+  }
+  if(mover.nextTurnDamageMod){
+    base += mover.nextTurnDamageMod;
+    mode = mover.nextTurnDamageMod>0 ? "up" : "down";
+  }
+  return {display:Math.max(base,0), orig:mv.baseDamage, mode};
+}
+
+function renderMoveSelectPanel(){
+  const panel = document.createElement("div");
+  panel.className = "move-select-panel";
+  const p = state.players[state.turnPlayer];
+  const opp = state.players[opponentKey(state.turnPlayer)];
+
+  const head = document.createElement("div");
+  head.className = "ms-header";
+  head.textContent = `${p.name} のワザ選択（ターン${state.turnCount+1}）`;
+  panel.appendChild(head);
+
+  const grid = document.createElement("div");
+  grid.className = "ms-grid";
+  p.moveIds.forEach(mid=>{
+    const mv = MOVES[mid];
+    const disabled = (mid === p.lastMoveId);
+    const dmgInfo = computeDisplayDamage(mv, p, opp);
+    const card = document.createElement("div");
+    card.className = "move-card" + (disabled?" disabled":"");
+    const dmgClass = dmgInfo.mode==="weak"?"weak":dmgInfo.mode==="up"?"up":dmgInfo.mode==="down"?"down":"";
+    
+    // ★ アイコン各種を画像から取得。上半分はタイプ別カラー(1行にタイプ+ワザ名)、下半分は黒(ワザ効果+キャラコロ)
+    card.innerHTML = `
+      <div class="mc-top" style="background:${typeBgColor(mv.type)}">
+        <div class="mc-typename">
+          <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
+          <div class="mc-name-big">${mv.name}</div>
         </div>
-
-        <!-- 通常ブラウザ用 -->
-        <div id="default-section" class="hidden">
-            <a id="direct-btn" href="#" class="btn">コンテンツへ進む</a>
+        <div class="mc-right-stack">
+          <div class="mc-cost">${mv.cost.map(t=>`<div class="cost-dot"><img src="image/ICON/${t}.png" class="img-icon" alt="${t}"></div>`).join("")}</div>
+          <div class="mc-dmg ${dmgClass}">${dmgInfo.display}${dmgInfo.mode!=="normal" ? `<span class="orig">(${dmgInfo.orig})</span>`:""}</div>
         </div>
-    </div>
+      </div>
+      <div class="mc-bottom">
+        <div class="mc-r3">${mv.effect||""}</div>
+        ${mv.chara.map(ce=>`
+          <div class="mc-chara-row">
+            <div style="display:flex; gap:2px; flex-shrink:0;">
+              ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
+            </div>
+            <div class="txt">${ce.text}</div>
+          </div>`).join("")}
+      </div>
+    `;
+    if(!disabled){
+      card.onclick = ()=>{
+        state.selectedMove = mid;
+        state.phase = "diceRoll";
+        render();
+      };
+    }
+    grid.appendChild(card);
+  });
+  panel.appendChild(grid);
+  return panel;
+}
 
-    <script>
-        // 遷移先のURL（ここにあなたの目的のURLを設定してください）
-        const targetUrl = "https://beymetchannel.github.io/BeyCalendar/"; 
+function renderDiceOverlay(){
+  const ov = document.createElement("div");
+  ov.className = "dice-overlay";
 
-        const ua = navigator.userAgent.toLowerCase();
-        const isAndroid = ua.indexOf("android") > -1;
-        const isIOS = /iphone|ipad|ipod/.test(ua);
+  const top = document.createElement("div");
+  top.className = "dice-top";
+  const isFirstTurn = state.turnCount === 0;
+  const energyCount = isFirstTurn ? 2 : 3;
 
-        const androidSection = document.getElementById("android-section");
-        const iosSection = document.getElementById("ios-section");
-        const defaultSection = document.getElementById("default-section");
-        const androidBtn = document.getElementById("android-btn");
-        const safariBtn = document.getElementById("safari-btn");
-        const directBtn = document.getElementById("direct-btn");
-        const statusBadge = document.getElementById("status-badge");
+  const lbl = document.createElement("div");
+  lbl.className = "lbl";
+  lbl.textContent = "ダイスを振ろう！";
+  top.appendChild(lbl);
 
-        directBtn.href = targetUrl;
+  const icons = document.createElement("div");
+  icons.className = "dice-icons";
+  for(let i=0;i<energyCount;i++){
+    const d = document.createElement("div");
+    d.className = "die";
+    d.style.background = "#DCEFE0";
+    d.textContent = "🔋";
+    icons.appendChild(d);
+  }
+  const cd = document.createElement("div");
+  cd.className = "die chara-die";
+  cd.textContent = "🎲";
+  icons.appendChild(cd);
+  top.appendChild(icons);
 
-        if (isAndroid) {
-            statusBadge.textContent = "Android Environment Detected";
-            androidSection.classList.remove("hidden");
-            // Android Intent URLの生成で直接Chromeを直撃
-            const cleanUrl = targetUrl.replace(/^https?:\/\//, '');
-            androidBtn.href = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end;`;
-        } else if (isIOS) {
-            statusBadge.textContent = "iOS Environment Detected";
-            iosSection.classList.remove("hidden");
-            
-            // クリップボードコピーの動作でスムーズに移行
-            safariBtn.addEventListener("click", function(e) {
-                e.preventDefault();
-                navigator.clipboard.writeText(targetUrl).then(() => {
-                    safariBtn.textContent = "URLをコピーしましたSafariへ移動してね";
-                    safariBtn.style.backgroundColor = "#10b981";
-                    safariBtn.style.color = "#ffffff";
-                }).catch(err => {
-                    window.location.href = targetUrl;
-                });
-            });
-        } else {
-            statusBadge.textContent = "Standard Browser";
-            defaultSection.classList.remove("hidden");
-            setTimeout(() => {
-                window.location.href = targetUrl;
-            }, 800);
-        }
-    </script>
+  if(isFirstTurn){
+    const note = document.createElement("div");
+    note.className = "die-note";
+    note.style.margin = "6px auto 0";
+    note.textContent = "初ターンのみエネコロは2個です";
+    top.appendChild(note);
+  }
+  ov.appendChild(top);
+
+  const bottom = document.createElement("div");
+  bottom.className = "dice-bottom";
+
+  const mv = MOVES[state.selectedMove];
+  const p = state.players[state.turnPlayer];
+  const opp = state.players[opponentKey(state.turnPlayer)];
+  const dmgInfo = computeDisplayDamage(mv, p, opp);
+
+  const recap = document.createElement("div");
+  recap.className = "move-recap";
+  recap.innerHTML = `<b>${mv.name}</b>（${TYPE_KANJI[mv.type]}）を選択中<br>基本ダメージ: ${dmgInfo.display}`;
+  bottom.appendChild(recap);
+
+  const resultRow = document.createElement("div");
+  resultRow.className = "result-row";
+  const okBtn = document.createElement("button");
+  okBtn.className = "result-btn ok";
+  okBtn.textContent = "ワザ成功（キャラコロ効果なし）";
+  okBtn.onclick = ()=> resolveTurn({kind:"success", dmgInfo});
+  resultRow.appendChild(okBtn);
+  const failBtn = document.createElement("button");
+  failBtn.className = "result-btn fail";
+  failBtn.textContent = "ワザ失敗（エネ不足）";
+  failBtn.onclick = ()=> resolveTurn({kind:"fail"});
+  resultRow.appendChild(failBtn);
+  bottom.appendChild(resultRow);
+
+  mv.chara.forEach(ce=>{
+    const btn = document.createElement("button");
+    btn.className = "chara-effect-btn";
+    // ★ キャラコロアイコンを画像から取得
+    btn.innerHTML = `
+      <div style="display:flex; gap:4px; flex-shrink:0;">
+        ${ce.orientations.map(ori=>`<div class="orient-icon" style="width:24px; height:24px;"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
+      </div>
+      <div style="text-align:left; line-height:1.3;">${ce.text}</div>`
+    btn.onclick = ()=> resolveTurn({kind:"chara", ce, dmgInfo});
+    bottom.appendChild(btn);
+  });
+
+  ov.appendChild(bottom);
+  return ov;
+}
+
+function resolveTurn(result){
+  const moverKey = state.turnPlayer;
+  const mover = state.players[moverKey];
+  const oppKey = opponentKey(moverKey);
+  const opp = state.players[oppKey];
+  const mv = MOVES[state.selectedMove];
+
+  mover.lastMoveId = state.selectedMove;
+
+  let dmgToOpp = 0, dmgToSelf = 0;
+
+  if(result.kind === "fail"){
+    dmgToOpp = 0;
+  } else if(result.kind === "success"){
+    dmgToOpp = result.dmgInfo.display;
+  } else if(result.kind === "chara"){
+    const base = result.dmgInfo.display;
+    if(result.ce.zero){
+      dmgToOpp = 0;
+    } else if(result.ce.target === "opponent"){
+      dmgToOpp = Math.max(base + result.ce.dmg, 0);
+    } else if(result.ce.target === "self"){
+      dmgToOpp = base;
+      dmgToSelf = result.ce.dmg;
+    }
+  }
+
+  mover.nextTurnDamageMod = 0;
+
+  state.phase = "resolve";
+  render();
+
+  playEffectOn(oppKey, mv.type, dmgToOpp, ()=>{
+    opp.hp = Math.max(opp.hp - dmgToOpp, 0);
+    updateHpBar(oppKey);
+
+    const finishSelf = () => {
+      if(opp.hp <= 0 || mover.hp <= 0){
+        let winnerKey;
+        if(opp.hp <= 0 && mover.hp <= 0) winnerKey = oppKey;
+        else if(opp.hp <= 0) winnerKey = moverKey;
+        else winnerKey = oppKey;
+        state.winner = winnerKey;
+        state.phase = "win";
+        render();
+        return;
+      }
+      state.turnPlayer = oppKey;
+      state.turnCount++;
+      state.selectedMove = null;
+      state.phase = "moveSelect";
+      render();
+    };
+
+    if(dmgToSelf > 0){
+      setTimeout(()=>{
+        playEffectOn(moverKey, mv.type, dmgToSelf, ()=>{
+          mover.hp = Math.max(mover.hp - dmgToSelf, 0);
+          updateHpBar(moverKey);
+          setTimeout(finishSelf, 300);
+        });
+      }, 250);
+    } else {
+      setTimeout(finishSelf, 300);
+    }
+  });
+}
+
+function updateHpBar(key){
+  const p = state.players[key];
+  const fill = document.getElementById("hpfill-"+key);
+  if(fill){
+    fill.style.width = Math.max(0,(p.hp/p.maxHp*100)) + "%";
+    fill.className = "hp-bar-fill " + hpBarClass(p);
+  }
+  const num = document.getElementById("hpnum-"+key);
+  if(num) num.textContent = `${Math.max(0,p.hp)}/${p.maxHp}`;
+}
+
+function playEffectOn(targetKey, type, dmg, cb){
+  const slot = document.querySelector("#card-"+targetKey+" .mon-slot");
+  if(!slot){ cb(); return; }
+  const rect = slot.getBoundingClientRect();
+  const appRect = app.getBoundingClientRect();
+  let size = dmg<=0 ? 40 : dmg<=30 ? 50 : dmg<=60 ? 80 : 110;
+  const isHeal = dmg < 0;
+  const color = isHeal ? "var(--heal)" : typeVar(type);
+
+  const flash = document.createElement("div");
+  flash.className = "fx-flash";
+  flash.style.width = size+"px";
+  flash.style.height = size+"px";
+  flash.style.left = (rect.left - appRect.left + rect.width/2 - size/2) + "px";
+  flash.style.top = (rect.top - appRect.top + rect.height/2 - size/2) + "px";
+  flash.style.background = color;
+  app.appendChild(flash);
+
+  const pop = document.createElement("div");
+  pop.className = "dmg-pop";
+  pop.style.left = (rect.left - appRect.left + rect.width/2 - 20) + "px";
+  pop.style.top = (rect.top - appRect.top + 10) + "px";
+  pop.style.color = isHeal ? "#4E9E6C" : "#3A3A3A";
+  pop.textContent = isHeal ? `+${-dmg}` : (dmg>0 ? `-${dmg}` : "MISS");
+  app.appendChild(pop);
+
+  setTimeout(()=>{
+    flash.remove(); pop.remove();
+    cb();
+  }, 550);
+}
+
+function renderWinOverlay(){
+  const ov = document.createElement("div");
+  ov.className = "overlay full";
+  const winner = state.players[state.winner];
+  const mon = document.createElement("div");
+  mon.className = "win-mon";
+  // ★ ポケモン画像をCHARAから取得
+  mon.innerHTML = `<img src="image/CHARA/${winner.character.name}.png" class="img-icon" alt="${winner.character.name}">`;
+  ov.appendChild(mon);
+  const title = document.createElement("div");
+  title.className = "overlay-title";
+  title.textContent = `${winner.name} の勝利！`;
+  ov.appendChild(title);
+  const sub = document.createElement("div");
+  sub.className = "overlay-sub";
+  sub.textContent = `${winner.character.name} が勝利しました`;
+  ov.appendChild(sub);
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.textContent = "もう一度対戦する";
+  btn.onclick = ()=>{
+    state = {
+      phase:"select",
+      players:{ A:newPlayer("トレーナーA"), B:newPlayer("トレーナーB") },
+      firstPlayer:null, turnPlayer:null, turnCount:0,
+      modal:null, editingPlayerKey:null, selectedMove:null, winner:null, revealed:false
+    };
+    render();
+  };
+  ov.appendChild(btn);
+  return ov;
+}
+
+fetchSupabaseData();
+</script>
 </body>
 </html>
