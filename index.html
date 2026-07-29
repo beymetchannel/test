@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>プラコロ バトル進行</title>
+<title>プラコロ</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
@@ -27,34 +27,23 @@
     --t-ひこう:#C9E4FF; --t-ドラゴン:#B8A9E0; --t-ノーマル:#E6E2D3;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;height:100%;background:var(--bg);color:var(--ink);
+  html,body{margin:0;padding:0;width:100%;height:100%;background:#15140f;color:var(--ink);
     font-family:"Hiragino Sans","Noto Sans JP",-apple-system,BlinkMacSystemFont,sans-serif;
     overflow:hidden;}
 
   /* 共通画像スタイル */
   .img-icon { width: 100%; height: 100%; object-fit: contain; }
 
-  /* 端末が縦向きでも常に横向き表示に固定するトリック */
-  @media screen and (orientation: portrait){
-    html{
-      width:100vh;
-      height:100vw;
-      transform-origin: top left;
-      transform: rotate(90deg) translateY(-100%);
-      overflow-x:hidden;
-    }
-  }
+  /* 端末の向きに関わらず、常に16:9の横向き画面をJSで計算して中央配置する（#stageのサイズ/回転はJSが設定） */
+  #stage{position:fixed; top:50%; left:50%; transform-origin:center center;
+    background:var(--bg); overflow:hidden; box-shadow:0 0 24px rgba(0,0,0,.35);}
 
-  #app{position:relative; width:100%; height:100vh; max-width:100vw; margin:0 auto;
+  #app{position:relative; width:100%; height:100%; margin:0 auto;
     background:var(--bg); overflow:hidden; display:flex; flex-direction:column;}
 
-  /* ---------- header ---------- */
-  .topbar{display:flex; align-items:center; justify-content:center; padding:6px 10px 4px; flex-shrink:0;
-    font-size:11px; letter-spacing:.12em; color:var(--sub); font-weight:600;}
-
   /* ---------- main board ---------- */
-  .board{flex:1; display:flex; flex-direction:column; gap:6px; padding:2px 14px 10px; min-height:0; overflow:hidden;}
-  .player-row{flex:1; display:flex; gap:14px; min-height:0;}
+  .board{flex:1; display:flex; flex-direction:column; gap:4px; padding:2px 8px 6px; min-height:0; overflow:hidden;}
+  .player-row{flex:1; display:flex; gap:8px; min-height:0;}
   .player-card{flex:1; border-radius:var(--radius); box-shadow:var(--shadow);
     position:relative; transition:transform .15s ease;
     display:flex; flex-direction:column; min-height:0; overflow:hidden;}
@@ -66,51 +55,70 @@
   }
 
   /* 行1: 画面上部20%（アイコン25% + 情報75%）。背景色はポケモンのタイプ別カラー(未選択時はニュートラル) */
-  .pc-row1{flex:1 1 20%; display:flex; gap:8px; min-height:0; padding:8px 10px 4px;}
-  .pc-icon-col{width:25%; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; min-height:0;}
-  .pc-info-col{width:75%; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:3px;}
+  .pc-row1{flex:1 1 20%; display:flex; gap:6px; min-height:0; padding:6px 8px 3px;}
+  .pc-icon-col{width:25%; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; min-height:0;}
+  .pc-info-col{width:75%; min-width:0; display:flex; flex-direction:column; justify-content:center; gap:2px;}
 
   /* ポケモン画像: 背景ボックス無しで、可能な限り大きく表示 */
   .mon-slot{width:100%; flex:1; min-height:0; display:flex; align-items:center; justify-content:center; font-size:28px;
     overflow:hidden; position:relative;}
-  .mon-slot.null-slot{flex:none; width:100%; max-width:min(16vh,80px); max-height:min(16vh,80px);
-    border:2px dashed #D8D6CE; border-radius:14px; background:#F3F2EC; color:#C7C5BC; font-size:10.5px; font-weight:600; padding:0;}
+  .mon-slot.null-slot{flex:none; width:100%; max-width:80px; max-height:80px;
+    border:none dashed #D8D6CE; border-radius:14px; background:#F3F2EC; color:#C7C5BC; font-size:10.5px; font-weight:600; padding:0;}
 
-  /* 画像の下に表示するタイプ・弱点アイコン行 */
-  .pc-typewk-row{display:flex; gap:6px; align-items:center; justify-content:center; flex-shrink:0;}
-  .pc-typewk-row .tw-icon{width:16px; height:16px; display:flex; align-items:center; justify-content:center;}
+  /* 画像の下に表示する弱点アイコン行（"弱点："ラベル + アイコン） */
+  .pc-typewk-row{display:flex; gap:4px; align-items:center; justify-content:center; flex-shrink:0;}
+  .pc-typewk-row .tw-label{font-size:10px; color:var(--sub); font-weight:700; white-space:nowrap;}
+  .pc-typewk-row .tw-icon{width:19px; height:19px; display:flex; align-items:center; justify-content:center;}
 
-  .pc-status{font-size:9px; color:var(--sub); font-weight:600; min-height:11px;}
+  .pc-status{font-size:10px; color:var(--sub); font-weight:600; min-height:12px;}
   .pc-name-hp{display:flex; align-items:baseline; justify-content:space-between; gap:6px;}
-  .pc-name{font-size:19px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .pc-hp-num{font-size:17px; font-weight:800; color:var(--ink); white-space:nowrap; flex-shrink:0;}
-  .pc-weak-hpbar{display:flex; align-items:center; gap:6px;}
-  .pc-weak{width:20%; flex-shrink:0; font-size:11px; color:var(--sub); font-weight:800; white-space:nowrap; overflow:hidden;}
-  .pc-hpbar-wrap{width:80%;}
-  .hp-bar-bg{width:100%; height:9px; border-radius:6px; background:#C9C9C9; border:1.5px solid #000; overflow:hidden; box-sizing:border-box;}
-  .hp-bar-fill{height:100%; border-radius:5px; background:linear-gradient(90deg,#9FE3AE,#7FCB98); transition:width .5s ease;}
+  /* タイプアイコン + ポケモン名 */
+  .pc-name-wrap{display:flex; align-items:center; gap:5px; min-width:0; flex:1 1 auto; overflow:hidden;}
+  .pc-type-icon{width:18px; height:18px; flex-shrink:0; display:flex; align-items:center; justify-content:center;}
+  .pc-name{font-size:20px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0;}
+  .pc-hp-num{font-size:18px; font-weight:800; color:var(--ink); white-space:nowrap; flex-shrink:0;}
+  /* HPラベルとゲージを同じ背景色でひとつなぎの一体化したバーにする */
+  .pc-weak-hpbar{display:flex; align-items:stretch; height:16px; border-radius:6px; border:2px solid #000;
+    background:#C9C9C9; overflow:hidden;}
+  .pc-weak{flex-shrink:0; font-size:10.5px; color:#fff; font-weight:800; white-space:nowrap;
+    display:flex; align-items:center; padding:0 6px; background:#000;}
+  .pc-hpbar-wrap{flex:1; min-width:0; height:100%;}
+  .hp-bar-bg{width:100%; height:100%; background:transparent; overflow:hidden; box-sizing:border-box;}
+  .hp-bar-fill{height:100%; border-radius:0; background:linear-gradient(90deg,#9FE3AE,#7FCB98); transition:width .5s ease;}
   .hp-bar-fill.low{background:linear-gradient(90deg,#F5D95C,#EFC93C);}
   .hp-bar-fill.crit{background:linear-gradient(90deg,#F3A8A8,#E77E7E);}
 
   /* 行2: 画面下部80%（ワザ2x2）。選択済みの場合は黒背景になる */
-  .pc-row2{flex:1 1 80%; min-height:0; padding:4px 10px 8px;}
+  .pc-row2{flex:1 1 80%; min-height:0; padding:3px 8px 6px;}
   .moves-mini{width:100%; height:100%; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:4px;}
-  .move-mini{font-size:9px; background:#F6F5F0; border-radius:8px; padding:4px 6px; color:var(--sub);
+  .move-mini{font-size:11px; background:#F6F5F0; border-radius:8px; padding:3px 5px; color:var(--sub);
     display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden;
     text-overflow:ellipsis; white-space:nowrap; font-weight:600;}
   .move-mini.used-last{opacity:.4; text-decoration:line-through;}
   .pc-row2.revealed .move-mini{background:rgba(255,255,255,.14); color:#fff;}
 
-  .center-hint{flex-shrink:0; text-align:center; font-size:10.5px; color:var(--sub); padding:2px 12px 4px; line-height:1.4;}
+  .center-hint{flex-shrink:0; text-align:center; font-size:11px; color:var(--sub); padding:2px 12px 3px; line-height:1.35;}
+
+  /* ---------- 手番ターン中のみのレイアウト（ワイヤーフレーム準拠） ----------
+     手番側は「上のミニカード＋下の全幅ワザ選択パネル」がすき間なく繋がったL字に、
+     相手側は上のミニカードだけが独立した箱として浮く（下との間にすき間が空く）。 */
+  .board.turn-board{padding:0;}
+  .turn-row{align-items:flex-start;}
+  .player-card.turn-active { height: 22%; border-radius: 18px 18px 0 0; box-shadow: none; }
+  .player-card.turn-inactive { height: 22%; border-radius: 18px; }
+  .player-card.turn-active .pc-row2,
+  .player-card.turn-inactive .pc-row2{display:none;}
+  .player-card.turn-active .pc-row1,
+  .player-card.turn-inactive .pc-row1{flex:1 1 auto; height:100%;}
 
   /* ---------- overlays (phase banners) ---------- */
   .overlay{position:absolute; inset:0; z-index:50; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; padding:24px; text-align:center; gap:14px;}
+    align-items:center; justify-content:center; padding:16px; text-align:center; gap:12px;}
   .overlay.full{background:linear-gradient(180deg,#FAFAF6 0%, #F1F0EA 100%);}
-  .overlay-title{font-size:19px; font-weight:800; color:var(--ink);}
-  .overlay-sub{font-size:13px; color:var(--sub); max-width:280px; line-height:1.6;}
+  .overlay-title{font-size:21px; font-weight:800; color:var(--ink);}
+  .overlay-sub{font-size:14px; color:var(--sub); max-width:320px; line-height:1.6;}
 
-  .btn{border:none; border-radius:14px; padding:14px 22px; font-size:15px; font-weight:800;
+  .btn{border:none; border-radius:14px; padding:12px 20px; font-size:16px; font-weight:800;
     background:var(--accent-strong); color:#fff; box-shadow:0 3px 10px rgba(143,205,169,.4);
     cursor:pointer; transition:transform .1s;}
   .btn:active{transform:scale(.96);}
@@ -128,96 +136,112 @@
   /* ---------- selection modal (character/move/peek) ---------- */
   .modal-overlay{position:fixed; inset:0; z-index:200; background:rgba(40,38,32,.4);
     display:flex; align-items:flex-end; justify-content:center;}
-  .modal-sheet{width:100%; max-width:480px; background:var(--bg); border-radius:22px 22px 0 0;
-    max-height:92vh; overflow-y:auto; padding:18px 16px 26px; box-shadow:0 -6px 30px rgba(0,0,0,.15);}
-  .modal-title{font-size:15px; font-weight:800; margin-bottom:12px; text-align:center;}
+  .modal-sheet{width:100%; max-width:none; background:var(--bg); border-radius:22px 22px 0 0;
+    max-height:94%; overflow-y:auto; padding:14px 18px 22px; box-shadow:0 -6px 30px rgba(0,0,0,.15);}
+  .modal-title{font-size:17px; font-weight:800; margin-bottom:10px; text-align:center;}
   .grid-2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
   /* ポケモン選択カード: 上半分(タイプ別カラー・アイコン) + 下半分(黒・名前/タイプ/弱点) */
   .pick-card{border:2px solid transparent; border-radius:14px; overflow:hidden;
     text-align:center; box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column;}
   .pick-card.selected{border-color:var(--accent-strong);}
-  .pick-top{padding:14px 8px 6px;}
-  .pick-card .ic{height:60px; margin: 0 auto; display:flex; align-items:center; justify-content:center;}
-  .pick-bottom{background:#262420; padding:6px 8px 12px;}
-  .pick-card .nm{font-size:12px; font-weight:700; color:#fff;}
-  .pick-card .wk{font-size:9px; color:#C7C4BC; margin-top:4px;}
+  .pick-top{padding:10px 8px 5px;}
+  .pick-card .ic{height:74px; margin: 0 auto; display:flex; align-items:center; justify-content:center;}
+  .pick-bottom{background:#262420; padding:6px 8px 10px;}
+  .pick-card .nm{font-size:14px; font-weight:700; color:#fff;}
+  .pick-card .wk{font-size:10.5px; color:#C7C4BC; margin-top:4px;}
 
   .cost-row{display:flex; gap:4px; margin-top:2px;}
-  .pick-count{text-align:center; font-size:11px; color:var(--sub); margin:6px 0 10px;}
+  .pick-count{text-align:center; font-size:12px; color:var(--sub); margin:4px 0 8px;}
   .move-pick-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-  .move-pick-list .move-card{margin-bottom:0;}
+  .move-pick-list .move-card{margin-bottom:0; min-height:172px;}
+  .move-pick-list .mc-effect{white-space:normal; overflow:visible; text-overflow:clip;}
+  .move-pick-list .mc-chara-row .txt{white-space:normal; overflow:visible; text-overflow:clip;}
 
-  .peek-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:16px;}
-  .peek-item{aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:20px; cursor:pointer; border:3px solid transparent; box-shadow:var(--shadow);}
-  .peek-item.selected{border-color:var(--ink);}
 
   /* ---------- move select (phase4) ---------- */
   .move-select-panel{position:absolute; left:0; right:0; bottom:0; height:80%; z-index:30;
     background:var(--card); border-radius:22px 22px 0 0; box-shadow:0 -8px 24px rgba(0,0,0,.1);
-    padding:12px 12px 14px; display:flex; flex-direction:column;}
-  .ms-header{text-align:center; font-size:11px; font-weight:800; color:var(--sub); margin-bottom:6px; flex-shrink:0;}
+    padding:8px 10px 10px; display:flex; flex-direction:column;}
   .ms-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px; flex:1; min-height:0;}
 
   /* ワザカード: 上半分(タイプ別カラー) + 下半分(黒) の2分割構成 */
-  .move-card{display:flex; flex-direction:column; border-radius:12px; overflow:hidden;
-    box-shadow:0 1px 4px rgba(0,0,0,.05); cursor:pointer; border:2px solid transparent; min-height:0;}
-  .move-card.disabled{opacity:.35; pointer-events:none;}
-  .move-card:active{transform:scale(.97);}
+  .move-card {
+    display: flex; flex-direction: column; border-radius: 12px; overflow: hidden;
+    /* 影を深くし、初期状態で少し浮かせる！ */
+    box-shadow: 0 6px 16px rgba(0,0,0,0.22), 0 2px 4px rgba(0,0,0,0.12);
+    cursor: pointer; border: 2px solid transparent; min-height: 0;
+    transform: translateY(-2px);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .move-card.disabled { opacity: .35; pointer-events: none; transform: translateY(0); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .move-card:active {
+    /* 押し込んだ際の沈み込み演算！ */
+    transform: translateY(1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
   .move-card.selected{border-color:var(--accent-strong);}
   .move-card + .move-card{margin-top:0;}
 
+  .wk-inline { display: flex; align-items: center; gap: 4px; flex-shrink: 0; margin-left: 6px; }
+  .wk-inline span { font-size: 10px; color: var(--sub); font-weight: 800; white-space: nowrap; }
+  .wk-inline .tw-icon { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
+
   /* 上半分: タイプ+ワザ名/エネルギー・ダメージの行 + その下にワザ効果テキスト */
-  .mc-top{flex:1 1 50%; padding:7px 9px 5px; display:flex; flex-direction:column; justify-content:center; gap:3px; min-height:0;}
+  .mc-top{flex:1 1 50%; padding:5px 8px 4px; display:flex; flex-direction:column; justify-content:center; gap:2px; min-height:0;}
   .mc-top-row{display:flex; align-items:center; justify-content:space-between; gap:6px; min-height:0;}
   .mc-typename{display:flex; align-items:center; gap:6px; min-width:0; flex:1;}
-  .mc-type-icon{width:20px; height:20px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .mc-name-big{font-size:16px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .mc-type-icon{width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mc-name-big{font-size:18px; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
 
   .mc-right-stack{display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;}
   .mc-cost{display:flex; gap:2px;}
-  .cost-dot{width:14px; height:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .mc-dmg{font-size:19px; font-weight:900; white-space:nowrap; flex-shrink:0;}
-  .mc-dmg .orig{font-size:9px; font-weight:600; color:#999; margin-left:2px;}
+  .cost-dot{width:17px; height:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mc-dmg{font-size:22px; font-weight:900; white-space:nowrap; flex-shrink:0;}
+  .mc-dmg .orig{font-size:10px; font-weight:600; color:#999; margin-left:2px;}
   .mc-dmg.weak{color:#E8A400;}
   .mc-dmg.up{color:#6FAE3E;}
   .mc-dmg.down{color:#D96666;}
 
   /* 下半分: 黒背景。ワザ効果テキスト + キャラコロ効果(最大3つ、overflow-yで対応) */
-  .mc-bottom{flex:1 1 50%; min-height:0; background:#262420; padding:4px 9px 6px;
+  .mc-bottom{flex:1 1 50%; min-height:0; background:#262420; padding:3px 8px 5px;
     display:flex; flex-direction:column; justify-content:center; gap:3px; overflow-y:auto;}
 
-  .mc-effect{font-size:9.5px; color:rgba(58,58,58,.72); line-height:1.25; flex-shrink:0;
+  .mc-effect{font-size:10.5px; color:rgba(58,58,58,.72); line-height:1.25; flex-shrink:0;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
   /* キャラコロ効果行(白文字・区切り線のみ、独自背景なし) */
-  .mc-chara-row{color:#fff; padding-top:3px; margin-top:1px; border-top:1px solid rgba(255,255,255,.14);
-    display:flex; align-items:center; gap:5px; font-size:8.5px; font-weight:600; line-height:1.2; flex-shrink:0;}
-  .mc-chara-row .oi{width:15px; height:15px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mc-chara-row{color:#fff; padding-top:3px; margin-top:1px;
+    display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:600; line-height:1.2; flex-shrink:0;}
+  .mc-chara-row .oi{width:17px; height:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .mc-chara-row .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
   /* ---------- dice phase (phase5) ---------- */
-  .dice-overlay{position:absolute; inset:0; z-index:35; background:var(--bg); display:flex; flex-direction:column;}
-  .dice-top{padding:20px 16px 10px; text-align:center;}
-  .dice-top .lbl{font-size:15px; font-weight:800; margin-bottom:10px;}
+  .dice-overlay {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 80%; z-index: 35; 
+    background: var(--bg); border-radius: 22px 22px 0 0;
+    box-shadow: 0 -8px 24px rgba(0,0,0,.1);
+    display: flex; flex-direction: column;
+  }
+  .dice-top{padding:12px 14px 8px; text-align:center;}
+  .dice-top .lbl{font-size:16px; font-weight:800; margin-bottom:8px;}
   .dice-icons{display:flex; justify-content:center; gap:10px; flex-wrap:wrap;}
-  .die{width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center;
-    font-size:17px; font-weight:800; box-shadow:var(--shadow); position:relative;}
+  .die{width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    font-size:18px; font-weight:800; box-shadow:var(--shadow); position:relative;}
   .die.chara-die{background:#FFE8B8; color:#8C6A1F;}
-  .die-note{font-size:9px; color:var(--sub); margin-top:4px; max-width:60px;}
+  .die-note{font-size:10px; color:var(--sub); margin-top:4px; max-width:70px;}
 
-  .dice-bottom{flex:1; background:var(--card); border-radius:22px 22px 0 0; margin-top:8px; padding:16px 14px 20px;
-    display:flex; flex-direction:column; gap:10px; box-shadow:0 -6px 20px rgba(0,0,0,.08); overflow-y:auto;}
-  .move-recap{background:#F8F7F2; border-radius:14px; padding:10px 12px; font-size:11px; color:var(--sub);}
-  .move-recap b{color:var(--ink); font-size:13px;}
+  .dice-bottom{flex:1; background:var(--card); border-radius:22px 22px 0 0; margin-top:6px; padding:12px 12px 14px;
+    display:flex; flex-direction:column; gap:8px; box-shadow:0 -6px 20px rgba(0,0,0,.08); overflow-y:auto;}
+  .move-recap{background:#F8F7F2; border-radius:14px; padding:8px 10px; font-size:12px; color:var(--sub);}
+  .move-recap b{color:var(--ink); font-size:14px;}
   .result-row{display:flex; gap:8px;}
-  .result-btn{flex:1; border:none; border-radius:14px; padding:14px 6px; font-size:12.5px; font-weight:800;
+  .result-btn{flex:1; border:none; border-radius:14px; padding:12px 6px; font-size:13.5px; font-weight:800;
     color:#fff; cursor:pointer; box-shadow:var(--shadow);}
   .result-btn.ok{background:var(--accent-strong);}
   .result-btn.fail{background:#C9C6BC;}
-  .chara-effect-btn{width:100%; border:none; border-radius:14px; padding:12px 12px; font-size:12px; font-weight:700;
+  .chara-effect-btn{width:100%; border:none; border-radius:14px; padding:10px 12px; font-size:13px; font-weight:700;
     background:#FFF3DC; color:#8C6A1F; text-align:left; display:flex; align-items:center; gap:10px; cursor:pointer;
-    box-shadow:var(--shadow); min-height:52px;}
+    box-shadow:var(--shadow); min-height:48px;}
   .orient-icon{width:30px; height:30px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
 
   /* ---------- effect flash ---------- */
@@ -232,7 +256,39 @@
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="stage"><div id="app"></div></div>
+
+<script>
+// ============================================================
+// 常に16:9の横向き画面として、端末の向きに関わらず中央に収める
+// (縦持ちの場合はステージごと90度回転させる)
+// ============================================================
+function layoutStage(){
+  const stage = document.getElementById('stage');
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const isPortrait = vh > vw;
+  // 横向き表示として扱う場合の論理的な幅・高さ（縦持ちならvw/vhを入れ替え）
+  const logicalW = isPortrait ? vh : vw;
+  const logicalH = isPortrait ? vw : vh;
+
+  let stageW = logicalW;
+  let stageH = stageW * 9 / 16;
+  if (stageH > logicalH) {
+    stageH = logicalH;
+    stageW = stageH * 16 / 9;
+  }
+
+  stage.style.width = stageW + 'px';
+  stage.style.height = stageH + 'px';
+  stage.style.transform = isPortrait
+    ? 'translate(-50%,-50%) rotate(90deg)'
+    : 'translate(-50%,-50%)';
+}
+window.addEventListener('resize', layoutStage);
+window.addEventListener('orientationchange', layoutStage);
+layoutStage();
+</script>
 
 <script>
 const SUPABASE_URL = 'https://yyrsscvofuoufkujetgf.supabase.co';
@@ -249,6 +305,7 @@ const TYPE_KANJI = {
   "かくとう":"闘","あく":"悪","はがね":"鋼","ひこう":"飛","ドラゴン":"龍","ノーマル":"無"
 };
 function typeVar(t){ return `var(--t-${t})`; }
+
 
 // ★ ワザ/ポケモンのタイプ別「優しいカラー」背景マップ（カード上半分用）
 const TYPE_BG_COLORS = {
@@ -267,7 +324,6 @@ const TYPE_BG_FALLBACK = "#ECEAE3";
 const CARD_BOTTOM_DARK = "#262420";
 function typeBgColor(t){ return TYPE_BG_COLORS[t] || TYPE_BG_FALLBACK; }
 
-const PEEK_ICONS = ["🔵","🔴","🟢","🟡","🟣","🟠","⚫","⚪","🔶","🔷"];
 
 // ★ キャラコロの向き（実際のファイル名: image/ICON/立.png などに合わせて設定してください）
 // ====== 環境データを格納する動的変数 ======
@@ -405,7 +461,7 @@ CHARACTERS = charaData.map(c => {
    ============================================================ */
 function newPlayer(name){
   return {
-    name, character:null, moveIds:[], peekCode:null, locked:false,
+    name, character:null, moveIds:[], locked:false,
     hp:0, maxHp:0, lastMoveId:null, nextTurnDamageMod:0
   };
 }
@@ -442,6 +498,20 @@ function renderBoard() {
   return board;
 }
 
+function renderTurnBoard(){
+  const board = document.createElement("div");
+  board.className = "board turn-board";
+  const row = document.createElement("div");
+  row.className = "player-row turn-row";
+  ["A","B"].forEach(key=>{
+    const card = renderPlayerCard(key);
+    card.classList.add(key===state.turnPlayer ? "turn-active" : "turn-inactive");
+    row.appendChild(card);
+  });
+  board.appendChild(row);
+  return board;
+}
+
 function render(){
   // 再描画でDOMが作り直されてもスクロール位置が先頭に戻らないよう、事前に保存しておく
   const prevSheet = app.querySelector(".modal-sheet");
@@ -473,12 +543,7 @@ function render(){
     app.appendChild(errWrap);
     return;
   }
-  const top = document.createElement("div");
-  top.className = "topbar";
-  top.textContent = "プラコロ バトル進行";
-  app.appendChild(top);
-
-  app.appendChild(renderBoard());
+  app.appendChild((state.phase === "moveSelect" || state.phase === "diceRoll") ? renderTurnBoard() : renderBoard());
 
   if(state.phase === "select"){
     if(bothLocked()){
@@ -539,15 +604,6 @@ function renderPlayerCard(key){
   slot.onclick = () => onCardTap(key);
   iconCol.appendChild(slot);
 
-  if(showAsSelected){
-    // ★ 画像の下にタイプ・弱点をアイコンで表示
-    const twRow = document.createElement("div");
-    twRow.className = "pc-typewk-row";
-    twRow.innerHTML = `
-      <div class="tw-icon"><img src="image/ICON/${p.character.type}.png" class="img-icon" alt="${p.character.type}"></div>
-      <div class="tw-icon"><img src="image/ICON/${p.character.weakness}.png" class="img-icon" alt="${p.character.weakness}"></div>`;
-    iconCol.appendChild(twRow);
-  }
   row1.appendChild(iconCol);
 
   const infoCol = document.createElement("div");
@@ -562,15 +618,31 @@ function renderPlayerCard(key){
 
   const nameHp = document.createElement("div");
   nameHp.className = "pc-name-hp";
+  const nameWrap = document.createElement("div");
+  nameWrap.className = "pc-name-wrap";
+  if(showAsSelected){
+    // ★ タイプアイコンをポケモン名の左に並べて表示
+    const typeIcon = document.createElement("div");
+    typeIcon.className = "pc-type-icon";
+    typeIcon.innerHTML = `<img src="image/ICON/${p.character.type}.png" class="img-icon" alt="${p.character.type}">`;
+    nameWrap.appendChild(typeIcon);
+  }
   const nm = document.createElement("div");
   nm.className = "pc-name";
   // ★ 手番は「（手番）」テキストではなく、カード全体のハイライト(active-turn)で表現
   nm.textContent = showAsSelected ? p.character.name : p.name;
+  nameWrap.appendChild(nm);
+  if(showAsSelected){
+    const wkInline = document.createElement("div");
+    wkInline.className = "wk-inline";
+    wkInline.innerHTML = `<span>弱点:</span><div class="tw-icon"><img src="image/ICON/${p.character.weakness}.png" class="img-icon" alt="${p.character.weakness}"></div>`;
+    nameWrap.appendChild(wkInline);
+  }
   const hpNum = document.createElement("div");
   hpNum.className = "pc-hp-num";
   hpNum.id = "hpnum-"+key;
   hpNum.textContent = showAsSelected ? `${Math.max(0,p.hp)}/${p.maxHp}` : "";
-  nameHp.appendChild(nm); nameHp.appendChild(hpNum);
+  nameHp.appendChild(nameWrap); nameHp.appendChild(hpNum);
   infoCol.appendChild(nameHp);
 
   const weakHp = document.createElement("div");
@@ -628,7 +700,9 @@ function onCardTap(key){
   if(!p.locked){
     openCharSelect(key);
   } else {
-    openPeekGate(key);
+    // ★ のぞき見防止は廃止。ロック済みでも直接ワザの再選択画面を開く
+    openMoveSelect(key, p.character);
+    state.modal.tempMoves = [...p.moveIds];
   }
 }
 
@@ -638,14 +712,6 @@ function openCharSelect(key){
 }
 function openMoveSelect(key, char){
   state.modal = {type:"move", playerKey:key, tempChar:char, tempMoves:[]};
-  render();
-}
-function openPeekSet(key, char, moveIds){
-  state.modal = {type:"peekset", playerKey:key, tempChar:char, tempMoves:moveIds, tempCode:null};
-  render();
-}
-function openPeekGate(key){
-  state.modal = {type:"peekgate", playerKey:key, tempPick:null};
   render();
 }
 
@@ -660,8 +726,6 @@ function renderModal(){
   const m = state.modal;
   if(m.type==="char") buildCharModal(sheet, m);
   if(m.type==="move") buildMoveModal(sheet, m);
-  if(m.type==="peekset") buildPeekSetModal(sheet, m);
-  if(m.type==="peekgate") buildPeekGateModal(sheet, m);
 
   return wrap;
 }
@@ -728,7 +792,7 @@ function buildMoveModal(sheet, m){
     el.className = "move-card" + (selected?" selected":"");
 
     el.innerHTML = `
-      <div class="mc-top" style="background:${typeBgColor(mv.type)}">
+      <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
         <div class="mc-top-row">
           <div class="mc-typename">
             <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
@@ -765,49 +829,14 @@ function buildMoveModal(sheet, m){
 
   const btn = document.createElement("button");
   btn.className = "btn wide";
-  btn.textContent = "次へ（のぞき見防止コード設定）";
+  btn.textContent = "この内容で確定";
   btn.disabled = m.tempMoves.length!==4;
   btn.style.opacity = m.tempMoves.length!==4 ? .4 : 1;
   btn.onclick = ()=>{
     if(m.tempMoves.length!==4) return;
-    openPeekSet(m.playerKey, m.tempChar, m.tempMoves);
-  };
-  sheet.appendChild(btn);
-}
-
-function buildPeekSetModal(sheet, m){
-  const title = document.createElement("div");
-  title.className = "modal-title";
-  title.textContent = "のぞき見防止コードを選んでください";
-  sheet.appendChild(title);
-  const sub = document.createElement("div");
-  sub.style.cssText = "font-size:11px; color:var(--sub); text-align:center; margin:-6px 0 14px;";
-  sub.textContent = "後で自分の情報を確認・変更するときに使います";
-  sheet.appendChild(sub);
-
-  const grid = document.createElement("div");
-  grid.className = "peek-grid";
-  PEEK_ICONS.forEach((ic,i)=>{
-    const el = document.createElement("div");
-    el.className = "peek-item" + (m.tempCode===i ? " selected":"");
-    el.style.background = "#F3F2EC";
-    el.textContent = ic;
-    el.onclick = ()=>{ m.tempCode = i; render(); };
-    grid.appendChild(el);
-  });
-  sheet.appendChild(grid);
-
-  const btn = document.createElement("button");
-  btn.className = "btn wide";
-  btn.textContent = "この内容で確定";
-  btn.disabled = m.tempCode===null;
-  btn.style.opacity = m.tempCode===null ? .4 : 1;
-  btn.onclick = ()=>{
-    if(m.tempCode===null) return;
     const p = state.players[m.playerKey];
     p.character = m.tempChar;
     p.moveIds = m.tempMoves;
-    p.peekCode = m.tempCode;
     p.locked = true;
     p.hp = m.tempChar.hp;
     p.maxHp = m.tempChar.hp;
@@ -815,50 +844,6 @@ function buildPeekSetModal(sheet, m){
     render();
   };
   sheet.appendChild(btn);
-}
-
-function buildPeekGateModal(sheet, m){
-  const title = document.createElement("div");
-  title.className = "modal-title";
-  title.textContent = "設定したのぞき見防止コードを選んでください";
-  sheet.appendChild(title);
-
-  const grid = document.createElement("div");
-  grid.className = "peek-grid";
-  PEEK_ICONS.forEach((ic,i)=>{
-    const el = document.createElement("div");
-    el.className = "peek-item";
-    el.style.background = "#F3F2EC";
-    el.textContent = ic;
-    el.onclick = ()=> verifyPeek(m.playerKey, i);
-    grid.appendChild(el);
-  });
-  sheet.appendChild(grid);
-
-  const cancel = document.createElement("button");
-  cancel.className = "btn secondary wide";
-  cancel.textContent = "閉じる";
-  cancel.onclick = ()=>{ state.modal=null; render(); };
-  sheet.appendChild(cancel);
-}
-
-function verifyPeek(key, pick){
-  const p = state.players[key];
-  if(pick === p.peekCode){
-    state.modal = null;
-    render();
-    openMoveSelect(key, p.character);
-    state.modal.tempMoves = [...p.moveIds];
-  } else {
-    state.modal = null;
-    render();
-    const card = document.getElementById("card-"+key);
-    if(card){
-      card.classList.add("shake");
-      setTimeout(()=>card.classList.remove("shake"), 400);
-    }
-    if(navigator.vibrate) navigator.vibrate([80,40,80]);
-  }
 }
 
 function renderStartCTA(){
@@ -919,10 +904,12 @@ function renderMoveSelectPanel(){
   const p = state.players[state.turnPlayer];
   const opp = state.players[opponentKey(state.turnPlayer)];
 
-  const head = document.createElement("div");
-  head.className = "ms-header";
-  head.textContent = `${p.name} のワザ選択（ターン${state.turnCount+1}）`;
-  panel.appendChild(head);
+  // ★ 手番プレイヤーのタイプカラーで塗り、手番側のミニカードとすき間なく繋がるように
+  //   その側の角だけ直角にする（反対側＝相手側の角は丸めたまま）
+  panel.style.background = typeBgColor(p.character.type);
+  panel.style.boxShadow = "none";
+  panel.style.height = "80%";
+  panel.style.borderRadius = state.turnPlayer === "A" ? "0 18px 0 0" : "18px 0 0 0";
 
   const grid = document.createElement("div");
   grid.className = "ms-grid";
@@ -936,7 +923,7 @@ function renderMoveSelectPanel(){
     
     // ★ アイコン各種を画像から取得。上半分はタイプ別カラー(1行にタイプ+ワザ名)、下半分は黒(ワザ効果+キャラコロ)
     card.innerHTML = `
-      <div class="mc-top" style="background:${typeBgColor(mv.type)}">
+      <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
         <div class="mc-top-row">
           <div class="mc-typename">
             <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
