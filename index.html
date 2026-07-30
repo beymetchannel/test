@@ -588,7 +588,8 @@ function newPlayer(name){
     hp:0, maxHp:0, lastMoveId:null,
     incomingDamageMod:0, // MOD_REDUCE_TAKEN：次に自分が受ける番のダメージ増減
     diceMod:0,           // MOD_DICE_SELF/MOD_DICE_ENEMY：次の自分の番のエネコロ増減
-    bannedMoveIds:[]     // SPECIAL_BIND_WAZA：次の自分の番、選べないワザ
+    bannedMoveIds:[],    // SPECIAL_BIND_WAZA：次の自分の番、選べないワザ
+    charaDiceBlocked:false // MOD_CHARADICE_ENEMY：次の自分の番、キャラコロを振れない（ワザチェック画面でキャラコロ画像を非表示）
   };
 }
 let state = {
@@ -600,7 +601,9 @@ let state = {
   selectedMove:null,
   winner:null,
   revealed:false,
-  effectPrompt:null // ワザ/キャラコロ効果処理中に追加の入力が必要な場合に使う一時状態
+  effectPrompt:null, // ワザ/キャラコロ効果処理中に追加の入力が必要な場合に使う一時状態
+  repeatUsesLeft:null, // SPECIAL_REPEAT：同じワザをあと何回使うか（nullは未使用中）
+  repeatActive:false    // SPECIAL_REPEAT：連続使用中はワザチェック画面の「ワザ選択に戻る」を押せなくする
 };
 
 function opponentKey(k){ return k==="A" ? "B" : "A"; }
@@ -970,7 +973,7 @@ function buildMoveModal(sheet, m){
 
   const btn = document.createElement("button");
   btn.className = "btn wide";
-  btn.textContent = "この内容で確定";
+  btn.textContent = "選択したワザで確定";
   btn.disabled = m.tempMoves.length!==4;
   btn.style.opacity = m.tempMoves.length!==4 ? .4 : 1;
   btn.onclick = ()=>{
@@ -1085,6 +1088,42 @@ function computeDisplayDamage(mv, mover, target){
   return {display:Math.max(base,0), orig:mv.baseDamage, mode};
 }
 
+// ★ move-cardのinnerHTMLを生成する共通関数。バトル画面のワザ選択カードと、SPECIAL_BIND_WAZAの
+//   ワザ選択画面（相手にどのワザを縛るか選んでもらう画面）とで、まったく同じ情報・見た目にするために共通化する。
+function buildMoveCardInnerHTML(mv, dmgInfo){
+  const dmgClass = dmgInfo.mode==="weak"?"weak":dmgInfo.mode==="up"?"up":dmgInfo.mode==="down"?"down":"";
+  // ★ 元々の値からの増減を "(元値±増減値)" の形式で表示するためのラベルを算出
+  const dmgDiff = dmgInfo.display - dmgInfo.orig;
+  const dmgDiffSign = dmgDiff >= 0 ? "+" : "-";
+  const dmgDiffLabel = `${dmgInfo.orig}${dmgDiffSign}${Math.abs(dmgDiff)}`;
+
+  // ★ アイコン各種を画像から取得。上半分はタイプ別カラー(1行にタイプ+ワザ名)、下半分は黒(ワザ効果+キャラコロ)
+  return `
+    <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
+      <div class="mc-top-row">
+        <div class="mc-typename">
+          <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
+          <div class="mc-name-big">${mv.name}</div>
+        </div>
+        <div class="mc-right-stack">
+          <div class="mc-cost">${mv.cost.map(t=>`<div class="cost-dot"><img src="image/ICON/${t}.png" class="img-icon" alt="${t}"></div>`).join("")}</div>
+          <div class="mc-dmg ${dmgClass}">${dmgInfo.display}${dmgInfo.mode!=="normal" ? `<span class="orig">(${dmgDiffLabel})</span>`:""}</div>
+        </div>
+      </div>
+      ${mv.effect ? `<div class="mc-effect">${mv.effect}</div>` : ""}
+    </div>
+    <div class="mc-bottom">
+      ${mv.chara.map(ce=>`
+        <div class="mc-chara-row">
+          <div style="display:flex; gap:2px; flex-shrink:0;">
+            ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
+          </div>
+          <div class="txt">${ce.text}</div>
+        </div>`).join("")}
+    </div>
+  `;
+}
+
 function buildMovesGrid(p, opp, interactive){
   const grid = document.createElement("div");
   grid.className = "ms-grid";
@@ -1094,37 +1133,7 @@ function buildMovesGrid(p, opp, interactive){
     const dmgInfo = computeDisplayDamage(mv, p, opp);
     const card = document.createElement("div");
     card.className = "move-card" + (disabled?" disabled":"");
-    const dmgClass = dmgInfo.mode==="weak"?"weak":dmgInfo.mode==="up"?"up":dmgInfo.mode==="down"?"down":"";
-    // ★ 元々の値からの増減を "(元値±増減値)" の形式で表示するためのラベルを算出
-    const dmgDiff = dmgInfo.display - dmgInfo.orig;
-    const dmgDiffSign = dmgDiff >= 0 ? "+" : "-";
-    const dmgDiffLabel = `${dmgInfo.orig}${dmgDiffSign}${Math.abs(dmgDiff)}`;
-
-    // ★ アイコン各種を画像から取得。上半分はタイプ別カラー(1行にタイプ+ワザ名)、下半分は黒(ワザ効果+キャラコロ)
-    card.innerHTML = `
-      <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
-        <div class="mc-top-row">
-          <div class="mc-typename">
-            <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
-            <div class="mc-name-big">${mv.name}</div>
-          </div>
-          <div class="mc-right-stack">
-            <div class="mc-cost">${mv.cost.map(t=>`<div class="cost-dot"><img src="image/ICON/${t}.png" class="img-icon" alt="${t}"></div>`).join("")}</div>
-            <div class="mc-dmg ${dmgClass}">${dmgInfo.display}${dmgInfo.mode!=="normal" ? `<span class="orig">(${dmgDiffLabel})</span>`:""}</div>
-          </div>
-        </div>
-        ${mv.effect ? `<div class="mc-effect">${mv.effect}</div>` : ""}
-      </div>
-      <div class="mc-bottom">
-        ${mv.chara.map(ce=>`
-          <div class="mc-chara-row">
-            <div style="display:flex; gap:2px; flex-shrink:0;">
-              ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
-            </div>
-            <div class="txt">${ce.text}</div>
-          </div>`).join("")}
-      </div>
-    `;
+    card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo);
     if(interactive && !disabled){
       card.onclick = ()=>{
         state.selectedMove = mid;
@@ -1179,7 +1188,8 @@ function renderDiceOverlay(){
   const isFirstTurn = state.turnCount === 0;
   // MOD_DICE_SELF / MOD_DICE_ENEMY で増減した分をこの番のエネコロ数に反映する
   const energyCount = Math.max(0, (isFirstTurn ? 2 : 3) + (p.diceMod || 0));
-  const hasChara = mv.chara && mv.chara.length > 0;
+  // MOD_CHARADICE_ENEMY：このワザチェック画面ではキャラコロが振れないため、キャラコロ画像（と"と"の表記）を非表示にする
+  const hasChara = mv.chara && mv.chara.length > 0 && !p.charaDiceBlocked;
 
   // ---------- ①1段目：左＝ワザカード／右＝アイコン＋"と"/"を振ろう！"のみの1行 ----------
   const topRow = document.createElement("div");
@@ -1277,11 +1287,18 @@ function renderDiceOverlay(){
   const backBtn = document.createElement("button");
   backBtn.className = "dr-back-btn";
   backBtn.innerHTML = "ワザ選択に<br>戻る";
-  backBtn.onclick = ()=>{
-    state.selectedMove = null;
-    state.phase = "moveSelect";
-    render();
-  };
+  if(state.repeatActive){
+    // SPECIAL_REPEAT：連続使用の途中はワザ選択画面へ戻れないようにする
+    backBtn.disabled = true;
+    backBtn.style.opacity = ".35";
+    backBtn.style.pointerEvents = "none";
+  } else {
+    backBtn.onclick = ()=>{
+      state.selectedMove = null;
+      state.phase = "moveSelect";
+      render();
+    };
+  }
   backBox.appendChild(backBtn);
   rightCol.appendChild(backBox);
 
@@ -1303,6 +1320,7 @@ function resolveTurn(result){
   mover.lastMoveId = state.selectedMove;
   mover.bannedMoveIds = [];   // SPECIAL_BIND_WAZAで縛られていた制限は、この選択で消化済み
   mover.diceMod = 0;          // 今回の番のエネコロ表示で既に消化済み（この後は自分の効果で新たにセットされ得る）
+  mover.charaDiceBlocked = false; // MOD_CHARADICE_ENEMYによる制限は、今回のワザチェック画面表示で消化済み
 
   // ★ ワザチェック画面(ダイス結果パネル)を閉じてから、盤面のみを表示した状態で以降の処理を行う
   state.phase = "resolve";
@@ -1361,7 +1379,7 @@ function runEffectQueue(queue, idx, ctx, done){
       break;
 
     case "DAMAGE_SELF":
-      // 相手への攻撃処理後、自分にも{effect_value}ダメージ
+      // 相手への攻撃処理後、自分にも{effect_value}ダメージ。{effect_value}がマイナスの場合はその分自分のHPを回復する
       ctx.dmgToSelf += eff.value;
       next();
       break;
@@ -1369,6 +1387,18 @@ function runEffectQueue(queue, idx, ctx, done){
     case "MOD_DICE_ENEMY":
       // 次の相手の番、相手のエネコロを{effect_value}個増減する
       ctx.opp.diceMod = (ctx.opp.diceMod || 0) + eff.value;
+      next();
+      break;
+
+    case "MOD_CHARADICE_ENEMY":
+      // 次の相手の番、相手はキャラコロを振れない（ワザチェック画面でキャラコロ画像を非表示にする）。effect_valueは参照しない
+      ctx.opp.charaDiceBlocked = true;
+      next();
+      break;
+
+    case "SPECIAL_REPEAT":
+      // {effect_value}回このワザを使う。実際の繰り返し制御はダメージ処理後（proceedToAnimateWithCtx）で行う
+      ctx.repeatValue = eff.value;
       next();
       break;
 
@@ -1432,7 +1462,8 @@ function showBindWazaPrompt(targetKey, count, onDone){
 function proceedToAnimateWithCtx(ctx){
   const { moverKey, mover, oppKey, opp, mv } = ctx;
   const dmgToOpp = Math.max(ctx.dmgToOpp, 0);
-  const dmgToSelf = Math.max(ctx.dmgToSelf, 0);
+  // DAMAGE_SELFがマイナス値の場合は回復として扱うため、0未満へはクランプしない（0にはクランプしない＝マイナスのまま保持）
+  const dmgToSelf = ctx.dmgToSelf;
 
   playEffectOn(oppKey, mv.type, dmgToOpp, ()=>{
     opp.hp = Math.max(opp.hp - dmgToOpp, 0);
@@ -1449,6 +1480,20 @@ function proceedToAnimateWithCtx(ctx){
         render();
         return;
       }
+
+      // SPECIAL_REPEAT：規定回数に達するまで手番を渡さず、もう一度ワザチェック画面を開く
+      if(ctx.repeatValue){
+        state.repeatUsesLeft = (state.repeatUsesLeft == null) ? (ctx.repeatValue - 1) : (state.repeatUsesLeft - 1);
+        if(state.repeatUsesLeft > 0){
+          state.repeatActive = true; // ワザチェック画面の「ワザ選択に戻る」を押せないようにする
+          state.phase = "diceRoll";
+          render();
+          return;
+        }
+        state.repeatUsesLeft = null;
+        state.repeatActive = false;
+      }
+
       state.turnPlayer = oppKey;
       state.turnCount++;
       state.selectedMove = null;
@@ -1456,10 +1501,15 @@ function proceedToAnimateWithCtx(ctx){
       render();
     };
 
-    if(dmgToSelf > 0){
+    if(dmgToSelf !== 0){
       setTimeout(()=>{
         playEffectOn(moverKey, mv.type, dmgToSelf, ()=>{
-          mover.hp = Math.max(mover.hp - dmgToSelf, 0);
+          // dmgToSelfが正数ならダメージ、マイナスならその分HPを回復する（maxHpを超えない）
+          if(dmgToSelf > 0){
+            mover.hp = Math.max(mover.hp - dmgToSelf, 0);
+          } else {
+            mover.hp = Math.min(mover.hp - dmgToSelf, mover.maxHp);
+          }
           updateHpBar(moverKey);
           setTimeout(finishSelf, 1000);
         });
@@ -1511,6 +1561,8 @@ function renderEffectPromptOverlay(){
 
   if(ep.kind === "bindWaza"){
     const target = state.players[ep.targetKey];
+    // ★ ダメージ表示等はバトル画面（ワザ選択画面）と全く同じ計算をするため、targetの相手（＝縛る側）を取得する
+    const targetOpp = state.players[opponentKey(ep.targetKey)];
     const remaining = ep.count - ep.picked.length;
 
     const title = document.createElement("div");
@@ -1530,17 +1582,11 @@ function renderEffectPromptOverlay(){
       const mv = MOVES[mid];
       const isPrevUsed = (mid === target.lastMoveId);
       const isPicked = ep.picked.includes(mid);
+      // ★ バトル画面のワザカードとまったく同じ情報・見た目で表示する
+      const dmgInfo = computeDisplayDamage(mv, target, targetOpp);
       const card = document.createElement("div");
       card.className = "move-card" + ((isPrevUsed || isPicked) ? " disabled" : "");
-      card.innerHTML = `
-        <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
-          <div class="mc-top-row">
-            <div class="mc-typename">
-              <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
-              <div class="mc-name-big">${mv.name}</div>
-            </div>
-          </div>
-        </div>`;
+      card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo);
       if(!isPrevUsed && !isPicked){
         card.onclick = ()=>{
           ep.picked.push(mid);
@@ -1656,7 +1702,7 @@ function renderWinOverlay(){
       players:{ A:newPlayer("トレーナーA"), B:newPlayer("トレーナーB") },
       firstPlayer:null, turnPlayer:null, turnCount:0,
       modal:null, editingPlayerKey:null, selectedMove:null, winner:null, revealed:false,
-      effectPrompt:null
+      effectPrompt:null, repeatUsesLeft:null, repeatActive:false
     };
     render();
   };
