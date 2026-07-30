@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>プラコロ バトル進行</title>
+<title>プラコロバトル</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @font-face{
@@ -99,7 +99,7 @@
     display:flex; align-items:center; padding:0 6px; background:#000;}
   .pc-hpbar-wrap{flex:1; min-width:0; height:100%;}
   .hp-bar-bg{width:100%; height:100%; background:transparent; overflow:hidden; box-sizing:border-box;}
-  .hp-bar-fill{height:100%; border-radius:0; background:linear-gradient(90deg,#9FE3AE,#7FCB98); transition:width .5s ease;}
+  .hp-bar-fill{height:100%; border-radius:0; background:linear-gradient(90deg,#9FE3AE,#7FCB98); transition:width 1s ease;}
   .hp-bar-fill.low{background:linear-gradient(90deg,#F5D95C,#EFC93C);}
   .hp-bar-fill.crit{background:linear-gradient(90deg,#F3A8A8,#E77E7E);}
 
@@ -140,6 +140,23 @@
   .btn.secondary{background:#EDEBE3; color:var(--ink); box-shadow:none;}
   .btn.wide{width:100%;}
 
+  /* ---------- win screen（勝利ポケモンのタイプ背景＋大きな演出） ---------- */
+  .win-screen{position:absolute; inset:0; z-index:50; overflow:hidden;
+    background-size:cover; background-position:center; background-repeat:no-repeat;
+    display:flex; align-items:center; justify-content:center; gap:4%; padding:0 6%;}
+  .win-mon-big{flex:0 0 auto; width:36%; max-width:320px; display:flex; align-items:center; justify-content:center;}
+  .win-mon-big img{width:100%; height:auto; object-fit:contain; filter:drop-shadow(0 16px 22px rgba(0,0,0,.35));}
+  .win-text-col{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:26px;}
+  .win-title{font-size:36px; font-weight:900; line-height:1.15; color:#fff; white-space:nowrap;
+    -webkit-text-stroke:3px #000; paint-order:stroke fill;
+    text-shadow:-3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000;}
+  .win-title .hl{display:block; font-size:1.9em; color:#FFE94A;
+    -webkit-text-stroke:7px #000; paint-order:stroke fill;
+    text-shadow:-4px -4px 0 #000, 4px -4px 0 #000, -4px 4px 0 #000, 4px 4px 0 #000;}
+  .win-again-btn{border:none; border-radius:40px; padding:14px 34px; font-size:18px; font-weight:800;
+    background:#000; color:#fff; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,.35); transition:transform .1s;}
+  .win-again-btn:active{transform:scale(.96);}
+
   /* ---------- select phase (非公開・簡易表示) ---------- */
   .select-board{padding:10px 10px 10px;}
   .select-row{gap:12px;}
@@ -147,11 +164,14 @@
     background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 12px;}
   .select-card-title{font-size:19px; font-weight:800; color:var(--ink);}
   .select-box{width:100%; flex:1; min-height:0; border-radius:14px; display:flex; align-items:center; justify-content:center;
-    text-align:center; font-size:17px; font-weight:800; color:#3A3A3A;}
+    text-align:center; font-size:17px; font-weight:800; color:#3A3A3A; background:#F6F5F0;}
   .select-box.pick-btn{cursor:pointer; transition:transform .1s;}
   .select-box.pick-btn:active{transform:scale(.97);}
   .select-box.ball-wrap{cursor:pointer;}
-  .ball-icon{width:55%; height:55%; object-fit:contain;}
+  .null-ball-wrap{position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
+  .null-ball{width:78%; height:78%; object-fit:contain;}
+  .null-ball-label{position:absolute; font-size:17px; font-weight:800; color:#3A3A3A; text-align:center; line-height:1.35;}
+  .ball-icon{width:70%; height:70%; object-fit:contain;}
   .ball-icon.wiggle{animation:ballWiggle 3.2s ease-in-out infinite;}
   @keyframes ballWiggle{
     0%,86%,100%{transform:rotate(0deg);}
@@ -201,6 +221,7 @@
     transition: transform 0.1s, box-shadow 0.1s;
   }
   .move-card.disabled { opacity: .35; pointer-events: none; transform: translateY(0); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  .resolve-panel .move-card{ cursor:default; pointer-events:none; }
   .move-card:active {
     /* 押し込んだ際の沈み込み演算！ */
     transform: translateY(1px);
@@ -278,29 +299,40 @@
   .dr-energy-icons{display:grid; grid-auto-flow:column; grid-template-rows:repeat(2,auto); gap:4px; flex-shrink:0;}
   .dr-energy-icons.one-row{display:flex; gap:5px;}
 
-  /* ②結果セクション：ワザ成功列 / エネ不足列 */
+  /* ②結果セクション：ワザ成功列 / エネ不足列＋ワザ選択に戻る */
   .dr-result-cols{flex:1; display:flex; gap:8px; min-height:0;}
   .dr-success-col{flex:3; display:flex; flex-direction:column; border-radius:14px; overflow:hidden;
-    background:#E5352F; min-height:0;}
+    background:var(--danger); min-height:0;}
   .dr-col-header{padding:8px 10px; font-size:13.5px; font-weight:900; color:#fff; text-align:center; flex-shrink:0;}
   .dr-header-success .hl{color:#FFE94A;}
-  .dr-header-fail{background:#3E6E86;}
-  .dr-btn-list{flex:1; display:flex; flex-direction:column; gap:5px; padding:0 8px 8px; overflow-y:auto; min-height:0;}
+  .dr-btn-list{flex:1; display:grid; grid-template-rows:repeat(4,1fr); gap:5px; padding:0 8px 8px; min-height:0;}
   .dr-chara-btn{width:100%; border:none; border-radius:10px; padding:8px 10px; background:#111;
     color:#fff; text-align:left; display:flex; align-items:center; gap:8px; cursor:pointer;
-    font-size:13.5px; font-weight:700; flex-shrink:0;}
+    font-size:13.5px; font-weight:700; flex:1; min-height:0; box-shadow:0 3px 8px rgba(0,0,0,.22);}
   .dr-chara-btn:disabled, .dr-success-only-btn:disabled{cursor:default;}
   .dr-chara-btn-icons{display:flex; gap:2px; flex-shrink:0;}
   .dr-chara-btn-icons .oi{width:25px; height:25px;}
   .dr-chara-btn-text{line-height:1.25;}
   .dr-success-only-btn{width:100%; border:none; border-radius:10px; padding:8px 10px;
     display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13.5px; font-weight:800;
-    color:#1a1a1a; flex-shrink:0;}
+    color:#1a1a1a; flex:1; min-height:0; box-shadow:0 3px 8px rgba(0,0,0,.16);}
   .dr-type-icon{width:27px; height:27px; flex-shrink:0;}
-  .dr-fail-col{flex:1.3; display:flex; flex-direction:column; border:none; border-radius:14px;
-    overflow:hidden; background:#fff; cursor:pointer; padding:0; box-shadow:inset 0 0 0 2px #3E6E86; min-height:0;}
-  .dr-fail-body{flex:1; display:flex; align-items:center; justify-content:center;
-    font-size:16px; font-weight:900; color:var(--ink); text-align:center; padding:4px;}
+
+  /* エネ不足：グレー背景の箱の中に、元の青色をそのまま適用した「ワザ失敗」ボタンを配置 */
+  .dr-right-col{flex:1.3; display:flex; flex-direction:column; gap:8px; min-height:0;}
+  .dr-fail-box{flex:3; display:flex; flex-direction:column; border-radius:14px; overflow:hidden;
+    background:#D8D6CE; min-height:0;}
+  .dr-header-fail{color:#5C5A50;}
+  .dr-fail-btn{flex:1; margin:0 10px 10px; border:none; border-radius:10px; background:#3E6E86;
+    color:#fff; font-size:16px; font-weight:900; cursor:pointer; box-shadow:0 3px 10px rgba(0,0,0,.2);}
+
+  /* 戻るボタンもエネ不足セクションと同様に箱で囲み、ひと回り薄いグレー背景の中に白いボタンを配置 */
+  .dr-back-box{flex:2; display:flex; flex-direction:column; border-radius:14px; overflow:hidden;
+    background:#E9E7E0; min-height:0;}
+  .dr-back-btn{flex:1; margin:10px; border:none; border-radius:10px; background:#FFFFFF; color:#5C5A50;
+    font-size:13px; font-weight:800; line-height:1.35; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    box-shadow:0 3px 8px rgba(0,0,0,.12);}
 
   /* ---------- effect flash ---------- */
   .fx-flash{position:absolute; border-radius:50%; pointer-events:none; z-index:60;
@@ -309,8 +341,39 @@
   .dmg-pop{position:absolute; z-index:61; font-size:22px; font-weight:900; animation:poprise .8s ease-out forwards;}
   @keyframes poprise{0%{transform:translateY(0); opacity:0;} 15%{opacity:1;} 100%{transform:translateY(-30px); opacity:0;}}
 
-  /* ---------- win screen ---------- */
-  .win-mon{width: 100px; height: 100px; margin: 0 auto;}
+  /* ---------- ①手番モンスターの攻撃モーション（相手側へ左右に揺れる） ---------- */
+  .mon-slot.atk-right{animation:atkLungeRight .55s ease-in-out;}
+  .mon-slot.atk-left{animation:atkLungeLeft .55s ease-in-out;}
+  @keyframes atkLungeRight{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(16px);} 40%{transform:translateX(0);}
+    60%{transform:translateX(16px);} 80%{transform:translateX(0);}
+  }
+  @keyframes atkLungeLeft{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-16px);} 40%{transform:translateX(0);}
+    60%{transform:translateX(-16px);} 80%{transform:translateX(0);}
+  }
+
+  /* ---------- ②被ダメージ側の点滅モーション＋ダメージ値の重ね表示 ---------- */
+  .mon-slot .img-icon.hit-blink{animation:hitBlink .5s steps(1,end) 1;}
+  @keyframes hitBlink{
+    0%{opacity:1;}
+    12.5%{opacity:0;}
+    25%{opacity:1;}
+    37.5%{opacity:0;}
+    50%{opacity:1;}
+    100%{opacity:1;}
+  }
+  .dmg-overlay-num{position:absolute; inset:0; z-index:62; display:flex; align-items:center; justify-content:center;
+    font-size:26px; font-weight:900; pointer-events:none;
+    font-family:'851Gkktt','Hiragino Sans','Noto Sans JP',sans-serif;
+    -webkit-text-stroke:1.4px #fff; paint-order:stroke fill;
+    text-shadow:-1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff;
+    color:#3A3A3A; animation:dmgOverlayIn .2s ease-out;}
+  .dmg-overlay-num.heal{color:#4E9E6C;}
+  @keyframes dmgOverlayIn{0%{opacity:0; transform:scale(.7);} 100%{opacity:1; transform:scale(1);}}
+
 </style>
 </head>
 <body>
@@ -612,7 +675,8 @@ function render(){
   }
   if(state.phase === "moveSelect") app.appendChild(renderMoveSelectPanel());
   if(state.phase === "diceRoll") app.appendChild(renderDiceOverlay());
-  // ★ ワザチェック画面は解決前に閉じ、盤面のみを表示してからダメージ演出を行う（重なり描写を防止）
+  // ★ ワザチェック画面は解決前に閉じ、盤面＋手番側のワザ一覧のみを表示してダメージ演出を行う（重なり描写を防止）
+  if(state.phase === "resolve") app.appendChild(renderResolveMovesPanel());
   if(state.phase === "win") app.appendChild(renderWinOverlay());
 
   if(state.modal) app.appendChild(renderModal());
@@ -879,10 +943,18 @@ function buildMoveModal(sheet, m){
     el.onclick = ()=>{
       if(selected){
         m.tempMoves = m.tempMoves.filter(x=>x!==mid);
+        render();
       } else if(m.tempMoves.length<4){
         m.tempMoves.push(mid);
+        render();
+        if(m.tempMoves.length===4){
+          // ★ 4つ選択完了時、利用者に分かりやすいよう滑らかに一番下(確定ボタン)までスクロールする
+          requestAnimationFrame(()=>{
+            const sheet = document.querySelector(".modal-sheet");
+            if(sheet) sheet.scrollTo({top: sheet.scrollHeight, behavior:"smooth"});
+          });
+        }
       }
-      render();
     };
     list.appendChild(el);
   });
@@ -924,7 +996,6 @@ function renderSelectBoard(){
 function renderSelectCard(key){
   const p = state.players[key];
   const isA = key === "A";
-  const bg = isA ? "var(--trainerA-bg)" : "var(--trainerB-bg)";
 
   const card = document.createElement("div");
   card.className = "select-card";
@@ -936,16 +1007,24 @@ function renderSelectCard(key){
 
   const box = document.createElement("div");
   box.className = "select-box";
-  box.style.background = bg;
 
   if(!p.locked){
     box.classList.add("pick-btn");
-    box.textContent = "ポケモンを\n選ぶ";
-    box.style.whiteSpace = "pre-line";
+    box.innerHTML = `
+      <div class="null-ball-wrap">
+        <img src="image/ICON/モンスターボールNull.png" class="ball-icon null-ball" alt="">
+        <div class="null-ball-label">ポケモンを<br>選ぶ</div>
+      </div>`;
     box.onclick = ()=> openCharSelect(key);
   } else {
+    // ★ 選択後は各トレーナー専用のモンスターボール画像に切り替え、揺れアニメーションも継続。
+    //   ラベルのみ「ポケモンを選ぶ」→「選択済み」に変更して表示したままにする。
     box.classList.add("ball-wrap");
-    box.innerHTML = `<img src="image/ICON/モンスターボール${key}.png" class="ball-icon wiggle" alt="モンスターボール">`;
+    box.innerHTML = `
+      <div class="null-ball-wrap">
+        <img src="image/ICON/モンスターボール${key}.png" class="ball-icon wiggle" alt="モンスターボール">
+        <div class="null-ball-label">選択済み</div>
+      </div>`;
     box.onclick = ()=>{
       openMoveSelect(key, p.character);
       state.modal.tempMoves = [...p.moveIds];
@@ -986,19 +1065,7 @@ function computeDisplayDamage(mv, mover, target){
   return {display:Math.max(base,0), orig:mv.baseDamage, mode};
 }
 
-function renderMoveSelectPanel(){
-  const panel = document.createElement("div");
-  panel.className = "move-select-panel";
-  const p = state.players[state.turnPlayer];
-  const opp = state.players[opponentKey(state.turnPlayer)];
-
-  // ★ 手番プレイヤーのタイプカラーで塗り、手番側のミニカードとすき間なく繋がるように
-  //   その側の角だけ直角にする（反対側＝相手側の角は丸めたまま）
-  panel.style.background = typeBgColor(p.character.type);
-  panel.style.boxShadow = "none";
-  panel.style.height = "80%";
-  panel.style.borderRadius = state.turnPlayer === "A" ? "0 18px 0 0" : "18px 0 0 0";
-
+function buildMovesGrid(p, opp, interactive){
   const grid = document.createElement("div");
   grid.className = "ms-grid";
   p.moveIds.forEach(mid=>{
@@ -1012,7 +1079,7 @@ function renderMoveSelectPanel(){
     const dmgDiff = dmgInfo.display - dmgInfo.orig;
     const dmgDiffSign = dmgDiff >= 0 ? "+" : "-";
     const dmgDiffLabel = `${dmgInfo.orig}${dmgDiffSign}${Math.abs(dmgDiff)}`;
-    
+
     // ★ アイコン各種を画像から取得。上半分はタイプ別カラー(1行にタイプ+ワザ名)、下半分は黒(ワザ効果+キャラコロ)
     card.innerHTML = `
       <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
@@ -1038,7 +1105,7 @@ function renderMoveSelectPanel(){
           </div>`).join("")}
       </div>
     `;
-    if(!disabled){
+    if(interactive && !disabled){
       card.onclick = ()=>{
         state.selectedMove = mid;
         state.phase = "diceRoll";
@@ -1047,7 +1114,37 @@ function renderMoveSelectPanel(){
     }
     grid.appendChild(card);
   });
-  panel.appendChild(grid);
+  return grid;
+}
+
+function moveTurnPanelBase(){
+  const panel = document.createElement("div");
+  const p = state.players[state.turnPlayer];
+  // ★ 手番プレイヤーのタイプカラーで塗り、手番側のミニカードとすき間なく繋がるように
+  //   その側の角だけ直角にする（反対側＝相手側の角は丸めたまま）
+  panel.style.background = typeBgColor(p.character.type);
+  panel.style.boxShadow = "none";
+  panel.style.height = "80%";
+  panel.style.borderRadius = state.turnPlayer === "A" ? "0 18px 0 0" : "18px 0 0 0";
+  return panel;
+}
+
+function renderMoveSelectPanel(){
+  const panel = moveTurnPanelBase();
+  panel.className = "move-select-panel";
+  const p = state.players[state.turnPlayer];
+  const opp = state.players[opponentKey(state.turnPlayer)];
+  panel.appendChild(buildMovesGrid(p, opp, true));
+  return panel;
+}
+
+// ★ ダメージ計算・演出中も、手番トレーナー側の4つのワザ一覧を表示しておく（操作不可）
+function renderResolveMovesPanel(){
+  const panel = moveTurnPanelBase();
+  panel.className = "move-select-panel resolve-panel";
+  const p = state.players[state.turnPlayer];
+  const opp = state.players[opponentKey(state.turnPlayer)];
+  panel.appendChild(buildMovesGrid(p, opp, false));
   return panel;
 }
 
@@ -1062,7 +1159,6 @@ function renderDiceOverlay(){
   const isFirstTurn = state.turnCount === 0;
   const energyCount = isFirstTurn ? 2 : 3;
   const hasChara = mv.chara && mv.chara.length > 0;
-  const stackEnergy = energyCount >= 4; // ★ エネコロが4個以上ならサイズを半分にして2段表示
 
   // ---------- ①1段目：左＝ワザカード／右＝アイコン＋"と"/"を振ろう！"のみの1行 ----------
   const topRow = document.createElement("div");
@@ -1079,7 +1175,7 @@ function renderDiceOverlay(){
   topRow.appendChild(moveCard);
 
   // ★ テキストラベル("キャラコロ"/"エネコロ×n")を排し、アイコンを大きく表示。
-  //   「[キャラコロ]と[エネコロ]を振ろう！」を1行1セクションで完結させる。
+  //   「[キャラコロ]と[エネコロ]を振ろう！」を1行1セクションで完結させる（エネコロは常に1段表示）。
   const rollLine = document.createElement("div");
   rollLine.className = "dr-roll-line";
   let rollHtml = "";
@@ -1087,10 +1183,10 @@ function renderDiceOverlay(){
     rollHtml += `<div class="dr-inline-icon big"><img src="image/ICON/キャラコロ.png" class="img-icon" alt="キャラコロ"></div>`;
     rollHtml += `<span class="dr-flow-word">と</span>`;
   }
-  rollHtml += `<div class="dr-energy-icons${stackEnergy ? "" : " one-row"}">`;
+  rollHtml += `<div class="dr-energy-icons one-row">`;
   for(let i=0;i<energyCount;i++){
     const num = (i % 6) + 1;
-    rollHtml += `<div class="dr-inline-icon ${stackEnergy ? "half" : "big"}"><img src="image/ICON/エネコロ${num}.png" class="img-icon" alt="エネコロ"></div>`;
+    rollHtml += `<div class="dr-inline-icon big"><img src="image/ICON/エネコロ${num}.png" class="img-icon" alt="エネコロ"></div>`;
   }
   rollHtml += `</div><span class="dr-flow-word">を振ろう！</span>`;
   rollLine.innerHTML = rollHtml;
@@ -1137,14 +1233,38 @@ function renderDiceOverlay(){
   successCol.appendChild(btnList);
   resultCols.appendChild(successCol);
 
-  // ★「エネ不足」セクション全体をひとつのボタンにする
-  const failCol = document.createElement("button");
-  failCol.className = "dr-fail-col";
-  failCol.innerHTML = `
-    <div class="dr-col-header dr-header-fail">エネ不足</div>
-    <div class="dr-fail-body">ワザ失敗</div>`;
-  failCol.onclick = ()=> resolveTurn({kind:"fail"});
-  resultCols.appendChild(failCol);
+  // ★「エネ不足」セクション：グレーの箱の中に、元の青色を適用した「ワザ失敗」ボタンを配置
+  const rightCol = document.createElement("div");
+  rightCol.className = "dr-right-col";
+
+  const failBox = document.createElement("div");
+  failBox.className = "dr-fail-box";
+  const failHeader = document.createElement("div");
+  failHeader.className = "dr-col-header dr-header-fail";
+  failHeader.textContent = "エネ不足";
+  failBox.appendChild(failHeader);
+  const failBtn = document.createElement("button");
+  failBtn.className = "dr-fail-btn";
+  failBtn.textContent = "ワザ失敗";
+  failBtn.onclick = ()=> resolveTurn({kind:"fail"});
+  failBox.appendChild(failBtn);
+  rightCol.appendChild(failBox);
+
+  // ★ 「ワザ選択に戻る」ボタンも、エネ不足セクションと同様に箱で囲んで配置する
+  const backBox = document.createElement("div");
+  backBox.className = "dr-back-box";
+  const backBtn = document.createElement("button");
+  backBtn.className = "dr-back-btn";
+  backBtn.innerHTML = "ワザ選択に<br>戻る";
+  backBtn.onclick = ()=>{
+    state.selectedMove = null;
+    state.phase = "moveSelect";
+    render();
+  };
+  backBox.appendChild(backBtn);
+  rightCol.appendChild(backBox);
+
+  resultCols.appendChild(rightCol);
 
   ov.appendChild(resultCols);
 
@@ -1212,13 +1332,13 @@ function resolveTurn(result){
         playEffectOn(moverKey, mv.type, dmgToSelf, ()=>{
           mover.hp = Math.max(mover.hp - dmgToSelf, 0);
           updateHpBar(moverKey);
-          setTimeout(finishSelf, 300);
+          setTimeout(finishSelf, 1000);
         });
       }, 250);
     } else {
-      setTimeout(finishSelf, 300);
+      setTimeout(finishSelf, 1000);
     }
-  });
+  }, moverKey);
 }
 
 function updateHpBar(key){
@@ -1233,58 +1353,78 @@ function updateHpBar(key){
   if(num) num.className = "pc-hp-num " + hpBarClass(p);
 }
 
-function playEffectOn(targetKey, type, dmg, cb){
-  const slot = document.querySelector("#card-"+targetKey+" .mon-slot");
-  if(!slot){ cb(); return; }
-  const rect = slot.getBoundingClientRect();
-  const appRect = app.getBoundingClientRect();
-  let size = dmg<=0 ? 40 : dmg<=30 ? 50 : dmg<=60 ? 80 : 110;
+// ★ ダメージ演出は以下の順序で実行する：
+//   ①手番モンスターの画像を相手側へ左右に揺らす（attackerKeyが指定されている場合のみ）
+//   ②被ダメージ側の画像を2回点滅させ、ダメージ値を画像に重ねて表示
+//   ③（呼び出し元で）HPゲージを減らす（通常の50%速度でゆっくり減少）
+function playEffectOn(targetKey, type, dmg, cb, attackerKey){
   const isHeal = dmg < 0;
-  const color = isHeal ? "var(--heal)" : typeVar(type);
 
-  const flash = document.createElement("div");
-  flash.className = "fx-flash";
-  flash.style.width = size+"px";
-  flash.style.height = size+"px";
-  flash.style.left = (rect.left - appRect.left + rect.width/2 - size/2) + "px";
-  flash.style.top = (rect.top - appRect.top + rect.height/2 - size/2) + "px";
-  flash.style.background = color;
-  app.appendChild(flash);
+  const doHit = ()=>{
+    const slot = document.querySelector("#card-"+targetKey+" .mon-slot");
+    if(!slot){ cb(); return; }
+    const img = slot.querySelector(".img-icon");
 
-  const pop = document.createElement("div");
-  pop.className = "dmg-pop";
-  pop.style.left = (rect.left - appRect.left + rect.width/2 - 20) + "px";
-  pop.style.top = (rect.top - appRect.top + 10) + "px";
-  pop.style.color = isHeal ? "#4E9E6C" : "#3A3A3A";
-  pop.textContent = isHeal ? `+${-dmg}` : (dmg>0 ? `-${dmg}` : "MISS");
-  app.appendChild(pop);
+    // ② 被ダメージ側の点滅 + ダメージ値の重ね表示
+    if(img) img.classList.add("hit-blink");
+    const overlay = document.createElement("div");
+    overlay.className = "dmg-overlay-num" + (isHeal ? " heal" : "");
+    overlay.textContent = isHeal ? `+${-dmg}` : (dmg>0 ? `-${dmg}` : "MISS");
+    slot.appendChild(overlay);
 
-  setTimeout(()=>{
-    flash.remove(); pop.remove();
-    cb();
-  }, 550);
+    setTimeout(()=>{
+      if(img) img.classList.remove("hit-blink");
+      overlay.remove();
+      // ③ HPゲージを減らす（実際の反映・アニメーションは呼び出し元のcb内で行う）
+      cb();
+    }, 550);
+  };
+
+  if(attackerKey){
+    // ① 手番モンスターの画像を相手側（Aなら右／Bなら左）へ揺らす
+    const moverSlot = document.querySelector("#card-"+attackerKey+" .mon-slot");
+    if(moverSlot){
+      const dirClass = attackerKey === "A" ? "atk-right" : "atk-left";
+      moverSlot.classList.add(dirClass);
+      setTimeout(()=>{
+        moverSlot.classList.remove(dirClass);
+        doHit();
+      }, 550);
+    } else {
+      doHit();
+    }
+  } else {
+    doHit();
+  }
 }
 
 function renderWinOverlay(){
-  const ov = document.createElement("div");
-  ov.className = "overlay full";
   const winner = state.players[state.winner];
+  const type = winner.character.type;
+
+  const ov = document.createElement("div");
+  ov.className = "win-screen";
+  // ★ 背景は勝利ポケモンのタイプ画像
+  ov.style.backgroundImage = `url('image/BACK/back_${type}.png')`;
+
+  // ★ 中央左寄りに勝利ポケモン画像を大きく配置
   const mon = document.createElement("div");
-  mon.className = "win-mon";
-  // ★ ポケモン画像をCHARAから取得
-  mon.innerHTML = `<img src="image/CHARA/${winner.character.name}.png" class="img-icon" alt="${winner.character.name}">`;
+  mon.className = "win-mon-big";
+  mon.innerHTML = `<img src="image/CHARA/${winner.character.name}.png" alt="${winner.character.name}">`;
   ov.appendChild(mon);
+
+  // ★ 中央右寄りに「トレーナー名＋勝利！」を大きく表示し、その下にボタンを配置
+  const textCol = document.createElement("div");
+  textCol.className = "win-text-col";
+
   const title = document.createElement("div");
-  title.className = "overlay-title";
-  title.textContent = `${winner.name} の勝利！`;
-  ov.appendChild(title);
-  const sub = document.createElement("div");
-  sub.className = "overlay-sub";
-  sub.textContent = `${winner.character.name} が勝利しました`;
-  ov.appendChild(sub);
+  title.className = "win-title";
+  title.innerHTML = `${winner.name}<span class="hl">勝利！</span>`;
+  textCol.appendChild(title);
+
   const btn = document.createElement("button");
-  btn.className = "btn";
-  btn.textContent = "もう一度対戦する";
+  btn.className = "win-again-btn";
+  btn.textContent = "もう一度遊ぶ";
   btn.onclick = ()=>{
     state = {
       phase:"select",
@@ -1294,7 +1434,9 @@ function renderWinOverlay(){
     };
     render();
   };
-  ov.appendChild(btn);
+  textCol.appendChild(btn);
+
+  ov.appendChild(textCol);
   return ov;
 }
 
