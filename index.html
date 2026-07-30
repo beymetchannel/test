@@ -32,6 +32,9 @@
     --t-くさ:#B8E6C1; --t-ほのお:#FFB199; --t-みず:#A9D6E5; --t-かみなり:#FFE28A;
     --t-エスパー:#E3B8F0; --t-かくとう:#F4A6A6; --t-あく:#B0A8C0; --t-はがね:#C7CCD1;
     --t-ひこう:#C9E4FF; --t-ドラゴン:#B8A9E0; --t-ノーマル:#E6E2D3;
+
+    --trainerA-bg:#FFC2E3; --trainerA-btn:#FF9FCF;
+    --trainerB-bg:#A9D8F5; --trainerB-btn:#7EC1EE;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;width:100%;height:100%;background:#15140f;color:var(--ink);
@@ -137,13 +140,25 @@
   .btn.secondary{background:#EDEBE3; color:var(--ink); box-shadow:none;}
   .btn.wide{width:100%;}
 
-  .float-cta{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); z-index:40;}
-
-  /* first player select */
-  .trainer-pick-row{display:flex; gap:14px; width:100%;}
-  .trainer-pick{flex:1; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
-    padding:24px 10px; font-weight:800; font-size:15px; cursor:pointer;}
-  .trainer-pick:active{transform:scale(.97);}
+  /* ---------- select phase (非公開・簡易表示) ---------- */
+  .select-board{padding:10px 10px 10px;}
+  .select-row{gap:12px;}
+  .select-card{flex:1; display:flex; flex-direction:column; align-items:center; gap:10px;
+    background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 12px;}
+  .select-card-title{font-size:19px; font-weight:800; color:var(--ink);}
+  .select-box{width:100%; flex:1; min-height:0; border-radius:14px; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:17px; font-weight:800; color:#3A3A3A;}
+  .select-box.pick-btn{cursor:pointer; transition:transform .1s;}
+  .select-box.pick-btn:active{transform:scale(.97);}
+  .select-box.ball-wrap{cursor:pointer;}
+  .ball-icon{width:55%; height:55%; object-fit:contain;}
+  .ball-icon.wiggle{animation:ballWiggle 3.2s ease-in-out infinite;}
+  @keyframes ballWiggle{
+    0%,86%,100%{transform:rotate(0deg);}
+    88%{transform:rotate(-7deg);} 90%{transform:rotate(6deg);}
+    92%{transform:rotate(-4deg);} 94%{transform:rotate(2deg);} 96%{transform:rotate(0deg);}
+  }
+  .start-first-btn{color:#3A3A3A; box-shadow:none; margin-top:2px;}
 
   /* ---------- selection modal (character/move/peek) ---------- */
   .modal-overlay{position:fixed; inset:0; z-index:200; background:rgba(40,38,32,.4);
@@ -204,7 +219,7 @@
   .mc-typename{display:flex; align-items:center; gap:6px; min-width:0; flex:1;}
   .mc-type-icon{width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .mc-name-big{font-size:18px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    color:#fff; -webkit-text-stroke:2px #000; paint-order:stroke fill;
+    color:#fff; -webkit-text-stroke:2px #000; paint-order:stroke fill; padding-left:3px; margin-left:-3px;
     text-shadow:-2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 0 3px #000;}
 
   .mc-right-stack{display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0;}
@@ -223,8 +238,10 @@
   .mc-bottom{flex:1 1 50%; min-height:0; background:#262420; padding:3px 8px 5px;
     display:flex; flex-direction:column; justify-content:center; gap:3px; overflow-y:auto;}
 
-  .mc-effect{font-size:10.5px; color:rgba(58,58,58,.72); line-height:1.25; flex-shrink:0;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .mc-effect{font-size:10.5px; font-weight:800; color:#fff; line-height:1.25; flex-shrink:0;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    -webkit-text-stroke:2.2px #000; paint-order:stroke fill;
+    text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;}
 
   /* キャラコロ効果行(白文字・区切り線のみ、独自背景なし) */
   .mc-chara-row{color:#fff; padding-top:3px; margin-top:1px;
@@ -240,10 +257,7 @@
     display: flex; flex-direction: column; gap:8px;
     padding:10px 12px 12px; min-height:0;
   }
-  /* ダメージ計算・エフェクト処理中は操作不可の凍結表示にする */
-  .dice-overlay.dr-frozen{ pointer-events:none; opacity:.6; }
-
-  /* ①1段目：左＝ワザカード／中央＝テキスト／右＝アイコン群、を横一列に配置 */
+  /* ①1段目：左＝ワザカード／右＝アイコン+テキストを1行にまとめた「〜と〜を振ろう！」 */
   .dr-top-row{flex-shrink:0; display:flex; align-items:stretch; gap:10px;}
 
   /* ワザカード：1行目エネルギー・2行目ワザ名、タイプ背景＋back画像 */
@@ -251,20 +265,18 @@
     background-size:cover; background-position:center; box-shadow:0 4px 12px rgba(0,0,0,.15);
     display:flex; flex-direction:column; justify-content:center;}
   .dr-cost-row{display:flex; gap:3px; margin-bottom:3px; flex-wrap:wrap;}
-  .dr-move-name{font-size:19px;}
+  .dr-cost-row .cost-dot{width:23px; height:23px;}
+  .dr-move-name{font-size:19px; padding-left:3px; margin-left:-3px;}
 
-  /* 中央テキスト："キャラコロと" はタイプ色、"エネコロ×n" は黄色固定、どちらも太い黒縁 */
-  .dr-roll-text{flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; font-size:15px; font-weight:800; color:var(--ink); line-height:1.35;}
-  .dr-chara-word, .dr-enekoro-word{
-    font-weight:900; -webkit-text-stroke:1.6px #000; paint-order:stroke fill;
-    text-shadow:-1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 0 2px #000;}
-  .dr-enekoro-word{color:#FFE94A;}
-
-  /* 右：サイコロアイコン */
-  .dr-dice-icons{flex:0 0 auto; max-width:120px; display:flex; flex-wrap:wrap; gap:5px;
-    justify-content:flex-end; align-content:center;}
-  .dr-die-icon{width:32px; height:32px; flex-shrink:0;}
+  /* ★ テキストを排し、アイコンを大きく表示。"と"/"を振ろう！"の言葉だけを添えて1行1セクションで完結 */
+  .dr-roll-line{flex:1; min-width:0; display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:6px; text-align:center;}
+  .dr-flow-word{font-size:16px; font-weight:900; color:var(--ink); flex-shrink:0;}
+  .dr-inline-icon{flex-shrink:0;}
+  .dr-inline-icon.big{width:46px; height:46px;}
+  .dr-inline-icon.half{width:23px; height:23px;}
+  .dr-energy-icons{display:grid; grid-auto-flow:column; grid-template-rows:repeat(2,auto); gap:4px; flex-shrink:0;}
+  .dr-energy-icons.one-row{display:flex; gap:5px;}
 
   /* ②結果セクション：ワザ成功列 / エネ不足列 */
   .dr-result-cols{flex:1; display:flex; gap:8px; min-height:0;}
@@ -276,15 +288,15 @@
   .dr-btn-list{flex:1; display:flex; flex-direction:column; gap:5px; padding:0 8px 8px; overflow-y:auto; min-height:0;}
   .dr-chara-btn{width:100%; border:none; border-radius:10px; padding:8px 10px; background:#111;
     color:#fff; text-align:left; display:flex; align-items:center; gap:8px; cursor:pointer;
-    font-size:12px; font-weight:700; flex-shrink:0;}
+    font-size:13.5px; font-weight:700; flex-shrink:0;}
   .dr-chara-btn:disabled, .dr-success-only-btn:disabled{cursor:default;}
   .dr-chara-btn-icons{display:flex; gap:2px; flex-shrink:0;}
-  .dr-chara-btn-icons .oi{width:22px; height:22px;}
+  .dr-chara-btn-icons .oi{width:25px; height:25px;}
   .dr-chara-btn-text{line-height:1.25;}
   .dr-success-only-btn{width:100%; border:none; border-radius:10px; padding:8px 10px;
-    display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; font-weight:800;
+    display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13.5px; font-weight:800;
     color:#1a1a1a; flex-shrink:0;}
-  .dr-type-icon{width:24px; height:24px; flex-shrink:0;}
+  .dr-type-icon{width:27px; height:27px; flex-shrink:0;}
   .dr-fail-col{flex:1.3; display:flex; flex-direction:column; border:none; border-radius:14px;
     overflow:hidden; background:#fff; cursor:pointer; padding:0; box-shadow:inset 0 0 0 2px #3E6E86; min-height:0;}
   .dr-fail-body{flex:1; display:flex; align-items:center; justify-content:center;
@@ -589,23 +601,18 @@ function render(){
     app.appendChild(errWrap);
     return;
   }
-  app.appendChild((state.phase === "moveSelect" || state.phase === "diceRoll" || state.phase === "resolve") ? renderTurnBoard() : renderBoard());
+  const inBattleBoard = (state.phase === "moveSelect" || state.phase === "diceRoll" || state.phase === "resolve");
+  app.appendChild(inBattleBoard ? renderTurnBoard() : (state.phase === "select" ? renderSelectBoard() : renderBoard()));
 
-  if(state.phase === "select"){
-    if(bothLocked()){
-      app.appendChild(renderStartCTA());
-    } else {
-      const hint = document.createElement("div");
-      hint.className = "center-hint";
-      hint.textContent = "各プレイヤーはポケモンをタップして、ポケモンと4つのワザを非公開で選んでください。";
-      app.appendChild(hint);
-    }
+  if(state.phase === "select" && !bothLocked()){
+    const hint = document.createElement("div");
+    hint.className = "center-hint";
+    hint.textContent = "各プレイヤーはポケモンをタップして、ポケモンと4つのワザを非公開で選んでください。";
+    app.appendChild(hint);
   }
-  if(state.phase === "firstPlayer") app.appendChild(renderFirstPlayerOverlay());
   if(state.phase === "moveSelect") app.appendChild(renderMoveSelectPanel());
-  if(state.phase === "diceRoll") app.appendChild(renderDiceOverlay(false));
-  // ★ ダメージ計算・エフェクト処理中も、手番プレイヤーのワザ選択パネルを展開したままにする（操作不可の凍結表示）
-  if(state.phase === "resolve") app.appendChild(renderDiceOverlay(true));
+  if(state.phase === "diceRoll") app.appendChild(renderDiceOverlay());
+  // ★ ワザチェック画面は解決前に閉じ、盤面のみを表示してからダメージ演出を行う（重なり描写を防止）
   if(state.phase === "win") app.appendChild(renderWinOverlay());
 
   if(state.modal) app.appendChild(renderModal());
@@ -842,7 +849,8 @@ function buildMoveModal(sheet, m){
     const mv = MOVES[mid];
     const el = document.createElement("div");
     const selected = m.tempMoves.includes(mid);
-    el.className = "move-card" + (selected?" selected":"");
+    const maxedOut = !selected && m.tempMoves.length >= 4;
+    el.className = "move-card" + (selected?" selected":"") + (maxedOut?" disabled":"");
 
     el.innerHTML = `
       <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
@@ -899,42 +907,69 @@ function buildMoveModal(sheet, m){
   sheet.appendChild(btn);
 }
 
-function renderStartCTA(){
-  const wrap = document.createElement("div");
-  wrap.className = "float-cta";
-  const btn = document.createElement("button");
-  btn.className = "btn";
-  btn.textContent = "バトル開始";
-  btn.onclick = ()=>{ state.revealed = true; state.phase = "firstPlayer"; render(); };
-  wrap.appendChild(btn);
-  return wrap;
+function renderSelectBoard(){
+  const board = document.createElement("div");
+  board.className = "board select-board";
+  const row = document.createElement("div");
+  row.className = "player-row select-row";
+  row.appendChild(renderSelectCard("A"));
+  row.appendChild(renderSelectCard("B"));
+  board.appendChild(row);
+  return board;
 }
 
-function renderFirstPlayerOverlay(){
-  const ov = document.createElement("div");
-  ov.className = "overlay full";
-  const title = document.createElement("div");
-  title.className = "overlay-title";
-  title.textContent = "先行プレイヤーを選択";
-  ov.appendChild(title);
+// ★ 選択フェーズ用の簡易カード。非公開情報のためポケモン/ワザの内容は一切表示せず、
+//   未選択→「ポケモンを選ぶ」ボタン／選択済→モンスターボールアイコン（時折わずかに揺れる）
+//   →両者選択完了で「先行で開始」ボタンを追加表示する。
+function renderSelectCard(key){
+  const p = state.players[key];
+  const isA = key === "A";
+  const bg = isA ? "var(--trainerA-bg)" : "var(--trainerB-bg)";
 
-  const row = document.createElement("div");
-  row.className = "trainer-pick-row";
-  ["A","B"].forEach(k=>{
-    const el = document.createElement("div");
-    el.className = "trainer-pick";
-    el.textContent = state.players[k].name;
-    el.onclick = ()=>{
-      state.firstPlayer = k;
-      state.turnPlayer = k;
+  const card = document.createElement("div");
+  card.className = "select-card";
+
+  const title = document.createElement("div");
+  title.className = "select-card-title";
+  title.textContent = p.name;
+  card.appendChild(title);
+
+  const box = document.createElement("div");
+  box.className = "select-box";
+  box.style.background = bg;
+
+  if(!p.locked){
+    box.classList.add("pick-btn");
+    box.textContent = "ポケモンを\n選ぶ";
+    box.style.whiteSpace = "pre-line";
+    box.onclick = ()=> openCharSelect(key);
+  } else {
+    box.classList.add("ball-wrap");
+    box.innerHTML = `<img src="image/ICON/モンスターボール${key}.png" class="ball-icon wiggle" alt="モンスターボール">`;
+    box.onclick = ()=>{
+      openMoveSelect(key, p.character);
+      state.modal.tempMoves = [...p.moveIds];
+    };
+  }
+  card.appendChild(box);
+
+  if(bothLocked()){
+    const btn = document.createElement("button");
+    btn.className = "btn wide start-first-btn";
+    btn.style.background = isA ? "var(--trainerA-btn)" : "var(--trainerB-btn)";
+    btn.textContent = "先行で開始";
+    btn.onclick = ()=>{
+      state.firstPlayer = key;
+      state.turnPlayer = key;
       state.turnCount = 0;
+      state.revealed = true;
       state.phase = "moveSelect";
       render();
     };
-    row.appendChild(el);
-  });
-  ov.appendChild(row);
-  return ov;
+    card.appendChild(btn);
+  }
+
+  return card;
 }
 
 function computeDisplayDamage(mv, mover, target){
@@ -1016,9 +1051,9 @@ function renderMoveSelectPanel(){
   return panel;
 }
 
-function renderDiceOverlay(frozen){
+function renderDiceOverlay(){
   const ov = document.createElement("div");
-  ov.className = "dice-overlay" + (frozen ? " dr-frozen" : "");
+  ov.className = "dice-overlay";
 
   const mv = MOVES[state.selectedMove];
   const p = state.players[state.turnPlayer];
@@ -1027,8 +1062,9 @@ function renderDiceOverlay(frozen){
   const isFirstTurn = state.turnCount === 0;
   const energyCount = isFirstTurn ? 2 : 3;
   const hasChara = mv.chara && mv.chara.length > 0;
+  const stackEnergy = energyCount >= 4; // ★ エネコロが4個以上ならサイズを半分にして2段表示
 
-  // ---------- ①1段目：左＝ワザカード／中央＝テキスト／右＝サイコロアイコン群（効果によって動的に変化） ----------
+  // ---------- ①1段目：左＝ワザカード／右＝アイコン＋"と"/"を振ろう！"のみの1行 ----------
   const topRow = document.createElement("div");
   topRow.className = "dr-top-row";
 
@@ -1042,29 +1078,23 @@ function renderDiceOverlay(frozen){
   `;
   topRow.appendChild(moveCard);
 
-  const rollText = document.createElement("div");
-  rollText.className = "dr-roll-text";
-  rollText.innerHTML = hasChara
-    ? `<span class="dr-chara-word" style="color:${typeBgColor(mv.type)}">キャラコロ</span>と<br><span class="dr-enekoro-word">エネコロ×${energyCount}</span>を振る！`
-    : `<span class="dr-enekoro-word">エネコロ×${energyCount}</span>を振る！`;
-  topRow.appendChild(rollText);
-
-  const diceIcons = document.createElement("div");
-  diceIcons.className = "dr-dice-icons";
+  // ★ テキストラベル("キャラコロ"/"エネコロ×n")を排し、アイコンを大きく表示。
+  //   「[キャラコロ]と[エネコロ]を振ろう！」を1行1セクションで完結させる。
+  const rollLine = document.createElement("div");
+  rollLine.className = "dr-roll-line";
+  let rollHtml = "";
   if(hasChara){
-    const ci = document.createElement("div");
-    ci.className = "dr-die-icon";
-    ci.innerHTML = `<img src="image/ICON/キャラコロ.png" class="img-icon" alt="キャラコロ">`;
-    diceIcons.appendChild(ci);
+    rollHtml += `<div class="dr-inline-icon big"><img src="image/ICON/キャラコロ.png" class="img-icon" alt="キャラコロ"></div>`;
+    rollHtml += `<span class="dr-flow-word">と</span>`;
   }
+  rollHtml += `<div class="dr-energy-icons${stackEnergy ? "" : " one-row"}">`;
   for(let i=0;i<energyCount;i++){
     const num = (i % 6) + 1;
-    const di = document.createElement("div");
-    di.className = "dr-die-icon";
-    di.innerHTML = `<img src="image/ICON/エネコロ${num}.png" class="img-icon" alt="エネコロ">`;
-    diceIcons.appendChild(di);
+    rollHtml += `<div class="dr-inline-icon ${stackEnergy ? "half" : "big"}"><img src="image/ICON/エネコロ${num}.png" class="img-icon" alt="エネコロ"></div>`;
   }
-  topRow.appendChild(diceIcons);
+  rollHtml += `</div><span class="dr-flow-word">を振ろう！</span>`;
+  rollLine.innerHTML = rollHtml;
+  topRow.appendChild(rollLine);
   ov.appendChild(topRow);
 
   // ---------- ③ 結果セクション：ワザ成功（キャラコロ効果ボタン群）／エネ不足（丸ごとボタン） ----------
@@ -1090,7 +1120,6 @@ function renderDiceOverlay(frozen){
         ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
       </div>
       <div class="dr-chara-btn-text">${ce.text}</div>`;
-    btn.disabled = !!frozen;
     btn.onclick = ()=> resolveTurn({kind:"chara", ce, dmgInfo});
     btnList.appendChild(btn);
   });
@@ -1102,7 +1131,6 @@ function renderDiceOverlay(frozen){
   successOnlyBtn.innerHTML = `
     <div class="dr-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
     <div class="dr-chara-btn-text">ワザのみ（キャラコロ効果なし）</div>`;
-  successOnlyBtn.disabled = !!frozen;
   successOnlyBtn.onclick = ()=> resolveTurn({kind:"success", dmgInfo});
   btnList.appendChild(successOnlyBtn);
 
@@ -1112,7 +1140,6 @@ function renderDiceOverlay(frozen){
   // ★「エネ不足」セクション全体をひとつのボタンにする
   const failCol = document.createElement("button");
   failCol.className = "dr-fail-col";
-  failCol.disabled = !!frozen;
   failCol.innerHTML = `
     <div class="dr-col-header dr-header-fail">エネ不足</div>
     <div class="dr-fail-body">ワザ失敗</div>`;
@@ -1154,6 +1181,7 @@ function resolveTurn(result){
 
   mover.nextTurnDamageMod = 0;
 
+  // ★ ワザチェック画面(ダイス結果パネル)を閉じてから、盤面のみを表示した状態でダメージ演出を行う
   state.phase = "resolve";
   render();
 
