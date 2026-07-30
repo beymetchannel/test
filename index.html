@@ -499,32 +499,20 @@ async function fetchSupabaseData() {
     let chara = [];
     
     // キャラコロ効果を生成！"0"や空データは論理的に除外する！
+    // ★ effect_type / effect_value はここでは判定せず、そのまま汎用的に保持する。
+    //   実際の効果処理（DAMAGE_EXTRA / MOD_REDUCE_TAKEN 等）は resolveTurn 側の
+    //   runEffectQueue で waza_effect → chara_effect の順に一括処理する。
     const buildCharaEffect = (die, effectStr, type, val) => {
       if (!die || String(die) === "0") return null;
-      
-      let target = 'opponent';
-      let dmg = 0;
-      
-      // データ数値の比較により、リコイル（自傷）か通常ダメージかを正確に判定！
-      if (type === 'damage') {
-        target = 'opponent';
-        dmg = parseInt(val, 10) || 0;
-      } else if (type === 'recoil') {
-        target = 'self';
-        dmg = parseInt(val, 10) || 0;
-      }
-      
+
       // 「立,左,右」のような複数の出目を配列化し、どんな複雑なダイス判定にも対応させる！
       const orientations = String(die).replace(/"/g, '').split(',').map(s => s.trim());
 
       return {
         orientations: orientations,
         text: effectStr || "",
-        dmg: dmg,
-        target: target,
-        zero: false,
-        type: type,
-        val: val
+        type: type || "",
+        value: parseInt(val, 10) || 0
       };
     };
 
@@ -549,6 +537,8 @@ async function fetchSupabaseData() {
       cost: cost,
       baseDamage: parseInt(w.waza_damage, 10) || 0,
       effect: w.waza_effect || "",
+      effectType: w.waza_effect_type || "",
+      effectValue: parseInt(w.waza_effect_value, 10) || 0,
       chara: chara
     };
   });
@@ -566,6 +556,7 @@ CHARACTERS = charaData.map(c => {
       type: c.type,
       // 弱点カラムの正確なマッピング
       weakness: c.weakness_type1 || c.weakness || "", 
+      weaknessDamage: parseInt(c.weakness_damage, 10) || 20,
       hp: parseInt(c.HP, 10) || 100,
       moves: charaMoves
     };
@@ -583,7 +574,10 @@ CHARACTERS = charaData.map(c => {
 function newPlayer(name){
   return {
     name, character:null, moveIds:[], locked:false,
-    hp:0, maxHp:0, lastMoveId:null, nextTurnDamageMod:0
+    hp:0, maxHp:0, lastMoveId:null,
+    incomingDamageMod:0, // MOD_REDUCE_TAKEN：次に自分が受ける番のダメージ増減
+    diceMod:0,           // MOD_DICE_SELF/MOD_DICE_ENEMY：次の自分の番のエネコロ増減
+    bannedMoveIds:[]     // SPECIAL_BIND_WAZA：次の自分の番、選べないワザ
   };
 }
 let state = {
@@ -594,7 +588,8 @@ let state = {
   editingPlayerKey:null,
   selectedMove:null,
   winner:null,
-  revealed:false
+  revealed:false,
+  effectPrompt:null // ワザ/キャラコロ効果処理中に追加の入力が必要な場合に使う一時状態
 };
 
 function opponentKey(k){ return k==="A" ? "B" : "A"; }
@@ -664,19 +659,21 @@ function render(){
     app.appendChild(errWrap);
     return;
   }
-  const inBattleBoard = (state.phase === "moveSelect" || state.phase === "diceRoll" || state.phase === "resolve");
+  const inBattleBoard = (state.phase === "moveSelect" || state.phase === "diceRoll" || state.phase === "resolve" || state.phase === "effectPrompt");
   app.appendChild(inBattleBoard ? renderTurnBoard() : (state.phase === "select" ? renderSelectBoard() : renderBoard()));
 
   if(state.phase === "select" && !bothLocked()){
     const hint = document.createElement("div");
     hint.className = "center-hint";
-    hint.textContent = "各プレイヤーはポケモンをタップして、ポケモンと4つのワザを非公開で選んでください。";
+    hint.textContent = "";
     app.appendChild(hint);
   }
   if(state.phase === "moveSelect") app.appendChild(renderMoveSelectPanel());
   if(state.phase === "diceRoll") app.appendChild(renderDiceOverlay());
   // ★ ワザチェック画面は解決前に閉じ、盤面＋手番側のワザ一覧のみを表示してダメージ演出を行う（重なり描写を防止）
-  if(state.phase === "resolve") app.appendChild(renderResolveMovesPanel());
+  if(state.phase === "resolve" || state.phase === "effectPrompt") app.appendChild(renderResolveMovesPanel());
+  // ★ 効果処理中の追加入力(ダイス目選択・縛るワザ選択)はこの上に重ねて表示する
+  if(state.phase === "effectPrompt") app.appendChild(renderEffectPromptOverlay());
   if(state.phase === "win") app.appendChild(renderWinOverlay());
 
   if(state.modal) app.appendChild(renderModal());
@@ -736,7 +733,7 @@ function renderPlayerCard(key){
   const status = document.createElement("div");
   status.className = "pc-status";
   if(showAsSelected){
-    status.textContent = p.nextTurnDamageMod ? `効果: 次ワザダメージ${p.nextTurnDamageMod>0?"+":""}${p.nextTurnDamageMod}` : "";
+    status.textContent = p.incomingDamageMod ? `効果: 次に受けるダメージ${p.incomingDamageMod>0?"+":""}${p.incomingDamageMod}` : "";
   }
   infoCol.appendChild(status);
 
@@ -1054,14 +1051,26 @@ function renderSelectCard(key){
 function computeDisplayDamage(mv, mover, target){
   let base = mv.baseDamage;
   let mode = "normal";
-  if(mv.type === target.character.weakness && base>0){
-    base += 20;
+
+  // DAMAGE_COPY_LAST：相手が最後に選んだワザの元ダメージ×effect_valueを基礎ダメージにする
+  if(mv.effectType === "DAMAGE_COPY_LAST"){
+    const lastMv = target.lastMoveId ? MOVES[target.lastMoveId] : null;
+    base = lastMv ? (lastMv.baseDamage * mv.effectValue) : 0;
+  }
+
+  // SPECIAL_IGNORE_WEAKNESS：このワザは弱点を計算しない
+  const ignoreWeakness = (mv.effectType === "SPECIAL_IGNORE_WEAKNESS");
+  if(!ignoreWeakness && mv.type === target.character.weakness && base>0){
+    base += (target.character.weaknessDamage || 20);
     mode = "weak";
   }
-  if(mover.nextTurnDamageMod){
-    base += mover.nextTurnDamageMod;
-    mode = mover.nextTurnDamageMod>0 ? "up" : "down";
+
+  // MOD_REDUCE_TAKEN：targetが前の自分の番にセットした「次に受けるダメージ増減」を適用
+  if(target.incomingDamageMod){
+    base += target.incomingDamageMod;
+    if(mode === "normal") mode = target.incomingDamageMod>0 ? "up" : "down";
   }
+
   return {display:Math.max(base,0), orig:mv.baseDamage, mode};
 }
 
@@ -1070,7 +1079,7 @@ function buildMovesGrid(p, opp, interactive){
   grid.className = "ms-grid";
   p.moveIds.forEach(mid=>{
     const mv = MOVES[mid];
-    const disabled = (mid === p.lastMoveId);
+    const disabled = (mid === p.lastMoveId) || (p.bannedMoveIds && p.bannedMoveIds.includes(mid));
     const dmgInfo = computeDisplayDamage(mv, p, opp);
     const card = document.createElement("div");
     card.className = "move-card" + (disabled?" disabled":"");
@@ -1157,7 +1166,8 @@ function renderDiceOverlay(){
   const opp = state.players[opponentKey(state.turnPlayer)];
   const dmgInfo = computeDisplayDamage(mv, p, opp);
   const isFirstTurn = state.turnCount === 0;
-  const energyCount = isFirstTurn ? 2 : 3;
+  // MOD_DICE_SELF / MOD_DICE_ENEMY で増減した分をこの番のエネコロ数に反映する
+  const energyCount = Math.max(0, (isFirstTurn ? 2 : 3) + (p.diceMod || 0));
   const hasChara = mv.chara && mv.chara.length > 0;
 
   // ---------- ①1段目：左＝ワザカード／右＝アイコン＋"と"/"を振ろう！"のみの1行 ----------
@@ -1280,30 +1290,138 @@ function resolveTurn(result){
   const mv = MOVES[state.selectedMove];
 
   mover.lastMoveId = state.selectedMove;
+  mover.bannedMoveIds = [];   // SPECIAL_BIND_WAZAで縛られていた制限は、この選択で消化済み
+  mover.diceMod = 0;          // 今回の番のエネコロ表示で既に消化済み（この後は自分の効果で新たにセットされ得る）
 
-  let dmgToOpp = 0, dmgToSelf = 0;
-
-  if(result.kind === "fail"){
-    dmgToOpp = 0;
-  } else if(result.kind === "success"){
-    dmgToOpp = result.dmgInfo.display;
-  } else if(result.kind === "chara"){
-    const base = result.dmgInfo.display;
-    if(result.ce.zero){
-      dmgToOpp = 0;
-    } else if(result.ce.target === "opponent"){
-      dmgToOpp = Math.max(base + result.ce.dmg, 0);
-    } else if(result.ce.target === "self"){
-      dmgToOpp = base;
-      dmgToSelf = result.ce.dmg;
-    }
-  }
-
-  mover.nextTurnDamageMod = 0;
-
-  // ★ ワザチェック画面(ダイス結果パネル)を閉じてから、盤面のみを表示した状態でダメージ演出を行う
+  // ★ ワザチェック画面(ダイス結果パネル)を閉じてから、盤面のみを表示した状態で以降の処理を行う
   state.phase = "resolve";
   render();
+
+  if(result.kind === "fail"){
+    // ワザ失敗：ダメージ・効果ともに発生しないが、「次の相手の番」の被ダメージ増減はここで消化する
+    opp.incomingDamageMod = 0;
+    proceedToAnimateWithCtx({moverKey, mover, oppKey, opp, mv, dmgToOpp:0, dmgToSelf:0});
+    return;
+  }
+
+  // ★ 効果処理キューを構築：先にワザ効果(waza_effect)、次にキャラコロ効果(chara_effect)の順で処理する
+  const queue = [];
+  if(mv.effectType) queue.push({type:mv.effectType, value:mv.effectValue});
+  if(result.kind === "chara" && result.ce && result.ce.type){
+    queue.push({type:result.ce.type, value:result.ce.value});
+  }
+
+  const ctx = {
+    moverKey, mover, oppKey, opp, mv,
+    dmgToOpp: result.dmgInfo.display,
+    dmgToSelf: 0
+  };
+
+  runEffectQueue(queue, 0, ctx, ()=>{
+    opp.incomingDamageMod = 0; // 今回の攻撃で「次の相手の番」の被ダメージ増減は消化完了
+    proceedToAnimateWithCtx(ctx);
+  });
+}
+
+// ★ waza_effect / chara_effect の実処理本体。
+//   同期処理はそのまま次へ進み、追加入力が必要な効果（ダイス選択・ワザ選択など）は
+//   effectPrompt 画面を挟んで、選択完了後のコールバックから続きを処理する。
+function runEffectQueue(queue, idx, ctx, done){
+  if(idx >= queue.length){ done(); return; }
+  const eff = queue[idx];
+  const next = () => runEffectQueue(queue, idx+1, ctx, done);
+
+  switch(eff.type){
+    case "DAMAGE_EXTRA":
+      // {effect_value}分、ダメージを追加する
+      ctx.dmgToOpp += eff.value;
+      next();
+      break;
+
+    case "SPECIAL_IGNORE_WEAKNESS":
+      // 弱点計算はcomputeDisplayDamage側で既に反映済みのため、ここでは何もしない
+      next();
+      break;
+
+    case "MOD_REDUCE_TAKEN":
+      // 次の相手の番、このポケモン(mover)が受けるダメージを{effect_value}する
+      ctx.mover.incomingDamageMod = eff.value;
+      next();
+      break;
+
+    case "DAMAGE_SELF":
+      // 相手への攻撃処理後、自分にも{effect_value}ダメージ
+      ctx.dmgToSelf += eff.value;
+      next();
+      break;
+
+    case "MOD_DICE_ENEMY":
+      // 次の相手の番、相手のエネコロを{effect_value}個増減する
+      ctx.opp.diceMod = (ctx.opp.diceMod || 0) + eff.value;
+      next();
+      break;
+
+    case "MOD_DICE_SELF":
+      // 次の自分の番、自分のエネコロを{effect_value}個増減する
+      ctx.mover.diceMod = (ctx.mover.diceMod || 0) + eff.value;
+      next();
+      break;
+
+    case "DAMAGE_MULTIPLY":
+      // このワザで与えるダメージは{effect_value}倍になる（chara_effect専用）
+      ctx.dmgToOpp = ctx.dmgToOpp * eff.value;
+      next();
+      break;
+
+    case "DAMAGE_COPY_LAST":
+      // 基礎ダメージへの反映はcomputeDisplayDamage側で既に完了しているため、ここでは何もしない
+      next();
+      break;
+
+    case "DAMAGE_BY_ENEMY_3DICE":
+      showDicePrompt(6, eff.value, (n)=>{ ctx.dmgToOpp += n * eff.value; next(); });
+      return;
+
+    case "DAMAGE_BY_ENEMY_2DICE":
+      showDicePrompt(4, eff.value, (n)=>{ ctx.dmgToOpp += n * eff.value; next(); });
+      return;
+
+    case "DAMAGE_BY_ENEMY_1DICE":
+      showDicePrompt(2, eff.value, (n)=>{ ctx.dmgToOpp += n * eff.value; next(); });
+      return;
+
+    case "SPECIAL_BIND_WAZA":
+      showBindWazaPrompt(ctx.oppKey, eff.value, (pickedIds)=>{
+        ctx.opp.bannedMoveIds = pickedIds;
+        next();
+      });
+      return;
+
+    default:
+      next();
+  }
+}
+
+// ★ DAMAGE_BY_ENEMY_1/2/3DICE：相手が振ったエネコロで一番多く出た数字を選んでもらう画面
+function showDicePrompt(maxNum, multiplier, onPick){
+  state.effectPrompt = { kind:"diceNumber", max:maxNum, multiplier, onPick };
+  state.phase = "effectPrompt";
+  render();
+}
+
+// ★ SPECIAL_BIND_WAZA：相手のワザを{count}個選んでもらう画面
+//   前のターンに使用済みのワザは元々グレーアウトされ選択不可
+function showBindWazaPrompt(targetKey, count, onDone){
+  state.effectPrompt = { kind:"bindWaza", targetKey, count, picked:[], onDone };
+  state.phase = "effectPrompt";
+  render();
+}
+
+// ★ ダメージ演出・HP反映・勝敗判定（DAMAGE_SELFで相打ちになった場合は相手の勝利）
+function proceedToAnimateWithCtx(ctx){
+  const { moverKey, mover, oppKey, opp, mv } = ctx;
+  const dmgToOpp = Math.max(ctx.dmgToOpp, 0);
+  const dmgToSelf = Math.max(ctx.dmgToSelf, 0);
 
   playEffectOn(oppKey, mv.type, dmgToOpp, ()=>{
     opp.hp = Math.max(opp.hp - dmgToOpp, 0);
@@ -1312,7 +1430,7 @@ function resolveTurn(result){
     const finishSelf = () => {
       if(opp.hp <= 0 || mover.hp <= 0){
         let winnerKey;
-        if(opp.hp <= 0 && mover.hp <= 0) winnerKey = oppKey;
+        if(opp.hp <= 0 && mover.hp <= 0) winnerKey = oppKey; // お互い0なら相手の勝利
         else if(opp.hp <= 0) winnerKey = moverKey;
         else winnerKey = oppKey;
         state.winner = winnerKey;
@@ -1339,6 +1457,95 @@ function resolveTurn(result){
       setTimeout(finishSelf, 1000);
     }
   }, moverKey);
+}
+
+// ★ 効果処理中に追加入力が必要な場合の画面(ダイス目選択 / 縛るワザ選択)
+function renderEffectPromptOverlay(){
+  const ov = document.createElement("div");
+  ov.className = "overlay full";
+  const ep = state.effectPrompt;
+
+  if(ep.kind === "diceNumber"){
+    const diceCountLabel = ep.max===6 ? "３個" : ep.max===4 ? "２個" : "１個";
+    const title = document.createElement("div");
+    title.className = "overlay-title";
+    title.textContent = `相手はエネコロを${diceCountLabel}振る`;
+    ov.appendChild(title);
+
+    const sub = document.createElement("div");
+    sub.className = "overlay-sub";
+    sub.textContent = ep.max===2
+      ? "出たエネルギーの数を選んで下さい。"
+      : "一番多く出たタイプのエネルギーの数を選んで下さい。";
+    ov.appendChild(sub);
+
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px;";
+    for(let n=1; n<=ep.max; n++){
+      const b = document.createElement("button");
+      b.className = "btn";
+      b.textContent = String(n);
+      b.onclick = ()=>{
+        const cb = ep.onPick;
+        state.effectPrompt = null;
+        cb(n);
+      };
+      grid.appendChild(b);
+    }
+    ov.appendChild(grid);
+  }
+
+  if(ep.kind === "bindWaza"){
+    const target = state.players[ep.targetKey];
+    const remaining = ep.count - ep.picked.length;
+
+    const title = document.createElement("div");
+    title.className = "overlay-title";
+    title.textContent = "次のターン使用できなくするワザを選択して下さい";
+    ov.appendChild(title);
+
+    const sub = document.createElement("div");
+    sub.className = "overlay-sub";
+    sub.textContent = `あと${remaining}個選んで下さい`;
+    ov.appendChild(sub);
+
+    const grid = document.createElement("div");
+    grid.className = "grid-2";
+    grid.style.cssText = "margin-top:10px; width:100%; max-width:420px;";
+    target.moveIds.forEach(mid=>{
+      const mv = MOVES[mid];
+      const isPrevUsed = (mid === target.lastMoveId);
+      const isPicked = ep.picked.includes(mid);
+      const card = document.createElement("div");
+      card.className = "move-card" + ((isPrevUsed || isPicked) ? " disabled" : "");
+      card.innerHTML = `
+        <div class="mc-top" style="background-color:${typeBgColor(mv.type)}; background-image:url('image/BACK/back_${mv.type}.png'); background-size:cover; background-position:center;">
+          <div class="mc-top-row">
+            <div class="mc-typename">
+              <div class="mc-type-icon"><img src="image/ICON/${mv.type}.png" class="img-icon" alt="${mv.type}"></div>
+              <div class="mc-name-big">${mv.name}</div>
+            </div>
+          </div>
+        </div>`;
+      if(!isPrevUsed && !isPicked){
+        card.onclick = ()=>{
+          ep.picked.push(mid);
+          if(ep.picked.length >= ep.count){
+            const cb = ep.onDone;
+            const picked = ep.picked.slice();
+            state.effectPrompt = null;
+            cb(picked);
+          } else {
+            render();
+          }
+        };
+      }
+      grid.appendChild(card);
+    });
+    ov.appendChild(grid);
+  }
+
+  return ov;
 }
 
 function updateHpBar(key){
@@ -1430,7 +1637,8 @@ function renderWinOverlay(){
       phase:"select",
       players:{ A:newPlayer("トレーナーA"), B:newPlayer("トレーナーB") },
       firstPlayer:null, turnPlayer:null, turnCount:0,
-      modal:null, editingPlayerKey:null, selectedMove:null, winner:null, revealed:false
+      modal:null, editingPlayerKey:null, selectedMove:null, winner:null, revealed:false,
+      effectPrompt:null
     };
     render();
   };
