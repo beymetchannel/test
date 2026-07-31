@@ -144,7 +144,7 @@
   .win-screen{position:absolute; inset:0; z-index:50; overflow:hidden;
     background-size:cover; background-position:center; background-repeat:no-repeat;
     display:flex; align-items:center; justify-content:center; gap:4%; padding:0 6%;}
-  .win-mon-big{flex:0 0 auto; width:36%; max-width:320px; display:flex; align-items:center; justify-content:center;}
+  .win-mon-big{flex:0 0 auto; width:36%; max-width:320px; margin-left:8%; display:flex; align-items:center; justify-content:center;}
   .win-mon-big img{width:100%; height:auto; object-fit:contain; filter:drop-shadow(0 16px 22px rgba(0,0,0,.35));}
   .win-text-col{flex:1 1 auto; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:26px;}
   .win-title{font-size:36px; font-weight:900; line-height:1.15; color:#fff; white-space:nowrap;
@@ -594,6 +594,7 @@ function newPlayer(name){
     name, character:null, moveIds:[], locked:false,
     hp:0, maxHp:0, lastMoveId:null,
     incomingDamageMod:0, // MOD_REDUCE_TAKEN：次に自分が受ける番のダメージ増減
+    incomingDamageNullify:null, // MOD_NULLIFY_TAKEN：次に自分が受ける番のダメージを{effect_value}に固定（nullは未使用中）
     diceMod:0,           // MOD_DICE_SELF/MOD_DICE_ENEMY：次の自分の番のエネコロ増減
     bannedMoveIds:[],    // SPECIAL_BIND_WAZA：次の自分の番、選べないワザ
     charaDiceBlocked:false // MOD_CHARADICE_ENEMY：次の自分の番、キャラコロを振れない（ワザチェック画面でキャラコロ画像を非表示）
@@ -1095,6 +1096,13 @@ function computeDisplayDamage(mv, mover, target){
     if(mode === "normal") mode = target.incomingDamageMod>0 ? "up" : "down";
   }
 
+  // MOD_NULLIFY_TAKEN：targetが前の自分の番にセットしていた場合、waza_damageや弱点・MOD_REDUCE_TAKEN等の
+  //   計算結果を無視し、必ずMOD_NULLIFY_TAKENの{effect_value}に固定する（0なら0ダメージ）
+  if(target.incomingDamageNullify !== null && target.incomingDamageNullify !== undefined){
+    base = target.incomingDamageNullify;
+    mode = base < mv.baseDamage ? "down" : (base > mv.baseDamage ? "up" : "normal");
+  }
+
   // ★ display は画面表示用に0未満をクランプした値。raw はDAMAGE_EXTRA等の加算をこの後さらに乗せるための
   //   クランプ前の素の値（マイナスもそのまま保持）。MOD_REDUCE_TAKENの減少をここで0にクランプしてしまうと、
   //   後続のDAMAGE_EXTRA加算が誤って0から積み増しされてしまうため、rawは必ず未クランプで返す。
@@ -1352,8 +1360,9 @@ function resolveTurn(result){
   render();
 
   if(result.kind === "fail"){
-    // ワザ失敗：ダメージ・効果ともに発生しないが、「次の相手の番」の被ダメージ増減はここで消化する
+    // ワザ失敗：ダメージ・効果ともに発生しないが、「次の相手の番」の被ダメージ増減・固定はここで消化する
     opp.incomingDamageMod = 0;
+    opp.incomingDamageNullify = null;
     proceedToAnimateWithCtx({moverKey, mover, oppKey, opp, mv, dmgToOpp:0, dmgToSelf:0, isMiss:true});
     return;
   }
@@ -1402,7 +1411,7 @@ function runEffectQueue(queue, idx, ctx, done){
   }
 
   // ★ DAMAGE_EXTRA_{n}CHARADICE： nは可変（例：DAMAGE_EXTRA_3CHARADICE）。
-  //   ワザチェック画面の後、バトル画面へ遷移する前に「n回キャラコロを振り、成功した数を選択」する画面を挿み、
+  //   ワザチェック画面の後、バトル画面へ遷移する前に「合計n回キャラコロを振り、成功した数を選択」する画面を挿み、
   //   選択された成功数×{effect_value}を追加ダメージとして加算する。
   const charaDiceMatch = /^DAMAGE_EXTRA_(\d+)CHARADICE$/.exec(eff.type);
   if(charaDiceMatch){
@@ -1429,6 +1438,14 @@ function runEffectQueue(queue, idx, ctx, done){
     case "MOD_REDUCE_TAKEN":
       // 次の相手の番、このポケモン(mover)が受けるダメージを{effect_value}する
       ctx.mover.incomingDamageMod = eff.value;
+      next();
+      break;
+
+    case "MOD_NULLIFY_TAKEN":
+      // 次の相手の番、このポケモン(mover)が受けるダメージをwaza_damageや他の増加効果に関わらず
+      // {effect_value}に固定する（0なら0ダメージ）。SPECIAL_REPEATで同じ番の中で繰り返される場合も、
+      // 消化されるまでは毎回この固定値が適用される
+      ctx.mover.incomingDamageNullify = eff.value;
       next();
       break;
 
@@ -1539,7 +1556,11 @@ function showBindWazaPrompt(targetKey, count, onDone){
 // ★ ダメージ演出・HP反映・勝敗判定（DAMAGE_SELFで相打ちになった場合は相手の勝利）
 function proceedToAnimateWithCtx(ctx){
   const { moverKey, mover, oppKey, opp, mv } = ctx;
-  const dmgToOpp = Math.max(ctx.dmgToOpp, 0);
+  // MOD_NULLIFY_TAKEN：opp側にセットされていれば、DAMAGE_EXTRA等でここまでにctx.dmgToOppへ
+  // 積み増しされた分もすべて無視し、必ず{effect_value}固定のダメージにする
+  const dmgToOpp = (opp.incomingDamageNullify !== null && opp.incomingDamageNullify !== undefined)
+    ? Math.max(opp.incomingDamageNullify, 0)
+    : Math.max(ctx.dmgToOpp, 0);
   // DAMAGE_SELFがマイナス値の場合は回復として扱うため、0未満へはクランプしない（0にはクランプしない＝マイナスのまま保持）
   const dmgToSelf = ctx.dmgToSelf;
 
@@ -1576,9 +1597,10 @@ function proceedToAnimateWithCtx(ctx){
       }
       state.repeatActive = false;
 
-      // ★ MOD_REDUCE_TAKENの消化：SPECIAL_REPEATによる繰り返しが終わり、実際に手番が相手へ渡る
-      //   このタイミングで初めて「次の相手の番」の被ダメージ増減を消化する
+      // ★ MOD_REDUCE_TAKEN/MOD_NULLIFY_TAKENの消化：SPECIAL_REPEATによる繰り返しが終わり、実際に手番が相手へ渡る
+      //   このタイミングで初めて「次の相手の番」の被ダメージ増減・固定を消化する
       opp.incomingDamageMod = 0;
+      opp.incomingDamageNullify = null;
 
       state.turnPlayer = oppKey;
       state.turnCount++;
@@ -1648,7 +1670,7 @@ function renderEffectPromptOverlay(){
   if(ep.kind === "charaDiceCount"){
     const title = document.createElement("div");
     title.className = "overlay-title";
-    title.textContent = `${ep.n}回キャラコロを振り、成功した数を選択。`;
+    title.textContent = `合計${ep.n}回キャラコロを振り、成功した数を選択。`;
     ov.appendChild(title);
 
     // ★ 詳細確認用に、バトル画面で表示されるワザカードと同一のものを表示する
