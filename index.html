@@ -658,7 +658,7 @@ function render(){
   app.innerHTML = "";
   // データ取得中はローディング画面を展開！
   if (isLoading) {
-    app.innerHTML = `<div style="display:flex; height:100%; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:var(--sub);">最新のスタジアム環境を同期中...</div>`;
+    app.innerHTML = `<div style="display:flex; height:100%; align-items:center; justify-content:center; font-weight:800; font-size:16px; color:var(--sub);">NOW LOADING...</div>`;
     return;
   }
   // データ取得に失敗した場合は、固まらずにエラーとやり直しボタンを表示！
