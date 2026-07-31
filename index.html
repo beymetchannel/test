@@ -1410,7 +1410,7 @@ function runEffectQueue(queue, idx, ctx, done){
     return;
   }
 
-  // ★ DAMAGE_EXTRA_{n}HP_LOW_LOW： nは可変（例：DAMAGE_EXTRA_30HP_LOW）。
+  // ★ DAMAGE_EXTRA_{n}HP_LOW： nは可変（例：DAMAGE_EXTRA_30HP_LOW）。
   //   このポケモン(mover)の残りHPが{n}以下なら、{effect_value}を追加ダメージとして加算する。
   const hpThresholdMatch = /^DAMAGE_EXTRA_(\d+)HP_LOW$/.exec(eff.type);
   if(hpThresholdMatch){
@@ -1419,6 +1419,16 @@ function runEffectQueue(queue, idx, ctx, done){
       ctx.dmgToOpp += eff.value;
     }
     next();
+    return;
+  }
+
+  // ★ DAMAGE_EXTRA_ENE：ワザチェック画面の後、バトル画面へ遷移する前に「対象エネルギー数を選択」する画面を挿み、
+  //   エネコロで出た該当エネルギーの数(0~6)×{effect_value}を追加ダメージとして加算する。
+  if(eff.type === "DAMAGE_EXTRA_ENE"){
+    showEneCountPrompt(eff.value, ctx, (count)=>{
+      ctx.dmgToOpp += count * eff.value;
+      next();
+    });
     return;
   }
 
@@ -1470,6 +1480,14 @@ function runEffectQueue(queue, idx, ctx, done){
     case "MOD_DICE_ENEMY":
       // 次の相手の番、相手のエネコロを{effect_value}個増減する
       ctx.opp.diceMod = (ctx.opp.diceMod || 0) + eff.value;
+      next();
+      break;
+
+    case "MOD_DICE_STEAL":
+      // 次の相手の番、相手のエネコロを{effect_value}個減らし、次の自分の番、自分のエネコロを{effect_value}個増やす。
+      // effect_valueはあくまで「自分が増やす数」として扱うため、相手側には符号反転して適用する
+      ctx.opp.diceMod = (ctx.opp.diceMod || 0) - eff.value;
+      ctx.mover.diceMod = (ctx.mover.diceMod || 0) + eff.value;
       next();
       break;
 
@@ -1543,6 +1561,15 @@ function showDicePrompt(maxNum, multiplier, onPick){
 function showCharaDiceCountPrompt(n, effectValue, ctx, onPick){
   const dmgInfo = computeDisplayDamage(ctx.mv, ctx.mover, ctx.opp);
   state.effectPrompt = { kind:"charaDiceCount", n, effectValue, mv:ctx.mv, dmgInfo, onPick };
+  state.phase = "effectPrompt";
+  render();
+}
+
+// ★ DAMAGE_EXTRA_ENE：ワザチェック画面後・バトル画面遷移前に、エネコロで出た該当エネルギー数(0~6)を選んでもらう画面
+//   詳細確認用に、バトル画面と同一のワザカード（現在のダメージ状況を反映したもの）も併せて表示する
+function showEneCountPrompt(effectValue, ctx, onPick){
+  const dmgInfo = computeDisplayDamage(ctx.mv, ctx.mover, ctx.opp);
+  state.effectPrompt = { kind:"eneCount", effectValue, mv:ctx.mv, dmgInfo, onPick };
   state.phase = "effectPrompt";
   render();
 }
@@ -1698,6 +1725,41 @@ function renderEffectPromptOverlay(){
     const grid = document.createElement("div");
     grid.style.cssText = "display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:14px;";
     for(let n=0; n<=ep.n; n++){
+      const b = document.createElement("button");
+      b.className = "btn";
+      b.textContent = String(n);
+      b.onclick = ()=>{
+        const cb = ep.onPick;
+        state.effectPrompt = null;
+        // ★ ボタン押下直後にこの画面を閉じ、バトル画面へ遷移してダメージ処理を行う
+        state.phase = "resolve";
+        render();
+        cb(n);
+      };
+      grid.appendChild(b);
+    }
+    ov.appendChild(grid);
+  }
+
+  if(ep.kind === "eneCount"){
+    const title = document.createElement("div");
+    title.className = "overlay-title";
+    title.textContent = "対象エネルギー数を選択";
+    ov.appendChild(title);
+
+    // ★ 詳細確認用に、バトル画面で表示されるワザカードと同一のものを表示する
+    const cardWrap = document.createElement("div");
+    cardWrap.style.cssText = "width:100%; max-width:300px; margin:10px auto 0;";
+    const card = document.createElement("div");
+    card.className = "move-card";
+    card.style.cssText = "cursor:default; pointer-events:none; min-height:172px;";
+    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo);
+    cardWrap.appendChild(card);
+    ov.appendChild(cardWrap);
+
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:14px;";
+    for(let n=0; n<=6; n++){
       const b = document.createElement("button");
       b.className = "btn";
       b.textContent = String(n);
