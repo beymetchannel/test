@@ -1981,7 +1981,7 @@ function renderEffectPromptOverlay(){
     // ★ 出目アイコンをテキストと同じサイズでインライン表示
     const oriHtml = ep.orientations.map(ori=>
       `<img src="image/ICON/${ori}.png" alt="${ori}" style="height:1em; width:1em; object-fit:contain; vertical-align:-0.15em; margin:0 1px;">`
-    ).join("、");
+    ).join("");
     title.innerHTML = `相手のキャラコロを振り、${oriHtml}が出たなら成功`;
     ov.appendChild(title);
 
