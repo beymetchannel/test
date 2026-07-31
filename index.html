@@ -1410,6 +1410,18 @@ function runEffectQueue(queue, idx, ctx, done){
     return;
   }
 
+  // ★ DAMAGE_EXTRA_{n}HP_LOW_LOW： nは可変（例：DAMAGE_EXTRA_30HP_LOW）。
+  //   このポケモン(mover)の残りHPが{n}以下なら、{effect_value}を追加ダメージとして加算する。
+  const hpThresholdMatch = /^DAMAGE_EXTRA_(\d+)HP_LOW$/.exec(eff.type);
+  if(hpThresholdMatch){
+    const n = parseInt(hpThresholdMatch[1], 10);
+    if(ctx.mover.hp <= n){
+      ctx.dmgToOpp += eff.value;
+    }
+    next();
+    return;
+  }
+
   // ★ DAMAGE_EXTRA_{n}CHARADICE： nは可変（例：DAMAGE_EXTRA_3CHARADICE）。
   //   ワザチェック画面の後、バトル画面へ遷移する前に「合計n回キャラコロを振り、成功した数を選択」する画面を挿み、
   //   選択された成功数×{effect_value}を追加ダメージとして加算する。
