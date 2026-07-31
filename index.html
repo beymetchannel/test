@@ -593,6 +593,8 @@ function newPlayer(name){
   return {
     name, character:null, moveIds:[], locked:false,
     hp:0, maxHp:0, lastMoveId:null,
+    lastMoveFailed:false, // DAMAGE_EXTRA_DICE_MISS_ENEMY等：直前の自分の番のワザがエネ不足で失敗したか
+    pendingMoveId:null, pendingMoveFailed:false, // 今回選択したワザの情報。実際に手番が相手へ渡るタイミングでlastMoveId/lastMoveFailedへ反映する
     incomingDamageMod:0, // MOD_REDUCE_TAKEN：次に自分が受ける番のダメージ増減
     incomingDamageNullify:null, // MOD_NULLIFY_TAKEN：次に自分が受ける番のダメージを{effect_value}に固定（nullは未使用中）
     diceMod:0,           // MOD_DICE_SELF/MOD_DICE_ENEMY：次の自分の番のエネコロ増減
@@ -1111,7 +1113,26 @@ function computeDisplayDamage(mv, mover, target){
 
 // ★ move-cardのinnerHTMLを生成する共通関数。バトル画面のワザ選択カードと、SPECIAL_BIND_WAZAの
 //   ワザ選択画面（相手にどのワザを縛るか選んでもらう画面）とで、まったく同じ情報・見た目にするために共通化する。
-function buildMoveCardInnerHTML(mv, dmgInfo){
+//   mover/oppは「このカードの持ち主」とその相手（省略可）。DAMAGE_EXTRA_DICE_MISSシリーズ／
+//   DAMAGE_SELF_DICE_SUCCESSシリーズ（DAMAGE_EXTRA_DICE_SUCCESS_SELF_*含む）の条件成立判定に使う。
+function isChareEffectConditionMet(ce, mover, opp){
+  const t = ce.type;
+  if(!t) return false;
+  // DAMAGE_EXTRA_DICE_MISSシリーズ：前の相手の番、相手のワザがエネ不足で失敗していたか
+  if(t === "DAMAGE_EXTRA_DICE_MISS_ENEMY"){
+    return !!(opp && opp.lastMoveFailed);
+  }
+  // DAMAGE_SELF_DICE_SUCCESSシリーズ（DAMAGE_EXTRA_DICE_SUCCESS_SELF_*含む）：
+  //   前の自分の番、{id}のワザが成功していたか
+  const m = /^(?:DAMAGE_EXTRA_DICE_SUCCESS_SELF_|DAMAGE_SELF_DICE_SUCCESS_SELF_)(.+)$/.exec(t);
+  if(m){
+    const targetMoveId = m[1];
+    return !!(mover && mover.lastMoveId === targetMoveId && !mover.lastMoveFailed);
+  }
+  return false;
+}
+
+function buildMoveCardInnerHTML(mv, dmgInfo, mover, opp){
   const dmgClass = dmgInfo.mode==="weak"?"weak":dmgInfo.mode==="up"?"up":dmgInfo.mode==="down"?"down":"";
   // ★ 元々の値からの増減を "(元値±増減値)" の形式で表示するためのラベルを算出
   //   ここはあくまで補足情報のため、0未満にクランプされる前の素の値(raw)を使い、
@@ -1141,7 +1162,7 @@ function buildMoveCardInnerHTML(mv, dmgInfo){
           <div style="display:flex; gap:2px; flex-shrink:0;">
             ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
           </div>
-          <div class="txt">${ce.text}</div>
+          <div class="txt"${isChareEffectConditionMet(ce, mover, opp) ? ` style="color:#F5F842;"` : ""}>${ce.text}</div>
         </div>`).join("")}
     </div>
   `;
@@ -1156,7 +1177,7 @@ function buildMovesGrid(p, opp, interactive){
     const dmgInfo = computeDisplayDamage(mv, p, opp);
     const card = document.createElement("div");
     card.className = "move-card" + (disabled?" disabled":"");
-    card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo);
+    card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo, p, opp);
     if(interactive && !disabled){
       card.onclick = ()=>{
         state.selectedMove = mid;
@@ -1285,7 +1306,7 @@ function renderDiceOverlay(){
       <div class="dr-chara-btn-icons">
         ${ce.orientations.map(ori=>`<div class="oi"><img src="image/ICON/${ori}.png" class="img-icon" alt="${ori}"></div>`).join("")}
       </div>
-      <div class="dr-chara-btn-text">${ce.text}</div>`;
+      <div class="dr-chara-btn-text"${isChareEffectConditionMet(ce, p, opp) ? ` style="color:#F5F842;"` : ""}>${ce.text}</div>`;
     if(hasChara){
       btn.onclick = ()=> resolveTurn({kind:"chara", ce, dmgInfo});
     } else {
@@ -1350,7 +1371,12 @@ function resolveTurn(result){
   const opp = state.players[oppKey];
   const mv = MOVES[state.selectedMove];
 
-  mover.lastMoveId = state.selectedMove;
+  // ★ DAMAGE_EXTRA_DICE_SUCCESS_SELF_*/DAMAGE_SELF_DICE_SUCCESS_SELF_*の判定、およびワザカードの
+  //   ハイライト表示のために、mover.lastMoveId/lastMoveFailedは今回選択したワザの情報で即座には
+  //   上書きしない。今回の情報はpendingとして保持し、実際に手番が相手へ渡るタイミング
+  //   （proceedToAnimateWithCtx内のfinishSelf）で反映する。これにより「ターンが移ってから」
+  //   ハイライトが変化するようにする。
+  mover.pendingMoveId = state.selectedMove;
   mover.bannedMoveIds = [];   // SPECIAL_BIND_WAZAで縛られていた制限は、この選択で消化済み
   mover.diceMod = 0;          // 今回の番のエネコロ表示で既に消化済み（この後は自分の効果で新たにセットされ得る）
   mover.charaDiceBlocked = false; // MOD_CHARADICE_ENEMYによる制限は、今回のワザチェック画面表示で消化済み
@@ -1361,11 +1387,14 @@ function resolveTurn(result){
 
   if(result.kind === "fail"){
     // ワザ失敗：ダメージ・効果ともに発生しないが、「次の相手の番」の被ダメージ増減・固定はここで消化する
+    mover.pendingMoveFailed = true; // DAMAGE_EXTRA_DICE_MISS_ENEMY：次の相手の番から見て「相手がエネ不足で失敗した」判定に使う（手番交代時に反映）
     opp.incomingDamageMod = 0;
     opp.incomingDamageNullify = null;
     proceedToAnimateWithCtx({moverKey, mover, oppKey, opp, mv, dmgToOpp:0, dmgToSelf:0, isMiss:true});
     return;
   }
+  // ワザ成功：エネ不足ではないため、キャラコロ効果の成立有無に関わらず「成功」として記録する（手番交代時に反映）
+  mover.pendingMoveFailed = false;
 
   // ★ 効果処理キューを構築：先にワザ効果(waza_effect)、次にキャラコロ効果(chara_effect)の順で処理する
   const queue = [];
@@ -1376,6 +1405,10 @@ function resolveTurn(result){
 
   const ctx = {
     moverKey, mover, oppKey, opp, mv,
+    // ★ mover.lastMoveId/lastMoveFailedはこの時点ではまだ「直前の自分の番」の情報のまま
+    //   （pendingへの反映は手番交代時のため）。そのままprevMoverMoveId/prevMoverMoveFailedとして使う。
+    prevMoverMoveId: mover.lastMoveId,
+    prevMoverMoveFailed: mover.lastMoveFailed,
     // ★ ここではまだ0未満にクランプしない素の値(raw)を使う。DAMAGE_EXTRA等の効果は、この後raw値に対して
     //   加算され、最終的にproceedToAnimateWithCtx内で一度だけ0にクランプされる（MOD_REDUCE_TAKENで既に
     //   0未満になっていた場合に、DAMAGE_EXTRAが誤って0から積み増しされてしまうのを防ぐため）
@@ -1400,6 +1433,53 @@ function runEffectQueue(queue, idx, ctx, done){
   const eff = queue[idx];
   const next = () => runEffectQueue(queue, idx+1, ctx, done);
 
+  // ★ DAMAGE_EXTRA_DICE_MISS_ENEMY：前の相手の番、相手のワザがエネ不足により失敗していたなら、
+  //   {effect_value}ダメージを追加する。
+  if(eff.type === "DAMAGE_EXTRA_DICE_MISS_ENEMY"){
+    if(ctx.opp.lastMoveFailed){
+      ctx.dmgToOpp += eff.value;
+    }
+    next();
+    return;
+  }
+
+  // ★ DAMAGE_EXTRA_DICE_SUCCESS_SELF_{PLAKORO_WAZA.id}：前の自分の番、{id}のワザが成功していたなら
+  //   （エネ不足でなければ成功。キャラコロ効果の成立有無は問わない）、{effect_value}ダメージを追加する。
+  const successExtraMatch = /^DAMAGE_EXTRA_DICE_SUCCESS_SELF_(.+)$/.exec(eff.type);
+  if(successExtraMatch){
+    const targetMoveId = successExtraMatch[1];
+    if(ctx.prevMoverMoveId === targetMoveId && !ctx.prevMoverMoveFailed){
+      ctx.dmgToOpp += eff.value;
+    }
+    next();
+    return;
+  }
+
+  // ★ DAMAGE_SELF_DICE_SUCCESS_SELF_{PLAKORO_WAZA.id}：前の自分の番、{id}のワザが成功していたなら
+  //   このポケモン(mover)に{effect_value}ダメージ（マイナス値なら回復）を与える。
+  const selfDmgSuccessMatch = /^DAMAGE_SELF_DICE_SUCCESS_SELF_(.+)$/.exec(eff.type);
+  if(selfDmgSuccessMatch){
+    const targetMoveId = selfDmgSuccessMatch[1];
+    if(ctx.prevMoverMoveId === targetMoveId && !ctx.prevMoverMoveFailed){
+      ctx.dmgToSelf += eff.value;
+    }
+    next();
+    return;
+  }
+
+  // ★ DAMAGE_EXTRA_CHARADICE_ENEMY_{向きを,区切り}：ワザチェック画面後・バトル画面遷移前に
+  //   「相手のキャラコロを振り、{向き}が出たなら成功」の[成功][失敗]選択画面を挿み、成功なら{effect_value}を
+  //   追加ダメージとして加算する。
+  const charaDiceEnemyMatch = /^DAMAGE_EXTRA_CHARADICE_ENEMY_(.+)$/.exec(eff.type);
+  if(charaDiceEnemyMatch){
+    const dirs = charaDiceEnemyMatch[1].replace(/"/g, '').split(',').map(s=>s.trim()).filter(s=>s!=="");
+    showCharaDiceEnemyCheckPrompt(dirs, eff.value, ctx, (success)=>{
+      if(success) ctx.dmgToOpp += eff.value;
+      next();
+    });
+    return;
+  }
+
   // ★ DAMAGE_BY_ENEMY_{n}DICE： nは可変（例：DAMAGE_BY_ENEMY_3DICE）。
   //   相手がエネコロをn個振り、一番多く出た数字（n=1の場合は出た数字そのもの）を選んでもらう。
   //   選択肢の最大値は元の3/2/1DICE実装と同じ規則(n*2)で算出する。
@@ -1407,28 +1487,6 @@ function runEffectQueue(queue, idx, ctx, done){
   if(enemyDiceMatch){
     const n = parseInt(enemyDiceMatch[1], 10);
     showDicePrompt(n * 2, eff.value, (num)=>{ ctx.dmgToOpp += num * eff.value; next(); });
-    return;
-  }
-
-  // ★ DAMAGE_EXTRA_{n}HP_LOW： nは可変（例：DAMAGE_EXTRA_30HP_LOW）。
-  //   このポケモン(mover)の残りHPが{n}以下なら、{effect_value}を追加ダメージとして加算する。
-  const hpThresholdMatch = /^DAMAGE_EXTRA_(\d+)HP_LOW$/.exec(eff.type);
-  if(hpThresholdMatch){
-    const n = parseInt(hpThresholdMatch[1], 10);
-    if(ctx.mover.hp <= n){
-      ctx.dmgToOpp += eff.value;
-    }
-    next();
-    return;
-  }
-
-  // ★ DAMAGE_EXTRA_ENE：ワザチェック画面の後、バトル画面へ遷移する前に「対象エネルギー数を選択」する画面を挿み、
-  //   エネコロで出た該当エネルギーの数(0~6)×{effect_value}を追加ダメージとして加算する。
-  if(eff.type === "DAMAGE_EXTRA_ENE"){
-    showEneCountPrompt(eff.value, ctx, (count)=>{
-      ctx.dmgToOpp += count * eff.value;
-      next();
-    });
     return;
   }
 
@@ -1480,14 +1538,6 @@ function runEffectQueue(queue, idx, ctx, done){
     case "MOD_DICE_ENEMY":
       // 次の相手の番、相手のエネコロを{effect_value}個増減する
       ctx.opp.diceMod = (ctx.opp.diceMod || 0) + eff.value;
-      next();
-      break;
-
-    case "MOD_DICE_STEAL":
-      // 次の相手の番、相手のエネコロを{effect_value}個減らし、次の自分の番、自分のエネコロを{effect_value}個増やす。
-      // effect_valueはあくまで「自分が増やす数」として扱うため、相手側には符号反転して適用する
-      ctx.opp.diceMod = (ctx.opp.diceMod || 0) - eff.value;
-      ctx.mover.diceMod = (ctx.mover.diceMod || 0) + eff.value;
       next();
       break;
 
@@ -1560,16 +1610,7 @@ function showDicePrompt(maxNum, multiplier, onPick){
 //   詳細確認用に、バトル画面と同一のワザカード（現在のダメージ状況を反映したもの）も併せて表示する
 function showCharaDiceCountPrompt(n, effectValue, ctx, onPick){
   const dmgInfo = computeDisplayDamage(ctx.mv, ctx.mover, ctx.opp);
-  state.effectPrompt = { kind:"charaDiceCount", n, effectValue, mv:ctx.mv, dmgInfo, onPick };
-  state.phase = "effectPrompt";
-  render();
-}
-
-// ★ DAMAGE_EXTRA_ENE：ワザチェック画面後・バトル画面遷移前に、エネコロで出た該当エネルギー数(0~6)を選んでもらう画面
-//   詳細確認用に、バトル画面と同一のワザカード（現在のダメージ状況を反映したもの）も併せて表示する
-function showEneCountPrompt(effectValue, ctx, onPick){
-  const dmgInfo = computeDisplayDamage(ctx.mv, ctx.mover, ctx.opp);
-  state.effectPrompt = { kind:"eneCount", effectValue, mv:ctx.mv, dmgInfo, onPick };
+  state.effectPrompt = { kind:"charaDiceCount", n, effectValue, mv:ctx.mv, dmgInfo, mover:ctx.mover, opp:ctx.opp, onPick };
   state.phase = "effectPrompt";
   render();
 }
@@ -1578,7 +1619,16 @@ function showEneCountPrompt(effectValue, ctx, onPick){
 //   「キャラコロが連続で成功した数」を1~20のプルダウンで選んでもらう画面
 function showCharaDiceRepeatPrompt(effectValue, ctx, onPick){
   const dmgInfo = computeDisplayDamage(ctx.mv, ctx.mover, ctx.opp);
-  state.effectPrompt = { kind:"charaDiceRepeat", effectValue, mv:ctx.mv, dmgInfo, onPick };
+  state.effectPrompt = { kind:"charaDiceRepeat", effectValue, mv:ctx.mv, dmgInfo, mover:ctx.mover, opp:ctx.opp, onPick };
+  state.phase = "effectPrompt";
+  render();
+}
+
+// ★ DAMAGE_EXTRA_CHARADICE_ENEMY_{向き}：ワザチェック画面後・バトル画面遷移前に、「相手のキャラコロを振り、
+//   {向き}が出たなら成功」の[成功][失敗]選択画面を挿む。詳細確認用に、バトル画面と同一のワザカードも併せて表示する
+function showCharaDiceEnemyCheckPrompt(dirs, effectValue, ctx, onPick){
+  const dmgInfo = computeDisplayDamage(ctx.mv, ctx.mover, ctx.opp);
+  state.effectPrompt = { kind:"charaDiceEnemyCheck", dirs, effectValue, mv:ctx.mv, dmgInfo, mover:ctx.mover, opp:ctx.opp, onPick };
   state.phase = "effectPrompt";
   render();
 }
@@ -1640,6 +1690,11 @@ function proceedToAnimateWithCtx(ctx){
       //   このタイミングで初めて「次の相手の番」の被ダメージ増減・固定を消化する
       opp.incomingDamageMod = 0;
       opp.incomingDamageNullify = null;
+
+      // ★ DAMAGE_EXTRA_DICE_MISS_ENEMY等のハイライト表示・判定用：今回選択したワザの情報を、
+      //   実際に手番が相手へ渡るこのタイミングで初めてlastMoveId/lastMoveFailedへ反映する
+      mover.lastMoveId = mover.pendingMoveId;
+      mover.lastMoveFailed = mover.pendingMoveFailed;
 
       state.turnPlayer = oppKey;
       state.turnCount++;
@@ -1718,48 +1773,13 @@ function renderEffectPromptOverlay(){
     const card = document.createElement("div");
     card.className = "move-card";
     card.style.cssText = "cursor:default; pointer-events:none; min-height:172px;";
-    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo);
+    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo, ep.mover, ep.opp);
     cardWrap.appendChild(card);
     ov.appendChild(cardWrap);
 
     const grid = document.createElement("div");
     grid.style.cssText = "display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:14px;";
     for(let n=0; n<=ep.n; n++){
-      const b = document.createElement("button");
-      b.className = "btn";
-      b.textContent = String(n);
-      b.onclick = ()=>{
-        const cb = ep.onPick;
-        state.effectPrompt = null;
-        // ★ ボタン押下直後にこの画面を閉じ、バトル画面へ遷移してダメージ処理を行う
-        state.phase = "resolve";
-        render();
-        cb(n);
-      };
-      grid.appendChild(b);
-    }
-    ov.appendChild(grid);
-  }
-
-  if(ep.kind === "eneCount"){
-    const title = document.createElement("div");
-    title.className = "overlay-title";
-    title.textContent = "対象エネルギー数を選択";
-    ov.appendChild(title);
-
-    // ★ 詳細確認用に、バトル画面で表示されるワザカードと同一のものを表示する
-    const cardWrap = document.createElement("div");
-    cardWrap.style.cssText = "width:100%; max-width:300px; margin:10px auto 0;";
-    const card = document.createElement("div");
-    card.className = "move-card";
-    card.style.cssText = "cursor:default; pointer-events:none; min-height:172px;";
-    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo);
-    cardWrap.appendChild(card);
-    ov.appendChild(cardWrap);
-
-    const grid = document.createElement("div");
-    grid.style.cssText = "display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:14px;";
-    for(let n=0; n<=6; n++){
       const b = document.createElement("button");
       b.className = "btn";
       b.textContent = String(n);
@@ -1788,7 +1808,7 @@ function renderEffectPromptOverlay(){
     const card = document.createElement("div");
     card.className = "move-card";
     card.style.cssText = "cursor:default; pointer-events:none; min-height:172px;";
-    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo);
+    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo, ep.mover, ep.opp);
     cardWrap.appendChild(card);
     ov.appendChild(cardWrap);
 
@@ -1823,6 +1843,50 @@ function renderEffectPromptOverlay(){
     ov.appendChild(pickRow);
   }
 
+  if(ep.kind === "charaDiceEnemyCheck"){
+    const title = document.createElement("div");
+    title.className = "overlay-title";
+    title.style.cssText = "display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:4px;";
+    title.innerHTML = `相手のキャラコロを振り、
+      <span style="display:inline-flex; gap:2px; margin:0 2px;">
+        ${ep.dirs.map(d=>`<div style="width:1em; height:1em; display:inline-flex; align-items:center; justify-content:center;"><img src="image/ICON/${d}.png" class="img-icon" alt="${d}" style="width:100%; height:100%;"></div>`).join("")}
+      </span>
+      が出たなら成功`;
+    ov.appendChild(title);
+
+    // ★ 詳細確認用に、バトル画面で表示されるワザカードと同一のものを表示する
+    const cardWrap = document.createElement("div");
+    cardWrap.style.cssText = "width:100%; max-width:300px; margin:10px auto 0;";
+    const card = document.createElement("div");
+    card.className = "move-card";
+    card.style.cssText = "cursor:default; pointer-events:none; min-height:172px;";
+    card.innerHTML = buildMoveCardInnerHTML(ep.mv, ep.dmgInfo, ep.mover, ep.opp);
+    cardWrap.appendChild(card);
+    ov.appendChild(cardWrap);
+
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex; gap:14px; justify-content:center; margin-top:14px;";
+    const finalize = (v)=>{
+      const cb = ep.onPick;
+      state.effectPrompt = null;
+      // ★ ボタン押下直後にこの画面を閉じ、バトル画面へ遷移してダメージ処理を行う
+      state.phase = "resolve";
+      render();
+      cb(v);
+    };
+    const succBtn = document.createElement("button");
+    succBtn.className = "btn";
+    succBtn.textContent = "成功";
+    succBtn.onclick = ()=> finalize(true);
+    const failBtn = document.createElement("button");
+    failBtn.className = "btn";
+    failBtn.textContent = "失敗";
+    failBtn.onclick = ()=> finalize(false);
+    btnRow.appendChild(succBtn);
+    btnRow.appendChild(failBtn);
+    ov.appendChild(btnRow);
+  }
+
   if(ep.kind === "bindWaza"){
     const target = state.players[ep.targetKey];
     // ★ ダメージ表示等はバトル画面（ワザ選択画面）と全く同じ計算をするため、targetの相手（＝縛る側）を取得する
@@ -1850,7 +1914,7 @@ function renderEffectPromptOverlay(){
       const dmgInfo = computeDisplayDamage(mv, target, targetOpp);
       const card = document.createElement("div");
       card.className = "move-card" + ((isPrevUsed || isPicked) ? " disabled" : "");
-      card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo);
+      card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo, target, targetOpp);
       if(!isPrevUsed && !isPicked){
         card.onclick = ()=>{
           ep.picked.push(mid);
