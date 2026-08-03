@@ -219,12 +219,22 @@
     display: flex; flex-direction: column; border-radius: 12px; overflow: hidden;
     /* 影を深くし、初期状態で少し浮かせる！ */
     box-shadow: 0 6px 16px rgba(0,0,0,0.22), 0 2px 4px rgba(0,0,0,0.12);
-    cursor: pointer; border: 2px solid transparent; min-height: 0;
+    cursor: pointer; border: 2px solid transparent; min-height: 0; min-width: 0;
     transform: translateY(-2px);
     transition: transform 0.1s, box-shadow 0.1s;
     position: relative;
   }
   .move-card.disabled { opacity: .35; pointer-events: none; transform: translateY(0); box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  /* ★ バトル画面でグレーアウトしたワザカードの左上に表示する「理由バッジ」。
+     カード自体の.disabled(opacity:.35)の影響を受けないよう、カードの外側(ラッパー)に配置する。 */
+  .move-disable-badge{
+    position:absolute; top:6px; left:6px; z-index:5;
+    padding:3px 8px; border-radius:8px; font-size:10px; font-weight:800; color:#fff; letter-spacing:.02em;
+    box-shadow:0 2px 6px rgba(0,0,0,.35);
+    max-width:calc(100% - 12px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .move-disable-badge.lastused{ background:#FF8A2B; }
+  .move-disable-badge.bind{ background:#E5342A; }
   .resolve-panel .move-card{ cursor:default; pointer-events:none; }
   .move-card:active {
     /* 押し込んだ際の沈み込み演算！ */
@@ -246,7 +256,7 @@
   .wk-inline .tw-icon { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; }
 
   /* 上半分: タイプ+ワザ名/エネルギー・ダメージの行 + その下にワザ効果テキスト */
-  .mc-top{flex:1 1 50%; padding:5px 8px 4px; display:flex; flex-direction:column; justify-content:center; gap:2px; min-height:0;}
+  .mc-top{flex:1 1 50%; padding:5px 8px 4px; display:flex; flex-direction:column; justify-content:center; gap:2px; min-height:0; min-width:0;}
   .mc-top-row{display:flex; align-items:center; justify-content:space-between; gap:6px; min-height:0;}
   .mc-typename{display:flex; align-items:center; gap:6px; min-width:0; flex:1;}
   .mc-type-icon{width:24px; height:24px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
@@ -267,7 +277,7 @@
   .mc-dmg.down{color:#2A6FE8;}
 
   /* 下半分: 黒背景。ワザ効果テキスト + キャラコロ効果(最大3つ、overflow-yで対応) */
-  .mc-bottom{flex:1 1 50%; min-height:0; background:#262420; padding:3px 8px 5px;
+  .mc-bottom{flex:1 1 50%; min-height:0; min-width:0; background:#262420; padding:3px 8px 5px;
     display:flex; flex-direction:column; justify-content:center; gap:3px; overflow-y:auto;}
 
   .mc-effect{font-size:10.5px; font-weight:800; color:#fff; line-height:1.25; flex-shrink:0;
@@ -276,10 +286,11 @@
     text-shadow:-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;}
 
   /* キャラコロ効果行(白文字・区切り線のみ、独自背景なし) */
-  .mc-chara-row{color:#fff; padding-top:3px; margin-top:1px;
+  .mc-chara-row{color:#fff; padding-top:3px; margin-top:1px; min-width:0;
     display:flex; align-items:center; gap:5px; font-size:9.5px; font-weight:600; line-height:1.2; flex-shrink:0;}
   .mc-chara-row .oi{width:17px; height:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .mc-chara-row .txt{overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  /* ★ ワザカードの横幅を固定するため、長い文章でもカードごと横に広がらず、この中で折り返す */
+  .mc-chara-row .txt{flex:1 1 auto; min-width:0; overflow:visible; text-overflow:clip; white-space:normal; word-break:break-word; overflow-wrap:break-word;}
 
   /* ---------- dice / result phase (ワザ選択後の結果画面) ---------- */
   .dice-overlay {
@@ -597,7 +608,10 @@ function newPlayer(name){
     incomingDamageNullify:null, // MOD_NULLIFY_TAKEN：次に自分が受ける番のダメージを{effect_value}に固定（nullは未使用中）
     diceMod:0,           // MOD_DICE_SELF/MOD_DICE_ENEMY：次の自分の番のエネコロ増減
     bannedMoveIds:[],    // SPECIAL_BIND_WAZA：次の自分の番、選べないワザ
-    charaDiceBlocked:false, // MOD_CHARADICE_ENEMY：次の自分の番、キャラコロを振れない（ワザチェック画面でキャラコロ画像を非表示）
+    bannedMoveSourceName:"", // ★ そのSPECIAL_BIND_WAZAの効果元となったワザ名（グレーアウトバッジ表示用）
+    committedBannedMoveIds:[],       // ★ 実際にターンが渡った時点で確定する「選べないワザ」（バッジ表示用）
+    committedBannedMoveSourceName:"" // ★ 実際にターンが渡った時点で確定する「効果元のワザ名」（バッジ表示用）
+    ,charaDiceBlocked:false, // MOD_CHARADICE_ENEMY：次の自分の番、キャラコロを振れない（ワザチェック画面でキャラコロ画像を非表示）
     lastMoveFailed:false, // このプレイヤーが直近の自分の番で選んだワザがエネ不足で失敗していたか（lastMoveIdと同時に更新）
     committedLastMoveId:null,     // ★ 実際にターンが相手へ渡った時点で確定する「直近の自分の番のワザ」
     committedLastMoveFailed:false // ★ 実際にターンが相手へ渡った時点で確定する「直近の自分の番のワザが失敗だったか」
@@ -840,6 +854,32 @@ function renderPlayerCard(key){
   return card;
 }
 
+// ★ ワザ選択の記憶機能：ポケモンごとに直近選んだ4つのワザをlocalStorageへ保存し、
+//   次回同じポケモンのワザ選択画面を開いた時に最初から選択済み状態で表示する。
+//   トレーナーA/Bで左右を入れ替えて遊ぶことも考慮し、履歴はプレイヤーを区別せずポケモン単位で共通管理する。
+const MOVE_HISTORY_STORAGE_KEY = "baycal_move_select_history_v1";
+
+function loadMoveHistory(){
+  try{
+    const raw = localStorage.getItem(MOVE_HISTORY_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return (parsed && typeof parsed === "object") ? parsed : {};
+  }catch(e){
+    // localStorageが使えない環境やJSON壊れなどは記憶機能を諦めて空履歴扱いにする
+    return {};
+  }
+}
+
+function saveMoveHistoryForChar(charId, moveIds){
+  try{
+    const hist = loadMoveHistory();
+    hist[charId] = moveIds;
+    localStorage.setItem(MOVE_HISTORY_STORAGE_KEY, JSON.stringify(hist));
+  }catch(e){
+    // 保存に失敗しても致命的ではないので無視する
+  }
+}
+
 function onCardTap(key){
   const p = state.players[key];
   if(state.phase !== "select") return;
@@ -857,7 +897,12 @@ function openCharSelect(key){
   render();
 }
 function openMoveSelect(key, char){
-  state.modal = {type:"move", playerKey:key, tempChar:char, tempMoves:[]};
+  // ★ 記憶機能：このポケモンで過去に選んだワザ4つがlocalStorageにあり、かつ現在のワザ一覧と
+  //   矛盾しない（4つとも今も選択可能）場合のみ、最初から選択済みの状態で起動する
+  const hist = loadMoveHistory();
+  const saved = hist[char.id];
+  const validSaved = Array.isArray(saved) && saved.length === 4 && saved.every(mid => char.moves.includes(mid));
+  state.modal = {type:"move", playerKey:key, tempChar:char, tempMoves: validSaved ? [...saved] : []};
   render();
 }
 
@@ -998,6 +1043,8 @@ function buildMoveModal(sheet, m){
     p.locked = true;
     p.hp = m.tempChar.hp;
     p.maxHp = m.tempChar.hp;
+    // ★ 記憶機能：次回このポケモンを選んだ時のために、選んだ4つのワザを保存しておく
+    saveMoveHistoryForChar(m.tempChar.id, m.tempMoves);
     state.modal = null;
     render();
   };
@@ -1088,6 +1135,11 @@ function isCharaColorConditionMet(effType, owner, opponent){
     return !!opponent.committedLastMoveFailed;
   }
 
+  if(effType === "DAMAGE_EXTRA_DICE_MISS_SELF"){
+    // 前の自分の番、自分のワザがエネ不足により失敗していたなら
+    return !!owner.committedLastMoveFailed;
+  }
+
   const successSelfMatch = /^DAMAGE_EXTRA_DICE_SUCCESS_SELF_(.+)$/.exec(effType)
     || /^DAMAGE_SELF_DICE_SUCCESS_SELF_(.+)$/.exec(effType);
   if(successSelfMatch){
@@ -1096,6 +1148,14 @@ function isCharaColorConditionMet(effType, owner, opponent){
     return owner.committedLastMoveId !== null
       && String(owner.committedLastMoveId) === String(wazaId)
       && !owner.committedLastMoveFailed;
+  }
+
+  // ★ DAMAGE_EXTRA_{n}HP_LOW：nは可変（例：DAMAGE_EXTRA_30HP_LOW）。
+  //   このワザ/キャラコロ効果を持つポケモン（owner）自身の残りHPが{n}以下なら条件成立
+  const hpLowMatch = /^DAMAGE_EXTRA_(\d+)HP_LOW$/.exec(effType);
+  if(hpLowMatch){
+    const n = parseInt(hpLowMatch[1], 10);
+    return owner.hp <= n;
   }
 
   return false;
@@ -1182,10 +1242,21 @@ function buildMovesGrid(p, opp, interactive){
   grid.className = "ms-grid";
   p.moveIds.forEach(mid=>{
     const mv = MOVES[mid];
-    const disabled = (mid === p.lastMoveId) || (p.bannedMoveIds && p.bannedMoveIds.includes(mid));
+    // ★ ここでの判定は、現ターンのダメージ処理中に先走って更新されないよう、
+    //   「実際にターンが渡った時点」で確定するcommitted系フィールドを使う
+    const isLastUsed = (mid === p.committedLastMoveId);
+    const isBanned = !!(p.committedBannedMoveIds && p.committedBannedMoveIds.includes(mid));
+    const disabled = isLastUsed || isBanned;
     const dmgInfo = computeDisplayDamage(mv, p, opp);
+
+    // ★ バッジをカード自体の.disabled(opacity:.35)の影響で薄く表示させたくないため、
+    //   カードの外側にラッパーを用意し、バッジはラッパーの子（＝カードの兄弟）として配置する
+    const wrap = document.createElement("div");
+    wrap.style.cssText = "position:relative; display:flex; min-height:0; min-width:0;";
+
     const card = document.createElement("div");
     card.className = "move-card" + (disabled?" disabled":"");
+    card.style.cssText = "flex:1 1 auto; min-height:0; width:100%;";
     card.innerHTML = buildMoveCardInnerHTML(mv, dmgInfo, p, opp);
     if(interactive && !disabled){
       card.onclick = ()=>{
@@ -1194,7 +1265,23 @@ function buildMovesGrid(p, opp, interactive){
         render();
       };
     }
-    grid.appendChild(card);
+    wrap.appendChild(card);
+
+    if(disabled){
+      const badge = document.createElement("div");
+      // ★ 前ターン使用によるグレーアウトはオレンジ「前ターン使用」、
+      //   SPECIAL_BIND_WAZAによるグレーアウトは赤＋効果元のワザ名を表示する
+      if(isBanned){
+        badge.className = "move-disable-badge bind";
+        badge.textContent = p.committedBannedMoveSourceName || "使用不可";
+      } else {
+        badge.className = "move-disable-badge lastused";
+        badge.textContent = "前ターン使用";
+      }
+      wrap.appendChild(badge);
+    }
+
+    grid.appendChild(wrap);
   });
   return grid;
 }
@@ -1385,6 +1472,7 @@ function resolveTurn(result){
   mover.lastMoveId = state.selectedMove;
   mover.lastMoveFailed = (result.kind === "fail"); // DAMAGE_EXTRA_DICE_MISS/DAMAGE_SELF_DICE_SUCCESS系の判定用
   mover.bannedMoveIds = [];   // SPECIAL_BIND_WAZAで縛られていた制限は、この選択で消化済み
+  mover.bannedMoveSourceName = ""; // バッジ表示用の効果元ワザ名も同時にクリア
   mover.diceMod = 0;          // 今回の番のエネコロ表示で既に消化済み（この後は自分の効果で新たにセットされ得る）
   mover.charaDiceBlocked = false; // MOD_CHARADICE_ENEMYによる制限は、今回のワザチェック画面表示で消化済み
 
@@ -1491,8 +1579,10 @@ function runEffectQueue(queue, idx, ctx, done){
       break;
 
     case "MOD_REDUCE_TAKEN":
-      // 次の相手の番、このポケモン(mover)が受けるダメージを{effect_value}する
-      ctx.mover.incomingDamageMod = eff.value;
+      // 次の相手の番、このポケモン(mover)が受けるダメージを{effect_value}する。
+      // ★ 同一ワザのwaza_effect_typeとchara_effect_typeの両方にMOD_REDUCE_TAKENが設定されている場合、
+      //   （MOD_DICE系と同様に）両方の値を合算して適用する
+      ctx.mover.incomingDamageMod = (ctx.mover.incomingDamageMod || 0) + eff.value;
       next();
       break;
 
@@ -1565,6 +1655,8 @@ function runEffectQueue(queue, idx, ctx, done){
     case "SPECIAL_BIND_WAZA":
       showBindWazaPrompt(ctx.oppKey, eff.value, (pickedIds)=>{
         ctx.opp.bannedMoveIds = pickedIds;
+        // ★ グレーアウトバッジ表示用に、この効果を発動させたワザの名前を記録しておく
+        ctx.opp.bannedMoveSourceName = ctx.mv.name;
         next();
       });
       return;
@@ -1588,6 +1680,12 @@ function runEffectQueue(queue, idx, ctx, done){
     case "DAMAGE_EXTRA_DICE_MISS_ENEMY":
       // 前の相手の番、相手のワザがエネ不足により失敗していたなら、{effect_value}ダメージ追加
       if(ctx.opp.committedLastMoveFailed) ctx.dmgToOpp += eff.value;
+      next();
+      break;
+
+    case "DAMAGE_EXTRA_DICE_MISS_SELF":
+      // 前の自分の番、自分のワザがエネ不足により失敗していたなら、{effect_value}ダメージ追加
+      if(ctx.mover.committedLastMoveFailed) ctx.dmgToOpp += eff.value;
       next();
       break;
 
@@ -1731,6 +1829,13 @@ function proceedToAnimateWithCtx(ctx){
       //   見えてしまうのを防ぐため）
       mover.committedLastMoveId = mover.lastMoveId;
       mover.committedLastMoveFailed = mover.lastMoveFailed;
+
+      // ★ グレーアウトバッジ（前ターン使用／SPECIAL_BIND_WAZA）も、実際にターンが渡るこのタイミングで
+      //   初めて確定させる。これにより、現ターンの解決中（ダメージ計算中）にバッジが先走って表示されるのを防ぐ
+      mover.committedBannedMoveIds = mover.bannedMoveIds;
+      mover.committedBannedMoveSourceName = mover.bannedMoveSourceName;
+      opp.committedBannedMoveIds = opp.bannedMoveIds;
+      opp.committedBannedMoveSourceName = opp.bannedMoveSourceName;
 
       state.turnPlayer = oppKey;
       state.turnCount++;
