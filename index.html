@@ -35,6 +35,11 @@
 
     --trainerA-bg:#FFC2E3; --trainerA-btn:#FF9FCF;
     --trainerB-bg:#A9D8F5; --trainerB-btn:#7EC1EE;
+
+    /* ★ カットイン演出のグロウ色（RGB成分のみ。rgba(var(--tc-glow),アルファ)の形で使う） */
+    --tc-glow:255,255,255; /* デフォルト(白) */
+    --tc-glow-a:255,227,242; /* トレーナーA: かなり薄いピンク */
+    --tc-glow-b:220,239,252; /* トレーナーB: かなり薄い水色 */
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;width:100%;height:100%;background:#15140f;color:var(--ink);
@@ -167,6 +172,9 @@
        要素幅が大きく異なっても、同じ速度感で動くようにしている。 */
   .turn-cutin{position:absolute; inset:0; z-index:200; display:flex; flex-direction:column; align-items:center;
     justify-content:center; gap:8px; pointer-events:none; overflow:hidden;}
+  /* ★ トレーナーごとにグロウ色を切り替える（Aはかなり薄いピンク、Bはかなり薄い水色） */
+  .turn-cutin.cutin-a{ --tc-glow:var(--tc-glow-a); }
+  .turn-cutin.cutin-b{ --tc-glow:var(--tc-glow-b); }
   /* ★ カットイン中だけ背後の盤面を暗転＋ぼかして、テキストの視認性を上げる。
      テキスト側と同じタイミング(進入→中央保持→退出)でフェードイン/アウトさせる。 */
   .turn-cutin-backdrop{position:absolute; inset:0; z-index:0; background:rgba(0,0,0,.55);
@@ -184,9 +192,9 @@
     -webkit-text-stroke:3px #000;
     paint-order:stroke fill;
     text-shadow:
-      0 0 8px rgba(255,255,255,.95),
-      0 0 18px rgba(255,255,255,.9),
-      0 0 36px rgba(255,255,255,.85),
+      0 0 6px rgba(var(--tc-glow),.8),
+      0 0 14px rgba(var(--tc-glow),.7),
+      0 0 26px rgba(var(--tc-glow),.6),
       -3px -3px 0 #000,
       3px -3px 0 #000,
       -3px  3px 0 #000,
@@ -197,9 +205,9 @@
     font-family:'851Gkktt','Hiragino Sans','Noto Sans JP',sans-serif; font-size:68px;
     color:#fff; -webkit-text-stroke:3px #000; paint-order:stroke fill;
     text-shadow:
-    0 0 8px rgba(255,255,255,.95),
-    0 0 18px rgba(255,255,255,.9),
-    0 0 36px rgba(255,255,255,.85),
+    0 0 6px rgba(var(--tc-glow),.8),
+    0 0 14px rgba(var(--tc-glow),.7),
+    0 0 26px rgba(var(--tc-glow),.6),
     -3px -3px 0 #000,
     3px -3px 0 #000,
     -3px  3px 0 #000,
@@ -211,17 +219,17 @@
     height:100%;
     object-fit:contain;
     filter:
-        drop-shadow(0 0 8px rgba(255,255,255,.95))
-        drop-shadow(0 0 18px rgba(255,255,255,.9))
-        drop-shadow(0 0 32px rgba(255,255,255,.8));
+        drop-shadow(0 0 6px rgba(var(--tc-glow),.75))
+        drop-shadow(0 0 14px rgba(var(--tc-glow),.65))
+        drop-shadow(0 0 24px rgba(var(--tc-glow),.55));
   }
   .turn-cutin-line2 .tc-flow{
     font-size:1em;
     line-height:1;
     text-shadow:
-      0 0 8px rgba(255,255,255,.95),
-      0 0 18px rgba(255,255,255,.9),
-      0 0 36px rgba(255,255,255,.85),
+      0 0 6px rgba(var(--tc-glow),.8),
+      0 0 14px rgba(var(--tc-glow),.7),
+      0 0 26px rgba(var(--tc-glow),.6),
       -3px -3px 0 #000,
        3px -3px 0 #000,
       -3px  3px 0 #000,
@@ -557,6 +565,28 @@ const TYPE_BG_COLORS = {
 const TYPE_BG_FALLBACK = "#ECEAE3";
 const CARD_BOTTOM_DARK = "#262420";
 function typeBgColor(t){ return TYPE_BG_COLORS[t] || TYPE_BG_FALLBACK; }
+
+// ★ カットイン等で使う画像はブラウザキャッシュへ事前ロードしておき、
+//   「画像がまだ読み込まれていない状態にグロウだけ先に適用される」表示崩れを防ぐ。
+const PRELOAD_IMAGE_PATHS = [
+  "image/ICON/キャラコロ.png",
+  "image/ICON/エネコロ1.png",
+  "image/ICON/エネコロ2.png",
+  "image/ICON/エネコロ3.png",
+  "image/ICON/エネコロ4.png",
+  "image/ICON/エネコロ5.png",
+  "image/ICON/エネコロ6.png",
+  ...Object.keys(TYPE_BG_COLORS).map(t => `image/BACK/back_${t}.png`)
+];
+let preloadedImages = [];
+function preloadEssentialImages(){
+  preloadedImages = PRELOAD_IMAGE_PATHS.map(src => {
+    const img = new Image();
+    img.src = src; // ブラウザキャッシュに乗るのでロード完了を待つ必要はない
+    return img;
+  });
+}
+preloadEssentialImages();
 
 
 // ★ キャラコロの向き（実際のファイル名: image/ICON/立.png などに合わせて設定してください）
@@ -2314,7 +2344,7 @@ function showTurnCutIn(key){
   }
 
   const wrap = document.createElement("div");
-  wrap.className = "turn-cutin";
+  wrap.className = "turn-cutin " + (key === "A" ? "cutin-a" : "cutin-b");
   wrap.innerHTML = `
     <div class="turn-cutin-backdrop"></div>
     <div class="turn-cutin-line1">${p.name}</div>
